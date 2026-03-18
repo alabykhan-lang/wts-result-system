@@ -1263,12 +1263,30 @@ function nav(id,el){
   document.getElementById('tb-title').textContent=info[0];
   var sub=id==='settings'?'System':DEPTS[currentClass].label;
   document.getElementById('tb-sub').textContent=sub+' - '+info[1];
-  if(id==='dashboard')renderDash();
-  if(id==='students')renderStudents();
-  if(id==='scores')populateSels();
-  if(id==='broadsheet')renderBroadsheet();
-  if(id==='card'){populateCardSel();renderCard();}
-  if(id==='analytics')renderAnalytics();
+  if(id==='dashboard'){
+    if(DB_STUDENTS[currentClass]){renderDash();}
+    else{loadClassData(currentClass,function(){renderDash();});}
+  }
+  if(id==='students'){
+    if(DB_STUDENTS[currentClass]){renderStudents();}
+    else{loadClassData(currentClass,function(){renderStudents();});}
+  }
+  if(id==='scores'){
+    if(DB_STUDENTS[currentClass]){populateSels();}
+    else{loadClassData(currentClass,function(){populateSels();});}
+  }
+  if(id==='broadsheet'){
+    if(DB_STUDENTS[currentClass]){renderBroadsheet();}
+    else{loadClassData(currentClass,function(){renderBroadsheet();});}
+  }
+  if(id==='card'){
+    if(DB_STUDENTS[currentClass]){populateCardSel();renderCard();}
+    else{loadClassData(currentClass,function(){populateCardSel();renderCard();});}
+  }
+  if(id==='analytics'){
+    if(DB_STUDENTS[currentClass]){renderAnalytics();}
+    else{loadClassData(currentClass,function(){renderAnalytics();});}
+  }
   if(id==='settings')renderSettings();
 }
 
@@ -2249,7 +2267,10 @@ window.addEventListener('DOMContentLoaded',function(){
     var sb=document.querySelector('.sb-session');
     if(sb)sb.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
   }catch(e){}
-  // renderDash called after data loads above
+  // Load data from Supabase FIRST, then render dashboard
+  loadClassData(currentClass, function(){
+    renderDash();
+  });
 });
 
 </script>
