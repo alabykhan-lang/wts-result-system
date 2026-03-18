@@ -487,32 +487,11 @@ body.is-mobile .bs-scroll-hint{display:flex}
   </div>
   <div class="sb-class">
     <select id="class-select" onchange="onClassChange()">
-      <optgroup label="SS3">
-        <option value="ss3-science">SS3 - Science</option>
-        <option value="ss3-arts">SS3 - Arts</option>
-      </optgroup>
-      <optgroup label="SS2">
-        <option value="ss2-science">SS2 - Science</option>
-        <option value="ss2-arts">SS2 - Arts</option>
-        <option value="ss2-business">SS2 - Business</option>
-      </optgroup>
-      <optgroup label="SS1">
-        <option value="ss1-science">SS1 - Science</option>
-        <option value="ss1-arts">SS1 - Arts</option>
-        <option value="ss1-business">SS1 - Business</option>
-      </optgroup>
-      <optgroup label="JSS3">
-        <option value="jss3-a">JSS3 - A</option>
-        <option value="jss3-b">JSS3 - B</option>
-      </optgroup>
-      <optgroup label="JSS2">
-        <option value="jss2-a">JSS2 - A</option>
-        <option value="jss2-b">JSS2 - B</option>
-      </optgroup>
-      <optgroup label="JSS1">
-        <option value="jss1-a">JSS1 - A</option>
-        <option value="jss1-b">JSS1 - B</option>
-      </optgroup>
+      <option value="ss3-science">SS3 - Science</option>
+      <option value="ss3-arts">SS3 - Arts</option>
+      <option value="ss2-science">SS2 - Science</option>
+      <option value="ss2-arts">SS2 - Arts</option>
+      <option value="ss2-business">SS2 - Business</option>
     </select>
   </div>
   <nav>
@@ -545,6 +524,21 @@ body.is-mobile .bs-scroll-hint{display:flex}
 </div>
 
 <!-- MOBILE OVERLAY -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,61,46,.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#e8b547;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <p style="color:#fff;font-family:DM Sans,sans-serif;font-size:1rem;font-weight:500">Loading...</p>
+</div>
+<div id="toast" class="toast"></div>
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:#0a3d2e;color:#fff;padding:10px 22px;border-radius:24px;
+  font-family:DM Sans,sans-serif;font-size:.88rem;font-weight:500;
+  opacity:0;transition:.3s;pointer-events:none;z-index:9998;white-space:nowrap}
+.toast.show{opacity:1}
+.toast.error{background:#c0392b}
+.toast.success{background:#065f46}
+</style>
 <div id="sb-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:199;cursor:pointer"></div>
 
 <!-- BOTTOM NAV (mobile only) -->
@@ -854,12 +848,11 @@ body.is-mobile .bs-scroll-hint{display:flex}
         <div style="padding:16px">
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
             <select class="sel" id="dept-sel" onchange="renderSubjCfg()" style="min-width:200px">
-              <optgroup label="SS3"><option value="ss3-science">SS3 - Science</option><option value="ss3-arts">SS3 - Arts</option></optgroup>
-              <optgroup label="SS2"><option value="ss2-science">SS2 - Science</option><option value="ss2-arts">SS2 - Arts</option><option value="ss2-business">SS2 - Business</option></optgroup>
-              <optgroup label="SS1"><option value="ss1-science">SS1 - Science</option><option value="ss1-arts">SS1 - Arts</option><option value="ss1-business">SS1 - Business</option></optgroup>
-              <optgroup label="JSS3"><option value="jss3-a">JSS3 - A</option><option value="jss3-b">JSS3 - B</option></optgroup>
-              <optgroup label="JSS2"><option value="jss2-a">JSS2 - A</option><option value="jss2-b">JSS2 - B</option></optgroup>
-              <optgroup label="JSS1"><option value="jss1-a">JSS1 - A</option><option value="jss1-b">JSS1 - B</option></optgroup>
+              <option value="ss3-science">SS3 - Science</option>
+              <option value="ss3-arts">SS3 - Arts</option>
+              <option value="ss2-science">SS2 - Science</option>
+              <option value="ss2-arts">SS2 - Arts</option>
+              <option value="ss2-business">SS2 - Business</option>
             </select>
           </div>
           <div id="subj-cfg-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:14px"></div>
@@ -971,26 +964,208 @@ function getSession(){return getCfg().session||DEFAULT_SESSION;}
 function getTerm(){return getCfg().term||DEFAULT_TERM;}
 function getDepts(){var cfg=getCfg();if(cfg.depts)return cfg.depts;return null;}
 
+
+// ============================================================
+// SUPABASE DATABASE LAYER
+// ============================================================
+var SUPABASE_URL = 'https://wuftzyeajmsxdrbwaawl.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1ZnR6eWVham1zeGRyYndhYXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjczNTgsImV4cCI6MjA4OTQ0MzM1OH0.QUeDRP1IpHCjvecqAOEZAqmMalEFlCLXylZP5D5iLog';
+
+function sbFetch(path, options) {
+  var url = SUPABASE_URL + '/rest/v1/' + path;
+  var headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+  if(options && options.headers) Object.assign(headers, options.headers);
+  return fetch(url, Object.assign({}, options, {headers: headers}));
+}
+
+// ---- STUDENTS ----
+function dbGetStudents(classKey) {
+  return sbFetch('students?class_key=eq.' + encodeURIComponent(classKey) + '&order=created_at.asc')
+    .then(function(r){return r.json();});
+}
+function dbAddStudent(classKey, student) {
+  var body = Object.assign({}, student, {class_key: classKey, id: undefined});
+  return sbFetch('students', {method:'POST', body:JSON.stringify(body)})
+    .then(function(r){return r.json();});
+}
+function dbUpdateStudent(id, data) {
+  return sbFetch('students?id=eq.' + id, {
+    method:'PATCH',
+    headers:{'Prefer':'return=representation'},
+    body:JSON.stringify(data)
+  }).then(function(r){return r.json();});
+}
+function dbDeleteStudent(id) {
+  return sbFetch('students?id=eq.' + id, {method:'DELETE'});
+}
+
+// ---- SCORES ----
+function dbGetScores(studentId) {
+  return sbFetch('scores?student_id=eq.' + studentId)
+    .then(function(r){return r.json();});
+}
+function dbUpsertScore(studentId, classKey, subjectIndex, data) {
+  var body = Object.assign({}, data, {
+    student_id: studentId,
+    class_key: classKey,
+    subject_index: subjectIndex
+  });
+  return sbFetch('scores', {
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify(body)
+  }).then(function(r){return r.json();});
+}
+
+// ---- TRAITS ----
+function dbGetTraits(studentId) {
+  return sbFetch('traits?student_id=eq.' + studentId)
+    .then(function(r){return r.json();});
+}
+function dbUpsertTrait(studentId, classKey, traitType, traitName, rating) {
+  var body = {student_id:studentId, class_key:classKey, trait_type:traitType, trait_name:traitName, rating:rating};
+  return sbFetch('traits', {
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify(body)
+  }).then(function(r){return r.json();});
+}
+
+// ---- FEES ----
+function dbGetFees(studentId) {
+  return sbFetch('fees?student_id=eq.' + studentId)
+    .then(function(r){return r.json();});
+}
+function dbUpsertFees(studentId, classKey, data) {
+  var body = Object.assign({}, data, {student_id:studentId, class_key:classKey});
+  return sbFetch('fees', {
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify(body)
+  }).then(function(r){return r.json();});
+}
+
+// ---- REMARKS / ATTENDANCE ----
+function dbGetRemarks(studentId) {
+  return sbFetch('remarks?student_id=eq.' + studentId)
+    .then(function(r){return r.json();});
+}
+function dbUpsertRemarks(studentId, classKey, data) {
+  var body = Object.assign({}, data, {student_id:studentId, class_key:classKey});
+  return sbFetch('remarks', {
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify(body)
+  }).then(function(r){return r.json();});
+}
+
+// ---- SETTINGS ----
+function dbGetSettings() {
+  return sbFetch('settings').then(function(r){return r.json();});
+}
+function dbUpsertSetting(key, value) {
+  return sbFetch('settings', {
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify({key:key, value:value})
+  }).then(function(r){return r.json();});
+}
+
+// ---- LOADING STATE ----
+var DB_STUDENTS = {};  // classKey -> array of students
+var DB_SCORES = {};    // studentId -> {subjectIndex -> score}
+var DB_TRAITS = {};    // studentId -> {affective:{}, psychomotor:{}}
+var DB_FEES = {};      // studentId -> fees object
+var DB_REMARKS = {};   // studentId -> remarks object
+var DB_LOADING = false;
+
+function showLoading(msg) {
+  var el = document.getElementById('loading-overlay');
+  if(el) { el.style.display='flex'; el.querySelector('p').textContent = msg||'Loading...'; }
+}
+function hideLoading() {
+  var el = document.getElementById('loading-overlay');
+  if(el) el.style.display='none';
+}
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  if(!el) return;
+  el.textContent = msg;
+  el.className = 'toast show ' + (type||'success');
+  setTimeout(function(){el.className='toast';}, 3000);
+}
+
+// Load all students for current class from Supabase
+function loadClassData(classKey, callback) {
+  showLoading('Loading ' + (DEPTS[classKey]||{label:classKey}).label + '...');
+  dbGetStudents(classKey).then(function(students) {
+    DB_STUDENTS[classKey] = students || [];
+    hideLoading();
+    if(callback) callback();
+  }).catch(function(e) {
+    hideLoading();
+    showToast('Connection error. Check your internet.', 'error');
+    DB_STUDENTS[classKey] = DB_STUDENTS[classKey] || [];
+    if(callback) callback();
+  });
+}
+
+// Load all scores/traits/fees/remarks for a student
+function loadStudentData(studentId, callback) {
+  Promise.all([
+    dbGetScores(studentId),
+    dbGetTraits(studentId),
+    dbGetFees(studentId),
+    dbGetRemarks(studentId)
+  ]).then(function(results) {
+    var scores = results[0] || [];
+    var traits = results[1] || [];
+    var fees = results[2] || [];
+    var remarks = results[3] || [];
+
+    // Build scores map
+    var scoreMap = {};
+    scores.forEach(function(s) {
+      scoreMap[s.subject_index] = {ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+    });
+    DB_SCORES[studentId] = scoreMap;
+
+    // Build traits map
+    var traitMap = {affective:{}, psychomotor:{}};
+    traits.forEach(function(t) {
+      if(t.trait_type==='affective') traitMap.affective[t.trait_name]=t.rating;
+      else traitMap.psychomotor[t.trait_name]=t.rating;
+    });
+    DB_TRAITS[studentId] = traitMap;
+
+    // Fees
+    DB_FEES[studentId] = fees[0] || {};
+
+    // Remarks
+    DB_REMARKS[studentId] = remarks[0] || {};
+
+    if(callback) callback();
+  }).catch(function(e) {
+    showToast('Error loading student data', 'error');
+    if(callback) callback();
+  });
+}
+
 // ============================================================
 // SCHOOL DATA
 // ============================================================
 var CORE=['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies'];
-var JSS_CORE=['English Language','Mathematics','Basic Science','Basic Technology','Social Studies','Civic Education','Cultural & Creative Arts','Agricultural Science','Computer Studies','French','Yoruba','Christian Religious Studies'];
 var DEPTS={
-  'ss3-science': {label:'SS3 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss3-arts':    {label:'SS3 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
-  'ss2-science': {label:'SS2 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss2-arts':    {label:'SS2 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
-  'ss2-business':{label:'SS2 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])},
-  'ss1-science': {label:'SS1 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss1-arts':    {label:'SS1 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
-  'ss1-business':{label:'SS1 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])},
-  'jss3-a':      {label:'JSS3 - A',      subjects:JSS_CORE.slice()},
-  'jss3-b':      {label:'JSS3 - B',      subjects:JSS_CORE.slice()},
-  'jss2-a':      {label:'JSS2 - A',      subjects:JSS_CORE.slice()},
-  'jss2-b':      {label:'JSS2 - B',      subjects:JSS_CORE.slice()},
-  'jss1-a':      {label:'JSS1 - A',      subjects:JSS_CORE.slice()},
-  'jss1-b':      {label:'JSS1 - B',      subjects:JSS_CORE.slice()}
+  'ss3-science':{label:'SS3 - Science',subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
+  'ss3-arts':   {label:'SS3 - Arts',   subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
+  'ss2-science':{label:'SS2 - Science',subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
+  'ss2-arts':   {label:'SS2 - Arts',   subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
+  'ss2-business':{label:'SS2 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])}
 };
 
 var AFFECTIVE=['Punctuality','Mental Alertness','Behavior','Reliability','Attentiveness','Respect','Neatness','Politeness','Honesty','Relationship with Staff','Relationship with Students','Attitude to School','Self-control','Spirit of Teamwork','Initiatives','Organizational Ability'];
@@ -1050,8 +1225,15 @@ var DB={};
 var currentClass='ss3-science';
 var photoDataURL='';
 
-function classDB(){if(!DB[currentClass])DB[currentClass]={students:[],scores:{}};return DB[currentClass];}
-function save(){localStorage.setItem('wts2',JSON.stringify(DB));showSaved();}
+function classDB(){
+  // Returns a compatibility object that works with existing code
+  var students = DB_STUDENTS[currentClass] || [];
+  return {
+    students: students,
+    scores: DB_SCORES  // scores keyed by studentId
+  };
+}
+function save(){showSaved();} // Data saves to Supabase per operation
 function load(){var d=localStorage.getItem('wts2');if(d){try{DB=JSON.parse(d);}catch(e){DB={};}};}
 function showSaved(){var e=document.getElementById('saved-msg');if(e){e.classList.add('show');setTimeout(function(){e.classList.remove('show');},2200);}}
 load();
@@ -1092,9 +1274,11 @@ function nav(id,el){
 
 function onClassChange(){
   currentClass=document.getElementById('class-select').value;
-  var activeNav=document.querySelector('.ni.active');
-  if(activeNav)activeNav.click();
-  else document.getElementById('tb-sub').textContent=DEPTS[currentClass].label+' - Overview';
+  loadClassData(currentClass, function(){
+    var activeNav=document.querySelector('.ni.active');
+    if(activeNav)activeNav.click();
+    else{renderDash();document.getElementById('tb-sub').textContent=DEPTS[currentClass].label+' - Overview';}
+  });
 }
 
 // ============================================================
@@ -1116,8 +1300,7 @@ function computeTotal(sc){
 }
 
 function studentSummary(sid){
-  var db=classDB();
-  var scores=db.scores[sid]||{};
+  var scores=DB_SCORES[sid]||{};
   var subjs=subjects();
   var tots=[],grand=0,cnt=0,pass=0;
   subjs.forEach(function(_,i){
@@ -1130,8 +1313,7 @@ function studentSummary(sid){
 }
 
 function getRanks(){
-  var db=classDB();
-  var rows=db.students.map(function(s){var r=Object.assign({},s,studentSummary(s.id));return r;});
+  var rows=(DB_STUDENTS[currentClass]||[]).map(function(s){var r=Object.assign({},s,studentSummary(s.id));return r;});
   rows.sort(function(a,b){return b.avg-a.avg;});
   var rank=1;
   rows.forEach(function(r,i){
@@ -1222,36 +1404,52 @@ function saveStu(){
   var name=document.getElementById('in-name').value.trim();
   var gender=document.getElementById('in-gender').value;
   if(!name||!gender){alert('Name and gender are required.');return;}
-  var db=classDB();
   var eid=document.getElementById('edit-id').value;
   var obj={name:name,gender:gender,
     admno:document.getElementById('in-admno').value.trim(),
     house:document.getElementById('in-house').value.trim(),
     age:document.getElementById('in-age').value,
     photo:photoDataURL};
-  if(eid){var s=db.students.find(function(x){return x.id===eid;});if(s)Object.assign(s,obj);}
-  else db.students.push(Object.assign({id:'s'+Date.now()},obj));
-  save();closeModal('modal-stu');renderStudents();
+  showLoading('Saving student...');
+  if(eid){
+    dbUpdateStudent(eid, obj).then(function(){
+      var students=DB_STUDENTS[currentClass]||[];
+      var s=students.find(function(x){return x.id===eid;});
+      if(s)Object.assign(s,obj);
+      hideLoading();showToast('Student updated');
+      closeModal('modal-stu');renderStudents();
+    }).catch(function(){hideLoading();showToast('Save failed','error');});
+  }else{
+    dbAddStudent(currentClass, obj).then(function(result){
+      var newStudent=Array.isArray(result)?result[0]:result;
+      if(!DB_STUDENTS[currentClass])DB_STUDENTS[currentClass]=[];
+      DB_STUDENTS[currentClass].push(newStudent);
+      hideLoading();showToast('Student added');
+      closeModal('modal-stu');renderStudents();
+    }).catch(function(e){hideLoading();showToast('Save failed - check connection','error');});
+  }
 }
 
 function deleteStu(id){
   if(!confirm('Delete this student and all their records?'))return;
-  var db=classDB();
-  db.students=db.students.filter(function(s){return s.id!==id;});
-  delete db.scores[id];
-  save();renderStudents();
+  showLoading('Deleting...');
+  dbDeleteStudent(id).then(function(){
+    DB_STUDENTS[currentClass]=(DB_STUDENTS[currentClass]||[]).filter(function(s){return s.id!==id;});
+    delete DB_SCORES[id];delete DB_TRAITS[id];delete DB_FEES[id];delete DB_REMARKS[id];
+    hideLoading();showToast('Student deleted');renderStudents();
+  }).catch(function(){hideLoading();showToast('Delete failed','error');});
 }
 
 function closeModal(id){document.getElementById(id).style.display='none';}
 
 function renderStudents(){
-  var db=classDB();
+  var students=DB_STUDENTS[currentClass]||[];
   var tbody=document.getElementById('stu-tbody');
-  if(!db.students.length){
+  if(!students.length){
     tbody.innerHTML='<tr><td colspan="7"><div class="empty"><h3>No Students</h3><p>Add students to get started</p></div></td></tr>';
     return;
   }
-  tbody.innerHTML=db.students.map(function(s,i){
+  tbody.innerHTML=students.map(function(s,i){
     return'<tr>'
       +'<td><strong>'+(i+1)+'</strong></td>'
       +'<td><strong>'+s.name+'</strong></td>'
@@ -1270,23 +1468,31 @@ function renderStudents(){
 // SCORE ENTRY
 // ============================================================
 function populateSels(){
-  var db=classDB();
+  var students=DB_STUDENTS[currentClass]||[];
   var sel=document.getElementById('sc-stu');
   var cur=sel.value;
   sel.innerHTML='<option value="">-- Select student --</option>'+
-    db.students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+    students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
   if(cur)sel.value=cur;
   if(sel.value)loadScores();
 }
 
 function loadScores(){
   var sid=document.getElementById('sc-stu').value;
+  if(!sid){document.getElementById('sc-area').style.display='none';document.getElementById('sc-empty').style.display='block';return;}
+  // Load student data from Supabase first, then render
+  showLoading('Loading scores...');
+  loadStudentData(sid, function(){
+    hideLoading();
+    _renderScoreEntry(sid);
+  });
+}
+function _renderScoreEntry(sid){
   var area=document.getElementById('sc-area');
   var empty=document.getElementById('sc-empty');
-  if(!sid){area.style.display='none';empty.style.display='block';return;}
   area.style.display='block';empty.style.display='none';
   var db=classDB();
-  var sc=db.scores[sid]||{};
+  var sc=DB_SCORES[sid]||{};
   var subjs=subjects();
 
   document.getElementById('sc-rows').innerHTML=subjs.map(function(subj,i){
@@ -1305,7 +1511,8 @@ function loadScores(){
       +'</div>';
   }).join('');
 
-  var aff=sc.affective||{};
+  var traits=DB_TRAITS[sid]||{affective:{},psychomotor:{}};
+  var aff=traits.affective||{};
   document.getElementById('aff-rows').innerHTML=AFFECTIVE.map(function(tr){
     var val=aff[tr]||0;
     var stars=[1,2,3,4,5].map(function(n){
@@ -1314,7 +1521,7 @@ function loadScores(){
     return'<div class="trait-row"><span class="trait-name">'+tr+'</span><div class="stars" id="aff-'+tr.replace(/\W/g,'_')+'">'+stars+'</div></div>';
   }).join('');
 
-  var psy=sc.psychomotor||{};
+  var psy=traits.psychomotor||{};
   document.getElementById('psych-rows').innerHTML=PSYCHOMOTOR.map(function(tr){
     var val=psy[tr]||0;
     var stars=[1,2,3,4,5].map(function(n){
@@ -1323,7 +1530,7 @@ function loadScores(){
     return'<div class="trait-row"><span class="trait-name">'+tr+'</span><div class="stars" id="psy-'+tr.replace(/\W/g,'_')+'">'+stars+'</div></div>';
   }).join('');
 
-  var fees=sc.fees||{};
+  var fees=DB_FEES[sid]||{};
   document.getElementById('fee-total').value=fees.total||'';
   document.getElementById('fee-paid').value=fees.paid||'';
   document.getElementById('fee-debt').value=fees.debt||'';
@@ -1331,41 +1538,48 @@ function loadScores(){
   document.getElementById('fee-next').value=fees.next||'';
   updateBalance();
 
-  var rem=sc.remarks||{};
+  var rem=DB_REMARKS[sid]||{};
   document.getElementById('rem-academic').value=rem.academic||'';
   document.getElementById('rem-form').value=rem.form||'';
   document.getElementById('rem-principal').value=rem.principal||'';
 
-  var att=sc.attendance||{};
+  var att={opened:rem.days_opened||'',present:rem.days_present||''};
   document.getElementById('att-opened').value=att.opened||'';
   document.getElementById('att-present').value=att.present||'';
   document.getElementById('att-absent').value=att.absent||'';
 }
 
+var _scoreTimers={};
 function upd(i,field,val,sid){
-  var db=classDB();
-  if(!db.scores[sid])db.scores[sid]={};
-  if(!db.scores[sid][i])db.scores[sid][i]={ca1:'',ca2:'',ca3:'',exam:''};
+  if(!DB_SCORES[sid])DB_SCORES[sid]={};
+  if(!DB_SCORES[sid][i])DB_SCORES[sid][i]={ca1:'',ca2:'',ca3:'',exam:''};
   var max=field==='exam'?70:10;
   val=Math.min(max,Math.max(0,Number(val)||0));
-  db.scores[sid][i][field]=val;
-  var t=computeTotal(db.scores[sid][i]);
+  DB_SCORES[sid][i][field]=val;
+  var t=computeTotal(DB_SCORES[sid][i]);
   var gd=getGrade(t);
   document.getElementById('t-'+i).textContent=t!==''?t:'--';
   var ge=document.getElementById('g-'+i);ge.textContent=gd.g||'--';ge.style.background=gd.bg;ge.style.color=gd.c;
   var re=document.getElementById('r-'+i);re.textContent=gd.r||'--';re.style.background=gd.bg;re.style.color=gd.c;
+  // Debounce save to Supabase -- saves 1.5s after user stops typing
+  clearTimeout(_scoreTimers[sid+'_'+i]);
+  _scoreTimers[sid+'_'+i]=setTimeout(function(){
+    dbUpsertScore(sid, currentClass, i, DB_SCORES[sid][i])
+      .catch(function(){showToast('Score save failed','error');});
+  },1500);
 }
 
 function setStar(type,trait,val,sid){
-  var db=classDB();
-  if(!db.scores[sid])db.scores[sid]={};
+  if(!DB_TRAITS[sid])DB_TRAITS[sid]={affective:{},psychomotor:{}};
   var key=type==='aff'?'affective':'psychomotor';
-  if(!db.scores[sid][key])db.scores[sid][key]={};
-  db.scores[sid][key][trait]=val;
+  DB_TRAITS[sid][key][trait]=val;
   var prefix=type==='aff'?'aff-':'psy-';
   var id=prefix+trait.replace(/\W/g,'_');
   var stars=document.querySelectorAll('#'+id+' .star');
   stars.forEach(function(s,i){s.classList.toggle('on',i<val);});
+  // Save to Supabase
+  dbUpsertTrait(sid, currentClass, key, trait, val)
+    .catch(function(){showToast('Rating save failed','error');});
 }
 
 function updateBalance(){
@@ -1380,34 +1594,35 @@ function updateBalance(){
 
 function saveAll(){
   var sid=document.getElementById('sc-stu').value;if(!sid)return;
-  var db=classDB();
-  if(!db.scores[sid])db.scores[sid]={};
-  db.scores[sid].fees={
-    total:document.getElementById('fee-total').value,
-    paid:document.getElementById('fee-paid').value,
-    debt:document.getElementById('fee-debt').value,
-    resume:document.getElementById('fee-resume').value,
-    next:document.getElementById('fee-next').value
-  };
-  db.scores[sid].remarks={
-    academic:document.getElementById('rem-academic').value,
-    form:document.getElementById('rem-form').value,
-    principal:document.getElementById('rem-principal').value
-  };
   var op=Number(document.getElementById('att-opened').value||0);
   var pr=Number(document.getElementById('att-present').value||0);
-  db.scores[sid].attendance={opened:op,present:pr,absent:op-pr};
   document.getElementById('att-absent').value=op-pr;
-  save();
-  var btn=document.querySelector('#page-scores .btn-primary');
-  if(btn){btn.textContent='Saved!';btn.style.background='#10b981';setTimeout(function(){btn.textContent='Save All';btn.style.background='';},2000);}
+  showLoading('Saving...');
+  Promise.all([
+    dbUpsertFees(sid, currentClass, {
+      total:Number(document.getElementById('fee-total').value||0),
+      paid:Number(document.getElementById('fee-paid').value||0),
+      debt:Number(document.getElementById('fee-debt').value||0),
+      resume_date:document.getElementById('fee-resume').value,
+      next_term:Number(document.getElementById('fee-next').value||0)
+    }),
+    dbUpsertRemarks(sid, currentClass, {
+      academic:document.getElementById('rem-academic').value,
+      form_master:document.getElementById('rem-form').value,
+      principal:document.getElementById('rem-principal').value,
+      days_opened:op, days_present:pr
+    })
+  ]).then(function(){
+    hideLoading();showToast('Saved successfully');
+    var btn=document.querySelector('#page-scores .btn-primary');
+    if(btn){btn.textContent='Saved!';btn.style.background='#10b981';setTimeout(function(){btn.textContent='Save All';btn.style.background='';},2000);}
+  }).catch(function(){hideLoading();showToast('Save failed','error');});
 }
 
 // ============================================================
 // BROADSHEET
 // ============================================================
 function renderBroadsheet(){
-  var db=classDB();
   var subjs=subjects();
   var fixedCols='<th rowspan="2" style="min-width:30px;text-align:center">#</th>'
     +'<th rowspan="2" style="min-width:160px;text-align:left">STUDENT NAME</th>'
@@ -1421,12 +1636,13 @@ function renderBroadsheet(){
       +'<th style="font-size:.58rem">EXM</th><th style="font-size:.58rem;background:#1a4a38">TOT</th>';
   }).join('');
   document.getElementById('bs-thead').innerHTML='<tr>'+fixedCols+subjGroupHeaders+'</tr><tr>'+subjSubHeaders+'</tr>';
-  if(!db.students.length){
+  var bsStudents=DB_STUDENTS[currentClass]||[];
+  if(!bsStudents.length){
     document.getElementById('bs-tbody').innerHTML='<tr><td colspan="'+(3+subjs.length*5)+'" style="text-align:center;padding:40px;color:#aaa">No students added yet</td></tr>';
     return;
   }
-  document.getElementById('bs-tbody').innerHTML=db.students.map(function(s,idx){
-    var sc=db.scores[s.id]||{};
+  document.getElementById('bs-tbody').innerHTML=bsStudents.map(function(s,idx){
+    var sc=DB_SCORES[s.id]||{};
     var subjCells=subjs.map(function(_,i){
       var r=sc[i]||{};
       var t=computeTotal(r);
@@ -1450,11 +1666,11 @@ function renderBroadsheet(){
 // RESULT CARD
 // ============================================================
 function populateCardSel(){
-  var db=classDB();
+  var students=DB_STUDENTS[currentClass]||[];
   var sel=document.getElementById('rc-stu');
   var cur=sel.value;
   sel.innerHTML='<option value="">-- Select student --</option>'+
-    db.students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+    students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
   if(cur)sel.value=cur;
 }
 
@@ -1474,15 +1690,16 @@ function buildCardHTML(sid,term,session){
   var db=classDB();
   var s=db.students.find(function(x){return x.id===sid;});
   if(!s)return'';
-  var sc=db.scores[sid]||{};
+  var sc=DB_SCORES[sid]||{};
   var subjs=subjects();
   var smry=studentSummary(sid);
   var tots=smry.tots,grand=smry.grand,avg=smry.avg,pass=smry.pass,cnt=smry.cnt;
-  var fees=sc.fees||{};
-  var rem=sc.remarks||{};
-  var att=sc.attendance||{};
-  var aff=sc.affective||{};
-  var psy=sc.psychomotor||{};
+  var fees=DB_FEES[sid]||{};
+  var rem=DB_REMARKS[sid]||{};
+  var att={opened:rem.days_opened||'',present:rem.days_present||'',absent:(rem.days_opened||0)-(rem.days_present||0)};
+  var cardTraits=DB_TRAITS[sid]||{affective:{},psychomotor:{}};
+  var aff=cardTraits.affective||{};
+  var psy=cardTraits.psychomotor||{};
   var n=db.students.length;
   var sec=getSections();
   var cfg=getCfg();
@@ -1492,13 +1709,13 @@ function buildCardHTML(sid,term,session){
   var G=theme.primary,GOLD=theme.accent,GOLD2=theme.accent2;
   var ALT=theme.altRow||'#f5faf6',HDR=theme.hdrLight||'#f2f8f4';
 
-  var allAvgs=db.students.map(function(st){return studentSummary(st.id).avg;}).filter(function(x){return x!=='';});
+  var allAvgs=(DB_STUDENTS[currentClass]||[]).map(function(st){return studentSummary(st.id).avg;}).filter(function(x){return x!=='';});
   var classAvg=allAvgs.length?Math.round(allAvgs.reduce(function(a,x){return a+x;},0)/allAvgs.length*10)/10:'--';
   var lowestAvg=allAvgs.length?Math.min.apply(null,allAvgs):'--';
   var highestAvg=allAvgs.length?Math.max.apply(null,allAvgs):'--';
 
   var subjStats=subjs.map(function(_,i){
-    var all=db.students.map(function(st){var ss=db.scores[st.id]||{};return computeTotal(ss[i]);}).filter(function(x){return x!=='';});
+    var all=(DB_STUDENTS[currentClass]||[]).map(function(st){var ss=DB_SCORES[st.id]||{};return computeTotal(ss[i]);}).filter(function(x){return x!=='';});
     var hi=all.length?Math.max.apply(null,all):'--';
     var ca=all.length?Math.round(all.reduce(function(a,x){return a+x;},0)/all.length*10)/10:'--';
     var sorted=all.slice().sort(function(a,b){return b-a;});
@@ -1506,7 +1723,7 @@ function buildCardHTML(sid,term,session){
     return{hi:hi,ca:ca,pos:pos};
   });
 
-  var resumeDate=fees.resume?new Date(fees.resume).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
+  var resumeDate=fees.resume_date?new Date(fees.resume_date):fees.resume?new Date(fees.resume).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
   var feeBal=Number(fees.total||0)+Number(fees.debt||0)-Number(fees.paid||0);
   var dept=DEPTS[currentClass].label;
   var overallPerf=avg!==''?getGrade(avg).r:'--';
@@ -1645,7 +1862,7 @@ function buildCardHTML(sid,term,session){
         +'<tr style="background:'+HDR+';-webkit-print-color-adjust:exact;print-color-adjust:exact"><td style="padding:3px 7px;font-size:7.5px;border-bottom:1px solid #eee">Amount Paid</td><td style="padding:3px 7px;text-align:right;font-weight:700;color:#065f46;font-size:8px;border-bottom:1px solid #eee">N'+Number(fees.paid||0).toLocaleString()+'</td></tr>'
         +'<tr><td style="padding:3px 7px;font-size:7.5px;border-bottom:1px solid #eee">Previous Term Debt</td><td style="padding:3px 7px;text-align:right;font-weight:700;font-size:8px;border-bottom:1px solid #eee">N'+Number(fees.debt||0).toLocaleString()+'</td></tr>'
         +'<tr style="background:#fffbeb;-webkit-print-color-adjust:exact;print-color-adjust:exact"><td style="padding:3px 7px;font-size:7.5px;font-weight:700;border-bottom:1px solid #eee">Outstanding Balance</td><td style="padding:3px 7px;text-align:right;font-weight:700;font-size:9px;color:'+(feeBal>0?'#991b1b':'#065f46')+';border-bottom:1px solid #eee">N'+feeBal.toLocaleString()+'</td></tr>'
-        +'<tr><td style="padding:3px 7px;font-size:7.5px;border-bottom:1px solid #eee">Next Term Fees</td><td style="padding:3px 7px;text-align:right;font-weight:700;color:'+G+';font-size:8px">N'+Number(fees.next||0).toLocaleString()+'</td></tr>'
+        +'<tr><td style="padding:3px 7px;font-size:7.5px;border-bottom:1px solid #eee">Next Term Fees</td><td style="padding:3px 7px;text-align:right;font-weight:700;color:'+G+';font-size:8px">N'+Number(fees.next_term||fees.next||0).toLocaleString()+'</td></tr>'
         +'</table>'
         +'<div style="background:'+G+';color:#fff;padding:4px 7px;font-size:7.5px;font-weight:700;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact">General Remark</div>'
         +'<div style="padding:5px 8px;font-size:8px;font-weight:600;color:'+G+';background:'+HDR+';-webkit-print-color-adjust:exact;print-color-adjust:exact">'+getAutoRemark(avg)+'</div>'
@@ -1674,13 +1891,13 @@ function buildCardHTML(sid,term,session){
 }
 
 function printAllCards(){
-  var db=classDB();
-  if(!db.students.length){alert('No students in this class.');return;}
+  var students=DB_STUDENTS[currentClass]||[];
+  if(!students.length){alert('No students in this class.');return;}
   var term=document.getElementById('rc-term').value;
   var session=document.getElementById('rc-session').value;
   var wrap=document.getElementById('rc-wrap');
   var origSid=document.getElementById('rc-stu').value;
-  var allHTML=db.students.map(function(s){return buildCardHTML(s.id,term,session);}).join('<div style="page-break-after:always"></div>');
+  var allHTML=students.map(function(s){return buildCardHTML(s.id,term,session);}).join('<div style="page-break-after:always"></div>');
   wrap.innerHTML='<div>'+allHTML+'</div>';
   setTimeout(function(){
     window.print();
@@ -1695,10 +1912,10 @@ var charts={};
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
 function renderAnalytics(){
-  var db=classDB();
   var subjs=subjects();
-  if(!db.students.length)return;
-  var summaries=db.students.map(function(s){return Object.assign({},s,studentSummary(s.id));});
+  var anaStudents=DB_STUDENTS[currentClass]||[];
+  if(!anaStudents.length)return;
+  var summaries=anaStudents.map(function(s){return Object.assign({},s,studentSummary(s.id));});
   var withData=summaries.filter(function(s){return s.avg!=='';});
   var classAvg=withData.length?Math.round(withData.reduce(function(a,s){return a+s.avg;},0)/withData.length*10)/10:'--';
   var passRate=withData.length?Math.round(withData.filter(function(s){return s.avg>=40;}).length/withData.length*100)+'%':'--';
@@ -1706,8 +1923,8 @@ function renderAnalytics(){
     var sc=db.scores[s.id]||{};
     return a+subjs.filter(function(_,i){var t=computeTotal(sc[i]);return t!==''&&t>=75;}).length;
   },0);
-  var withFails=db.students.filter(function(s){
-    var sc=db.scores[s.id]||{};
+  var withFails=anaStudents.filter(function(s){
+    var sc=DB_SCORES[s.id]||{};
     return subjs.some(function(_,i){var t=computeTotal(sc[i]);return t!==''&&t<40;});
   }).length;
   document.getElementById('an-avg').textContent=classAvg;
@@ -1716,8 +1933,8 @@ function renderAnalytics(){
   document.getElementById('an-fail').textContent=withFails;
 
   var gradeCounts={A1:0,B2:0,B3:0,C4:0,C5:0,C6:0,D7:0,E8:0,F9:0};
-  db.students.forEach(function(s){
-    var sc=db.scores[s.id]||{};
+  anaStudents.forEach(function(s){
+    var sc=DB_SCORES[s.id]||{};
     subjs.forEach(function(_,i){var t=computeTotal(sc[i]);if(t!==''){var g=getGrade(t).g;gradeCounts[g]=(gradeCounts[g]||0)+1;}});
   });
   destroyChart('dist');
@@ -1727,7 +1944,7 @@ function renderAnalytics(){
     options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{size:11}}}}}});
 
   var subjAvgs=subjs.map(function(_,i){
-    var vals=db.students.map(function(s){var sc=db.scores[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});
+    var vals=anaStudents.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});
     return vals.length?Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10:0;
   });
   destroyChart('subj');
@@ -1745,7 +1962,7 @@ function renderAnalytics(){
     options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}});
 
   document.getElementById('perf-tbody').innerHTML=subjs.map(function(subj,i){
-    var vals=db.students.map(function(s){var sc=db.scores[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});
+    var vals=anaStudents.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});
     if(!vals.length)return'<tr><td>'+subj+'</td><td colspan="5" style="color:#aaa;text-align:center">No data</td></tr>';
     var avg=Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10;
     var hi=Math.max.apply(null,vals),lo=Math.min.apply(null,vals);
@@ -1761,21 +1978,21 @@ function renderAnalytics(){
 // DASHBOARD
 // ============================================================
 function renderDash(){
-  var db=classDB();
-  var n=db.students.length;
+  var students=DB_STUDENTS[currentClass]||[];
+  var n=students.length;
   document.getElementById('d-stu').textContent=n;
-  var ent=db.students.filter(function(s){return db.scores[s.id]&&Object.keys(db.scores[s.id]).some(function(k){return!isNaN(k);});}).length;
+  var ent=students.filter(function(s){return DB_SCORES[s.id]&&Object.keys(DB_SCORES[s.id]).some(function(k){return!isNaN(k);});}).length;
   document.getElementById('d-ent').textContent=ent;
   document.getElementById('d-tbl-title').textContent=DEPTS[currentClass].label+' - Students';
-  var avgs=db.students.map(function(s){return studentSummary(s.id).avg;}).filter(function(x){return x!=='';});
+  var avgs=students.map(function(s){return studentSummary(s.id).avg;}).filter(function(x){return x!=='';});
   if(avgs.length){
     document.getElementById('d-avg').textContent=(avgs.reduce(function(a,x){return a+x;},0)/avgs.length).toFixed(1);
     document.getElementById('d-pass').textContent=Math.round(avgs.filter(function(x){return x>=40;}).length/avgs.length*100)+'%';
   }else{document.getElementById('d-avg').textContent='--';document.getElementById('d-pass').textContent='--';}
   var ranks=getRanks();
-  document.getElementById('d-tbody').innerHTML=db.students.length?db.students.map(function(s,i){
+  document.getElementById('d-tbody').innerHTML=students.length?students.map(function(s,i){
     var avg=studentSummary(s.id).avg;
-    var fees=db.scores[s.id]&&db.scores[s.id].fees?db.scores[s.id].fees:{};
+    var fees=DB_FEES[s.id]||{};
     var bal=Number(fees.total||0)+Number(fees.debt||0)-Number(fees.paid||0);
     var feesBadge=fees.total?(bal<=0?'<span class="badge badge-green">Cleared</span>':'<span class="badge badge-red">N'+bal.toLocaleString()+'</span>'):'<span style="color:#ccc">--</span>';
     var rk=ranks[s.id];
@@ -2032,7 +2249,7 @@ window.addEventListener('DOMContentLoaded',function(){
     var sb=document.querySelector('.sb-session');
     if(sb)sb.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
   }catch(e){}
-  renderDash();
+  // renderDash called after data loads above
 });
 
 </script>
