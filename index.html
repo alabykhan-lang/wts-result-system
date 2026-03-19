@@ -462,17 +462,14 @@ body.is-mobile .bs-scroll-hint{display:flex}
   .bs-scroll-hint,.stu-selector,.tbl-head,.stats-row,.sec-title{display:none!important}
   #main{margin:0!important}
   .content{padding:0!important}
-  /* Hide all pages by default */
   .page{display:none!important}
-  /* Show whichever page has print-active class */
   .page.print-active{display:block!important}
-  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  /* Broadsheet print */
+  body{background:#fff!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+    color-adjust:exact!important}
   .bs-wrap{overflow:visible!important}
-  .bs-table{font-size:6.5px!important;page-break-inside:auto}
+  .bs-table{font-size:6.5px!important}
   .bs-table th,.bs-table td{padding:3px 2px!important}
-  /* Card print */
   #rc-wrap{max-width:100%!important}
 }
 </style>
@@ -669,14 +666,11 @@ body.is-mobile .bs-scroll-hint{display:flex}
           </div>
         </div>
       </div>
-      <!-- REMARKS -->
-      <div class="traits-wrap">
-        <p class="sec-title">Staff Remarks</p>
-        <div class="remarks-grid">
-          <div class="remark-field"><label>Academic Adviser's Remark</label><textarea id="rem-academic" placeholder="Enter remark..."></textarea></div>
-          <div class="remark-field"><label>Form Master's Remark</label><textarea id="rem-form" placeholder="Enter remark..."></textarea></div>
-          <div class="remark-field"><label>Principal's Remark</label><textarea id="rem-principal" placeholder="Enter remark..."></textarea></div>
-        </div>
+      <!-- Staff remarks removed - not needed on score entry -->
+      <div style="display:none">
+        <textarea id="rem-academic"></textarea>
+        <textarea id="rem-form"></textarea>
+        <textarea id="rem-principal"></textarea>
       </div>
       <!-- ATTENDANCE -->
       <div class="traits-wrap" style="margin-top:18px">
@@ -1184,19 +1178,19 @@ var GRADE_SCALE=[
 ];
 
 var CARD_SECTIONS=[
-  {key:'showHeader',   label:'School Header & Logo',        desc:'School name, address, contact details'},
-  {key:'showPhoto',    label:'Student Photo',               desc:'Photo on the top-right of the card'},
-  {key:'showBio',      label:'Bio Section',                 desc:'Name, class, reg no., next term date'},
-  {key:'showSummary',  label:'Summary Block',               desc:'Averages, days present, overall performance'},
-  {key:'showSubjects', label:'Subject Scores Table',        desc:'CA1, CA2, CA3, Exam, Total, Grade, Position'},
-  {key:'showAffective',label:'Affective Traits',            desc:'Character traits rated 1-5'},
-  {key:'showPsycho',   label:'Psychomotor Skills',          desc:'Practical skills rated 1-5'},
-  {key:'showFees',     label:'School Fees Panel',           desc:'Term fees, paid, balance, next term fees'},
-  {key:'showSignature',label:'Signature Area',              desc:'Proprietor digital signature'},
-  {key:'showFooter',   label:'Next Term Resumption Footer', desc:'Footer bar with resumption date'}
+  {key:'showHeader',   label:'School Header & Logo',     desc:'School name, address, contact details'},
+  {key:'showPhoto',    label:'Student Photo',            desc:'Photo on the top-right of the card'},
+  {key:'showBio',      label:'Bio Section',              desc:'Name, class, reg no., next term date'},
+  {key:'showSummary',  label:'Summary Block',            desc:'Averages, days present, overall performance'},
+  {key:'showSubjects', label:'Subject Scores Table',     desc:'CA1, CA2, CA3, Exam, Total, Grade, Position'},
+  {key:'showAffective',label:'Affective Traits (6)',     desc:'6 key character traits rated 1-5'},
+  {key:'showPsycho',   label:'Psychomotor Skills',       desc:'Practical skills rated 1-5'},
+  {key:'showFees',     label:'School Fees & Next Term',  desc:'Fees status and next term resumption date'},
+  {key:'showSignature',label:'Proprietor Signature',     desc:'Digital signature at the bottom'}
 ];
 var DEFAULT_SECTIONS={};
 CARD_SECTIONS.forEach(function(s){DEFAULT_SECTIONS[s.key]=true;});
+DEFAULT_SECTIONS['showFooter']=true; // legacy compat
 
 var CARD_THEMES=[
   {id:'forest',  name:'Forest Green',  primary:'#0a3d2e',accent:'#c9922a',accent2:'#e8b547',altRow:'#f5faf6',hdrLight:'#f2f8f4'},
@@ -1552,8 +1546,8 @@ function _renderScoreEntry(sid){
   document.getElementById('fee-total').value=fees.total||'';
   document.getElementById('fee-paid').value=fees.paid||'';
   document.getElementById('fee-debt').value=fees.debt||'';
-  document.getElementById('fee-resume').value=fees.resume||'';
-  document.getElementById('fee-next').value=fees.next||'';
+  document.getElementById('fee-resume').value=fees.resume_date||fees.resume||'';
+  document.getElementById('fee-next').value=fees.next_term||fees.next||'';
   updateBalance();
 
   var rem=DB_REMARKS[sid]||{};
@@ -1847,7 +1841,7 @@ function buildCardHTML(sid,term,session){
           +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca2!==undefined&&r2.ca2!==''?r2.ca2:'')+'</td>'
           +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca3!==undefined&&r2.ca3!==''?r2.ca3:'')+'</td>'
           +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+(r2.exam!==undefined&&r2.exam!==''?r2.exam:'')+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(t!==''?gd.c:'#999')+';background:'+(t!==''?gd.bg:WHITE)+';'+P+'">'+(t!==''?t:'')+'</td>'
+          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700;background:'+rb+';'+P+'">'+(t!==''?t:'')+'</td>'
           +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(t!==''?gd.c:'#999')+'">'+(gd.g||'')+'</td>'
           +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+ss.pos+'</td>'
           +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+ss.ca+'</td>'
@@ -1927,23 +1921,21 @@ function buildCardHTML(sid,term,session){
     +'</div>';
 
   //  SIGNATURE + NEXT TERM 
-  if(sec.showSignature||sec.showFooter){
-    h+='<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:10px 14px;border-bottom:1px solid '+BORDER+'">';
-    if(sec.showSignature){
-      h+='<div>'
-        +'<div style="font-weight:700;font-size:8.5pt;color:'+NAVY+'">SCHOOL PROPRIETOR (SIGNATURE &amp; STAMP)</div>'
-        +'<div style="margin-top:6px;min-height:40px;display:flex;align-items:flex-end">'+sigHTML+'</div>'
-        +'<div style="border-top:1.5px solid #999;margin-top:4px;width:180px"></div>'
-        +'</div>';
-    }
-    if(sec.showFooter){
-      h+='<div style="text-align:right">'
-        +'<div style="font-weight:700;font-size:8.5pt;color:'+NAVY+'">NEXT TERM BEGINS:</div>'
-        +'<div style="font-size:10pt;font-weight:700;color:'+GREEN+';margin-top:4px">'+resumeDate+'</div>'
-        +'</div>';
-    }
-    h+='</div>';
+  // Signature + Next Term Begins row
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:10px 14px;border-top:1px solid '+BORDER+'">';
+  if(sec.showSignature){
+    h+='<div style="text-align:center">'
+      +(sigHTML?sigHTML:'<div style="height:40px;border-bottom:1.5px solid #999;width:160px"></div>')
+      +'<div style="font-size:8pt;font-weight:700;color:'+NAVY+';margin-top:4px;letter-spacing:.05em">PROPRIETOR</div>'
+      +'</div>';
+  }else{
+    h+='<div></div>';
   }
+  h+='<div style="text-align:right">'
+    +'<div style="font-size:8.5pt;font-weight:700;color:'+NAVY+'">NEXT TERM BEGINS:</div>'
+    +'<div style="font-size:10pt;font-weight:700;color:'+GREEN+';margin-top:4px">'+resumeDate+'</div>'
+    +'</div>'
+    +'</div>';
 
   h+='</div>';
   return h;
