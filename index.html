@@ -695,7 +695,7 @@ body.is-mobile .bs-scroll-hint{display:flex}
   </div>
 
   <!-- DASHBOARD -->
-  <div class="page print-active" id="page-dashboard">
+  <div class="page" id="page-dashboard">
     <div class="stats-row">
       <div class="stat-card"><span class="stat-icon">&#127891;</span><h3 id="d-stu">0</h3><p>Students</p></div>
       <div class="stat-card gold"><span class="stat-icon">&#128221;</span><h3 id="d-ent">0</h3><p>Scores Entered</p></div>
@@ -723,7 +723,7 @@ body.is-mobile .bs-scroll-hint{display:flex}
     </div>
   </div>
 
-  <!-- SCORE ENTRY — Subject-centric -->
+  <!-- SCORE ENTRY  Subject-centric -->
   <div class="page" id="page-scores">
     <!-- Subject grid view -->
     <div id="sc-subject-grid">
@@ -2643,7 +2643,8 @@ function renderHome(){
     el.innerHTML=group.classes.map(function(cls){
       var count=(DB_STUDENTS[cls.key]||[]).length;
       var isActive=cls.key===currentClass;
-      return'<div class="home-class-card'+(isActive?' active-class':'')+'" data-key="'+cls.key+'" onclick="selectClass(this.dataset.key)">'
+      var cardId='hc-'+cls.key;
+      return'<div class="home-class-card'+(isActive?' active-class':'')+'" data-classkey="'+cls.key+'" onclick="handleClassCard(this)">'
         +'<div class="class-icon">'+cls.icon+'</div>'
         +'<div class="class-name">'+cls.label+'</div>'
         +'<div class="class-count">'+(count?count+' student'+(count===1?'':'s'):'Tap to open')+'</div>'
@@ -2927,7 +2928,6 @@ function navMobile(id,el){
 // INIT
 // ============================================================
 window.addEventListener('DOMContentLoaded',function(){
-  applyResponsive();
   window.addEventListener('resize',applyResponsive);
   var ov=document.getElementById('sb-overlay');
   if(ov)ov.addEventListener('click',closeSidebar);
@@ -2943,9 +2943,10 @@ window.addEventListener('DOMContentLoaded',function(){
     var sb=document.querySelector('.sb-session');
     if(sb)sb.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
   }catch(e){}
-  // Start on home page
+  // Set home mode FIRST, then apply responsive, then navigate
   setHomeMode(true);
-  closeSidebar(); // ensure sidebar closed on load
+  applyResponsive();
+  closeSidebar();
   nav('home', document.getElementById('ni-home'));
 });
 
