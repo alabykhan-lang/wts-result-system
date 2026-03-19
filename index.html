@@ -382,6 +382,40 @@ nav{flex:1;padding:14px 0;overflow-y:auto}
 .home-class-card .class-count{font-size:.72rem;color:var(--gray);margin-top:3px}
 .home-class-card.active-class{border-color:var(--g3);background:#e8f5e9}
 
+
+/* Subject cards */
+.subj-card{background:#fff;border-radius:12px;padding:16px;cursor:pointer;
+  box-shadow:var(--shadow);border:2px solid transparent;transition:.2s;
+  display:flex;flex-direction:column;gap:6px;position:relative;
+  -webkit-tap-highlight-color:transparent}
+.subj-card:hover{border-color:var(--g3);transform:translateY(-2px)}
+.subj-card.published{border-color:#10b981;background:#f0fdf4}
+.subj-card.published:hover{border-color:#059669}
+.subj-card .sc-name{font-weight:700;font-size:.9rem;color:var(--g1);line-height:1.2}
+.subj-card .sc-count{font-size:.75rem;color:var(--gray)}
+.subj-card .sc-badge{position:absolute;top:10px;right:10px;font-size:.65rem;
+  font-weight:700;padding:2px 8px;border-radius:12px}
+.subj-card .sc-badge.draft{background:#f3f4f6;color:#6b7280}
+.subj-card .sc-badge.pub{background:#d1fae5;color:#065f46}
+/* Score sheet rows */
+.ss-row{display:grid;grid-template-columns:30px 1fr 70px 70px 70px 100px 70px 80px 90px;
+  gap:0;align-items:center;padding:6px 12px;border-bottom:1px solid #f0f0f0}
+.ss-row:nth-child(even){background:#fafafa}
+.ss-row input{width:100%;border:1.5px solid #e5e7eb;border-radius:6px;padding:5px 6px;
+  text-align:center;font-size:.85rem;font-weight:600;background:#fff}
+.ss-row input:focus{border-color:var(--g3);outline:none;background:#f0fdf4}
+.ss-row input.over-limit{border-color:#c0392b!important;background:#fff5f5!important}
+/* Profile modal subject list */
+.profile-subj-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:.85rem}
+.profile-subj-row:last-child{border-bottom:none}
+.profile-subj-name{font-weight:600;color:var(--g1)}
+.profile-subj-score{font-weight:700;color:var(--g2)}
+/* Profile trait rows */
+.profile-trait-row{display:flex;justify-content:space-between;align-items:center;
+  padding:5px 12px;border-bottom:1px solid #f5f5f5;font-size:.8rem}
+.profile-trait-row:last-child{border-bottom:none}
+
 /* EMPTY STATE */
 .empty{text-align:center;padding:50px 20px;color:var(--gray)}
 .empty svg{width:54px;height:54px;opacity:.25;margin-bottom:12px}
@@ -689,83 +723,53 @@ body.is-mobile .bs-scroll-hint{display:flex}
     </div>
   </div>
 
-  <!-- SCORE ENTRY -->
+  <!-- SCORE ENTRY — Subject-centric -->
   <div class="page" id="page-scores">
-    <div class="stu-selector">
-      <div class="form-grp">
-        <label>Student</label>
-        <select class="sel" id="sc-stu" onchange="loadScores()" style="min-width:250px">
-          <option value="">- Select student -</option>
-        </select>
-      </div>
-      <div class="form-grp">
-        <label>Term</label>
-        <select class="sel" id="sc-term" style="min-width:140px">
-          <option>1st Term</option><option selected>2nd Term</option><option>3rd Term</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="saveAll()">&#128190; Save All</button>
+    <!-- Subject grid view -->
+    <div id="sc-subject-grid">
+      <p class="sec-title" style="margin-bottom:16px">Select a Subject to Enter Scores</p>
+      <div id="sc-subj-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px"></div>
     </div>
-    <div id="sc-area" style="display:none">
-      <div class="score-tbl-wrap">
-        <div class="score-tbl-hdr" id="sc-hdr" style="grid-template-columns:200px 70px 70px 70px 90px 70px 90px 70px">
-          <span style="text-align:left">Subject</span>
-          <span>CA1<br/><small style="opacity:.7">max 10</small></span>
-          <span>CA2<br/><small style="opacity:.7">max 10</small></span>
-          <span>CA3<br/><small style="opacity:.7">max 10</small></span>
-          <span>Exam<br/><small style="opacity:.7">max 70</small></span>
-          <span>Total</span><span>Grade</span><span>Remark</span>
-        </div>
-        <div id="sc-rows"></div>
+    <!-- Subject score sheet (shown when subject selected) -->
+    <div id="sc-sheet" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="closeSubjectSheet()">&#8592; Back to Subjects</button>
+        <h3 id="sc-sheet-title" style="font-family:'Playfair Display',serif;color:var(--g1);font-size:1.1rem;flex:1;margin:0"></h3>
+        <div id="sc-publish-badge" style="display:none;background:#10b981;color:#fff;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:4px">&#128274; Published</div>
       </div>
-      <!-- TRAITS -->
-      <div class="traits-wrap">
-        <p class="sec-title">Affective Traits & Psychomotor Skills</p>
-        <div class="traits-grid">
-          <div>
-            <h4>Affective Domain</h4>
-            <div id="aff-rows"></div>
-          </div>
-          <div>
-            <h4>Psychomotor Skills</h4>
-            <div id="psych-rows"></div>
+      <!-- Score table for all students -->
+      <div class="tbl-wrap" style="margin-bottom:16px">
+        <div class="tbl-head" style="background:var(--g1)">
+          <div style="display:grid;grid-template-columns:30px 1fr 70px 70px 70px 100px 70px 80px 90px;gap:0;width:100%;font-size:.75rem;color:#fff;font-weight:700;align-items:center">
+            <span>#</span>
+            <span>Student Name</span>
+            <span style="text-align:center">CA1<br/><small style="opacity:.7;font-weight:400">max 10</small></span>
+            <span style="text-align:center">CA2<br/><small style="opacity:.7;font-weight:400">max 10</small></span>
+            <span style="text-align:center">CA3<br/><small style="opacity:.7;font-weight:400">max 10</small></span>
+            <span style="text-align:center">Exam<br/><small style="opacity:.7;font-weight:400">max 70</small></span>
+            <span style="text-align:center">Total</span>
+            <span style="text-align:center">Grade</span>
+            <span style="text-align:center">Remark</span>
           </div>
         </div>
+        <div id="sc-sheet-rows"></div>
       </div>
-      <!-- FEES -->
-      <div class="fees-wrap">
-        <p class="sec-title">School Fees Status</p>
-        <div class="fees-grid">
-          <div class="fee-field"><label>Term Fees (N)</label><input class="inp" type="number" id="fee-total" placeholder="e.g. 45000" oninput="updateBalance()"/></div>
-          <div class="fee-field"><label>Amount Paid (N)</label><input class="inp" type="number" id="fee-paid" placeholder="0" oninput="updateBalance()"/></div>
-          <div class="fee-field"><label>Previous Debt (N)</label><input class="inp" type="number" id="fee-debt" placeholder="0" oninput="updateBalance()"/></div>
-          <div class="fee-field"><label>Next Term Resumption</label><input class="inp" type="date" id="fee-resume"/></div>
-          <div class="fee-field"><label>Next Term Fees (N)</label><input class="inp" type="number" id="fee-next" placeholder="0"/></div>
-          <div class="fee-balance" id="fee-balance-display">
-            <div class="val" id="fee-bal-val">N0</div>
-            <div class="lbl">Outstanding Balance</div>
-          </div>
-        </div>
-      </div>
-      <!-- Staff remarks removed - not needed on score entry -->
-      <div style="display:none">
-        <textarea id="rem-academic"></textarea>
-        <textarea id="rem-form"></textarea>
-        <textarea id="rem-principal"></textarea>
-      </div>
-      <!-- ATTENDANCE -->
-      <div class="traits-wrap" style="margin-top:18px">
-        <p class="sec-title">Attendance</p>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:14px">
-          <div class="fee-field"><label>Days School Opened</label><input class="inp" type="number" id="att-opened" placeholder="e.g. 65"/></div>
-          <div class="fee-field"><label>Days Present</label><input class="inp" type="number" id="att-present" placeholder="e.g. 60"/></div>
-          <div class="fee-field"><label>Days Absent</label><input class="inp" type="number" id="att-absent" placeholder="auto" readonly style="background:#f3f4f6"/></div>
-        </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn btn-outline" onclick="saveSubjectScores()">&#128190; Save Draft</button>
+        <button class="btn btn-primary" id="sc-publish-btn" onclick="togglePublish()">&#128274; Publish Subject</button>
       </div>
     </div>
-    <div id="sc-empty" class="empty">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-      <h3>Select a Student Above</h3><p>Choose a student to begin entering scores</p>
+    <!-- Hidden legacy fields for compatibility -->
+    <div style="display:none">
+      <select id="sc-stu"></select>
+      <textarea id="rem-academic"></textarea>
+      <textarea id="rem-form"></textarea>
+      <textarea id="rem-principal"></textarea>
+      <input id="fee-total"/><input id="fee-paid"/><input id="fee-debt"/>
+      <input id="fee-resume"/><input id="fee-next"/>
+      <input id="att-opened"/><input id="att-present"/><input id="att-absent"/>
+      <div id="fee-balance-display"><div id="fee-bal-val"></div></div>
+      <div id="aff-rows"></div><div id="psych-rows"></div>
     </div>
   </div>
 
@@ -1022,6 +1026,75 @@ body.is-mobile .bs-scroll-hint{display:flex}
   </div>
 </div>
 
+
+<!-- STUDENT PROFILE MODAL -->
+<div class="overlay" id="modal-profile" style="display:none">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-hdr">
+      <h3 id="profile-name">Student Profile</h3>
+      <button class="modal-x" onclick="closeModal('modal-profile')">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Bio strip -->
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e5e7eb">
+        <div id="profile-photo" style="width:70px;height:84px;border-radius:8px;background:#f3f4f6;border:2px solid var(--g3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:2rem;overflow:hidden"></div>
+        <div style="flex:1">
+          <div id="profile-fullname" style="font-size:1.1rem;font-weight:700;color:var(--g1);margin-bottom:6px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.82rem;color:#555">
+            <div><span style="font-weight:600">Reg No:</span> <span id="profile-admno"></span></div>
+            <div><span style="font-weight:600">Gender:</span> <span id="profile-gender"></span></div>
+            <div><span style="font-weight:600">Age:</span> <span id="profile-age"></span></div>
+            <div><span style="font-weight:600">Class:</span> <span id="profile-class"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Published Subjects -->
+      <p class="sec-title" style="margin-bottom:10px">Published Subjects</p>
+      <div id="profile-subjects" style="margin-bottom:18px"></div>
+
+      <!-- Affective Traits -->
+      <p class="sec-title" style="margin-bottom:10px">Affective Traits & Psychomotor Skills</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:18px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+        <div style="border-right:1px solid #e5e7eb">
+          <div style="background:var(--g1);color:#fff;padding:6px 12px;font-size:.75rem;font-weight:700;text-transform:uppercase">Affective Traits</div>
+          <div id="profile-aff-rows"></div>
+        </div>
+        <div>
+          <div style="background:var(--g1);color:#fff;padding:6px 12px;font-size:.75rem;font-weight:700;text-transform:uppercase">Psychomotor Skills</div>
+          <div id="profile-psy-rows"></div>
+        </div>
+      </div>
+
+      <!-- Fees -->
+      <p class="sec-title" style="margin-bottom:10px">School Fees Status</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+        <div class="fee-field"><label>Term Fees (N)</label><input class="inp" type="number" id="pf-fee-total" placeholder="0" oninput="pfUpdateBalance()"/></div>
+        <div class="fee-field"><label>Amount Paid (N)</label><input class="inp" type="number" id="pf-fee-paid" placeholder="0" oninput="pfUpdateBalance()"/></div>
+        <div class="fee-field"><label>Previous Debt (N)</label><input class="inp" type="number" id="pf-fee-debt" placeholder="0" oninput="pfUpdateBalance()"/></div>
+        <div class="fee-field"><label>Next Term Fees (N)</label><input class="inp" type="number" id="pf-fee-next" placeholder="0"/></div>
+        <div class="fee-field"><label>Next Term Resumption</label><input class="inp" type="date" id="pf-fee-resume"/></div>
+        <div class="fee-balance" id="pf-fee-balance" style="background:linear-gradient(135deg,#065f46,#10b981)">
+          <div class="val" id="pf-fee-bal-val">N0</div>
+          <div class="lbl">Outstanding Balance</div>
+        </div>
+      </div>
+
+      <!-- Attendance -->
+      <p class="sec-title" style="margin-bottom:10px">Attendance</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:8px">
+        <div class="fee-field"><label>Days Opened</label><input class="inp" type="number" id="pf-att-opened" placeholder="e.g. 65"/></div>
+        <div class="fee-field"><label>Days Present</label><input class="inp" type="number" id="pf-att-present" placeholder="e.g. 60"/></div>
+        <div class="fee-field"><label>Days Absent</label><input class="inp" type="number" id="pf-att-absent" placeholder="auto" readonly style="background:#f3f4f6"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-profile')">Close</button>
+      <button class="btn btn-primary" onclick="saveStudentProfile()">&#128190; Save Profile</button>
+    </div>
+  </div>
+</div>
+
 <script>
 
 // ============================================================
@@ -1173,13 +1246,13 @@ function dbUpsertSetting(key, value) {
   }).then(function(r){return r.json();});
 }
 
-// ---- LOADING STATE ----
+      +' oninput="updSubj(this,\''+s.id+'\','+idx+',\'ca1\')" class="sc-inp"/>'
 var DB_STUDENTS = {};  // classKey -> array of students
-var DB_SCORES = {};    // studentId -> {subjectIndex -> score}
+      +' oninput="updSubj(this,\''+s.id+'\','+idx+',\'ca2\')" class="sc-inp"/>'
 var DB_TRAITS = {};    // studentId -> {affective:{}, psychomotor:{}}
-var DB_FEES = {};      // studentId -> fees object
+      +' oninput="updSubj(this,\''+s.id+'\','+idx+',\'ca3\')" class="sc-inp"/>'
 var DB_REMARKS = {};   // studentId -> remarks object
-var DB_LOADING = false;
+      +' oninput="updSubj(this,\''+s.id+'\','+idx+',\'exam\')" class="sc-inp"/>'
 
 function showLoading(msg) {
   var el = document.getElementById('loading-overlay');
@@ -1474,7 +1547,8 @@ function studentSummary(sid){
   subjs.forEach(function(_,i){
     var t=computeTotal(scores[i]);
     tots.push(t);
-    if(t!==''){grand+=t;cnt++;if(t>=40)pass++;}
+    // Only count published subjects in averages
+    if(t!==''&&isSubjectPublished(currentClass,i)){grand+=t;cnt++;if(t>=40)pass++;}
   });
   var avg=cnt?Math.round(grand/cnt*10)/10:'';
   return{tots:tots,grand:cnt?grand:'',avg:avg,pass:cnt?pass:'',cnt:cnt};
@@ -2008,6 +2082,14 @@ function buildCardHTML(sid,term,session){
         var gd=getGrade(t);
         var ss=subjStats[i];
         var rb=i%2===0?WHITE:MINT;
+        var isPub=isSubjectPublished(currentClass,i);
+        // If not published, show blank row
+        if(!isPub){
+          return'<tr style="background:'+rb+';'+P+'">'
+            +'<td style="padding:4px 6px;border:1px solid '+BORDER+';font-weight:600;color:#aaa;font-style:italic">'+subj+'</td>'
+            +'<td colspan="10" style="padding:4px 6px;border:1px solid '+BORDER+';color:#ccc;font-size:7.5pt;text-align:center">Not yet published</td>'
+            +'</tr>';
+        }
         return'<tr style="background:'+rb+';'+P+'">'
           +'<td style="padding:4px 6px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+subj+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca1!==undefined&&r2.ca1!==''?r2.ca1:'')+'</td>'
@@ -2198,6 +2280,327 @@ function renderAnalytics(){
 }
 
 // ============================================================
+// SUBJECT-CENTRIC SCORE ENTRY
+// ============================================================
+var currentSubjectIndex = -1;
+var currentSubjectPublished = false;
+
+function renderScoreSubjectGrid(){
+  var students = DB_STUDENTS[currentClass]||[];
+  var subjs = subjects();
+  var cfg = getCfg();
+  var published = (cfg.publishedSubjects||{})[currentClass]||{};
+  var el = document.getElementById('sc-subj-cards');
+  if(!el)return;
+  if(!students.length){
+    el.innerHTML='<div class="empty"><h3>No Students</h3><p>Add students first from the Students section</p></div>';
+    return;
+  }
+  el.innerHTML = subjs.map(function(subj,i){
+    var isPub = !!published[i];
+    // Count how many students have scores for this subject
+    var filled = students.filter(function(s){
+      var sc = (DB_SCORES[s.id]||{})[i]||{};
+      return sc.ca1!==''&&sc.ca1!==undefined||sc.exam!==''&&sc.exam!==undefined;
+    }).length;
+    return '<div class="subj-card'+(isPub?' published':'')+'" onclick="openSubjectSheet('+i+')">'
+      +'<div class="sc-badge '+(isPub?'pub':'draft')+'">'+(isPub?'&#128274; Published':'Draft')+'</div>'
+      +'<div class="sc-name">'+(i+1)+'. '+subj+'</div>'
+      +'<div class="sc-count">'+filled+' / '+students.length+' scored</div>'
+      +'</div>';
+  }).join('');
+}
+
+function openSubjectSheet(idx){
+  var students = DB_STUDENTS[currentClass]||[];
+  var subjs = subjects();
+  var cfg = getCfg();
+  var published = (cfg.publishedSubjects||{})[currentClass]||{};
+  var isPub = !!published[idx];
+  currentSubjectIndex = idx;
+  currentSubjectPublished = isPub;
+  document.getElementById('sc-subject-grid').style.display='none';
+  document.getElementById('sc-sheet').style.display='block';
+  document.getElementById('sc-sheet-title').textContent = (idx+1)+'. '+subjs[idx];
+  var badge = document.getElementById('sc-publish-badge');
+  var pubBtn = document.getElementById('sc-publish-btn');
+  if(isPub){
+    badge.style.display='flex';
+    pubBtn.textContent='&#128275; Unpublish';
+    pubBtn.className='btn btn-outline';
+  }else{
+    badge.style.display='none';
+    pubBtn.textContent='&#128274; Publish Subject';
+    pubBtn.className='btn btn-primary';
+  }
+  // Render student rows
+  var rows = document.getElementById('sc-sheet-rows');
+  rows.innerHTML = students.map(function(s,rowIdx){
+    var sc = (DB_SCORES[s.id]||{})[idx]||{};
+    var t = computeTotal(sc);
+    var gd = getGrade(t);
+    return '<div class="ss-row" id="ssr-'+s.id+'">'
+      +'<span style="font-size:.8rem;color:var(--gray);">'+(rowIdx+1)+'</span>'
+      +'<span style="font-weight:600;font-size:.85rem;color:var(--g1)">'+s.name+'</span>'
+      +'<input type="number" min="0" max="10" value="'+(sc.ca1||'')+'" placeholder="-"'
+      +' data-sid="'+s.id+'" data-idx="'+idx+'" data-field="ca1" oninput="updSubjEl(this)" class="sc-inp"/>'
+      +'<input type="number" min="0" max="10" value="'+(sc.ca2||'')+'" placeholder="-"'
+      +' data-sid="'+s.id+'" data-idx="'+idx+'" data-field="ca2" oninput="updSubjEl(this)" class="sc-inp"/>'
+      +'<input type="number" min="0" max="10" value="'+(sc.ca3||'')+'" placeholder="-"'
+      +' data-sid="'+s.id+'" data-idx="'+idx+'" data-field="ca3" oninput="updSubjEl(this)" class="sc-inp"/>'
+      +'<input type="number" min="0" max="70" value="'+(sc.exam||'')+'" placeholder="-"'
+      +' data-sid="'+s.id+'" data-idx="'+idx+'" data-field="exam" oninput="updSubjEl(this)" class="sc-inp"/>'
+      +'<span id="st-'+s.id+'-'+idx+'" style="text-align:center;font-weight:700;font-size:.85rem;color:var(--g1)">'+(t!==''?t:'--')+'</span>'
+      +'<span style="text-align:center;font-weight:700;font-size:.8rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'--')+'</span>'
+      +'<span style="text-align:center;font-size:.78rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.r||'--')+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+function closeSubjectSheet(){
+  currentSubjectIndex=-1;
+  document.getElementById('sc-sheet').style.display='none';
+  document.getElementById('sc-subject-grid').style.display='block';
+  renderScoreSubjectGrid();
+}
+
+var _subjTimers={};
+function updSubjEl(el){
+  var sid=el.dataset.sid;
+  var idx=Number(el.dataset.idx);
+  var field=el.dataset.field;
+  updSubj(el,sid,idx,field);
+}
+function updSubj(el,sid,idx,field){
+  var max=field==='exam'?70:10;
+  var raw=Number(el.value)||0;
+  el.classList.toggle('over-limit',raw>max);
+  if(raw>max){showToast('Max '+(field==='exam'?'Exam':'CA')+' score is '+max,'error');return;}
+  var val=Math.min(max,Math.max(0,raw));
+  if(!DB_SCORES[sid])DB_SCORES[sid]={};
+  if(!DB_SCORES[sid][idx])DB_SCORES[sid][idx]={ca1:'',ca2:'',ca3:'',exam:''};
+  DB_SCORES[sid][idx][field]=val;
+  var t=computeTotal(DB_SCORES[sid][idx]);
+  var gd=getGrade(t);
+  var totEl=document.getElementById('st-'+sid+'-'+idx);
+  if(totEl)totEl.textContent=t!==''?t:'--';
+  // Debounce save
+  clearTimeout(_subjTimers[sid+'_'+idx]);
+  _subjTimers[sid+'_'+idx]=setTimeout(function(){
+    dbUpsertScore(sid,currentClass,idx,DB_SCORES[sid][idx])
+      .catch(function(){showToast('Score save failed','error');});
+  },1500);
+}
+
+function saveSubjectScores(){
+  var students=DB_STUDENTS[currentClass]||[];
+  var idx=currentSubjectIndex;
+  if(idx<0)return;
+  showLoading('Saving scores...');
+  var promises=students.map(function(s){
+    var sc=(DB_SCORES[s.id]||{})[idx]||{ca1:'',ca2:'',ca3:'',exam:''};
+    return dbUpsertScore(s.id,currentClass,idx,sc);
+  });
+  Promise.all(promises).then(function(){
+    hideLoading();showToast('Scores saved as draft');
+  }).catch(function(){hideLoading();showToast('Some scores failed to save','error');});
+}
+
+function togglePublish(){
+  var idx=currentSubjectIndex;
+  if(idx<0)return;
+  var cfg=getCfg();
+  if(!cfg.publishedSubjects)cfg.publishedSubjects={};
+  if(!cfg.publishedSubjects[currentClass])cfg.publishedSubjects[currentClass]={};
+  var isPub=!!cfg.publishedSubjects[currentClass][idx];
+  if(isPub){
+    // Unpublish
+    delete cfg.publishedSubjects[currentClass][idx];
+    saveCfg(cfg);
+    currentSubjectPublished=false;
+    document.getElementById('sc-publish-badge').style.display='none';
+    var btn=document.getElementById('sc-publish-btn');
+    btn.textContent='&#128274; Publish Subject';
+    btn.className='btn btn-primary';
+    showToast('Subject unpublished - can now edit');
+  }else{
+    // Save first then publish
+    saveSubjectScores();
+    cfg.publishedSubjects[currentClass][idx]=true;
+    saveCfg(cfg);
+    currentSubjectPublished=true;
+    document.getElementById('sc-publish-badge').style.display='flex';
+    var btn2=document.getElementById('sc-publish-btn');
+    btn2.textContent='&#128275; Unpublish';
+    btn2.className='btn btn-outline';
+    showToast('Subject published and ready for printing');
+  }
+}
+
+function isSubjectPublished(classKey,idx){
+  var cfg=getCfg();
+  return !!(cfg.publishedSubjects&&cfg.publishedSubjects[classKey]&&cfg.publishedSubjects[classKey][idx]);
+}
+
+// Override populateSels to render subject grid instead
+function populateSels(){
+  renderScoreSubjectGrid();
+}
+
+// ============================================================
+// STUDENT PROFILE MODAL
+// ============================================================
+var currentProfileSid='';
+
+function openStudentProfile(sid){
+  var students=DB_STUDENTS[currentClass]||[];
+  var s=students.find(function(x){return x.id===sid;});
+  if(!s)return;
+  currentProfileSid=sid;
+  var subjs=subjects();
+  var cfg=getCfg();
+  var published=(cfg.publishedSubjects||{})[currentClass]||{};
+
+  // Bio
+  document.getElementById('profile-name').textContent=s.name;
+  document.getElementById('profile-fullname').textContent=s.name;
+  document.getElementById('profile-admno').textContent=s.admno||'--';
+  document.getElementById('profile-gender').textContent=s.gender;
+  document.getElementById('profile-age').textContent=s.age||'--';
+  document.getElementById('profile-class').textContent=DEPTS[currentClass]?DEPTS[currentClass].label:currentClass;
+  var photo=document.getElementById('profile-photo');
+  photo.innerHTML=s.photo?'<img src="'+s.photo+'" style="width:100%;height:100%;object-fit:cover"/>':'&#128100;';
+
+  // Published subjects only
+  var sc=DB_SCORES[sid]||{};
+  var pubSubjs=subjs.filter(function(_,i){return published[i];});
+  var subjEl=document.getElementById('profile-subjects');
+  if(!pubSubjs.length){
+    subjEl.innerHTML='<div style="color:var(--gray);font-size:.85rem;padding:10px 0">No subjects published yet for this class.</div>';
+  }else{
+    subjEl.innerHTML='<div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">'
+      +subjs.map(function(subj,i){
+        if(!published[i])return'';
+        var r=sc[i]||{};
+        var t=computeTotal(r);
+        var gd=getGrade(t);
+        return'<div class="profile-subj-row">'
+          +'<span class="profile-subj-name">'+(i+1)+'. '+subj+'</span>'
+          +'<div style="display:flex;gap:12px;font-size:.8rem">'
+          +'<span>CA: '+(Number(r.ca1||0)+Number(r.ca2||0)+Number(r.ca3||0))+'</span>'
+          +'<span>Exam: '+(r.exam||'--')+'</span>'
+          +'<span class="profile-subj-score">Total: '+(t!==''?t:'--')+'</span>'
+          +'<span style="color:'+gd.c+';font-weight:700">'+(gd.g||'--')+'</span>'
+          +'</div></div>';
+      }).join('')
+      +'</div>';
+  }
+
+  // Affective traits
+  var traits=DB_TRAITS[sid]||{affective:{},psychomotor:{}};
+  var aff=traits.affective||{};
+  var psy=traits.psychomotor||{};
+  var AFF6=['Punctuality','Respect','Attentiveness','Reliability','Neatness','Spirit of Teamwork'];
+  var PSY6=['Handwriting','Reading','Verbal Fluency/Diction','Musical Skills','Creative Arts','Physical Education'];
+  document.getElementById('profile-aff-rows').innerHTML=AFF6.map(function(tr){
+    var val=aff[tr]||0;
+    var safeId=tr.replace(/[^a-zA-Z0-9]/g,'_');
+    var stars=[1,2,3,4,5].map(function(n){
+      return'<span class="star'+(val>=n?' on':'')+'" data-type="aff" data-trait="'+tr+'" data-val="'+n+'" data-sid="'+sid+'" onclick="pfSetStarEl(this)">&#9733;</span>';
+    }).join('');
+    return'<div class="profile-trait-row"><span>'+tr+'</span><div class="stars" id="pf-aff-'+safeId+'">'+stars+'</div></div>';
+  }).join('');
+  document.getElementById('profile-psy-rows').innerHTML=PSY6.map(function(tr){
+    var val=psy[tr]||0;
+    var safeId=tr.replace(/[^a-zA-Z0-9]/g,'_');
+    var stars=[1,2,3,4,5].map(function(n){
+      return'<span class="star'+(val>=n?' on':'')+'" data-type="psy" data-trait="'+tr+'" data-val="'+n+'" data-sid="'+sid+'" onclick="pfSetStarEl(this)">&#9733;</span>';
+    }).join('');
+    return'<div class="profile-trait-row"><span>'+tr+'</span><div class="stars" id="pf-psy-'+safeId+'">'+stars+'</div></div>';
+  }).join('');
+
+  // Fees
+  var fees=DB_FEES[sid]||{};
+  document.getElementById('pf-fee-total').value=fees.total||'';
+  document.getElementById('pf-fee-paid').value=fees.paid||'';
+  document.getElementById('pf-fee-debt').value=fees.debt||'';
+  document.getElementById('pf-fee-next').value=fees.next_term||fees.next||'';
+  document.getElementById('pf-fee-resume').value=fees.resume_date||fees.resume||'';
+  pfUpdateBalance();
+
+  // Attendance
+  var rem=DB_REMARKS[sid]||{};
+  document.getElementById('pf-att-opened').value=rem.days_opened||'';
+  document.getElementById('pf-att-present').value=rem.days_present||'';
+  document.getElementById('pf-att-absent').value=(Number(rem.days_opened||0)-Number(rem.days_present||0))||'';
+
+  document.getElementById('modal-profile').style.display='flex';
+}
+
+function pfUpdateBalance(){
+  var t=Number(document.getElementById('pf-fee-total').value||0);
+  var p=Number(document.getElementById('pf-fee-paid').value||0);
+  var d=Number(document.getElementById('pf-fee-debt').value||0);
+  var bal=t+d-p;
+  document.getElementById('pf-fee-bal-val').textContent='N'+bal.toLocaleString();
+  document.getElementById('pf-fee-balance').style.background=
+    bal<=0?'linear-gradient(135deg,#065f46,#10b981)':'linear-gradient(135deg,#7f1d1d,#c0392b)';
+}
+
+function pfSetStarEl(el){
+  var type=el.dataset.type;
+  var trait=el.dataset.trait;
+  var val=Number(el.dataset.val);
+  var sid=el.dataset.sid;
+  pfSetStar(type,trait,val,sid);
+}
+function pfSetStar(type,trait,val,sid){
+  if(!DB_TRAITS[sid])DB_TRAITS[sid]={affective:{},psychomotor:{}};
+  var key=type==='aff'?'affective':'psychomotor';
+  DB_TRAITS[sid][key][trait]=val;
+  var prefix=type==='aff'?'pf-aff-':'pf-psy-';
+  var id=prefix+trait.replace(/[^a-zA-Z0-9]/g,'_');
+  var stars=document.querySelectorAll('#'+id+' .star');
+  stars.forEach(function(s,i){s.classList.toggle('on',i<val);});
+  dbUpsertTrait(sid,currentClass,key,trait,val).catch(function(){showToast('Rating save failed','error');});
+}
+
+function saveStudentProfile(){
+  var sid=currentProfileSid;
+  if(!sid)return;
+  var op=Number(document.getElementById('pf-att-opened').value||0);
+  var pr=Number(document.getElementById('pf-att-present').value||0);
+  document.getElementById('pf-att-absent').value=op-pr;
+  showLoading('Saving profile...');
+  Promise.all([
+    dbUpsertFees(sid,currentClass,{
+      total:Number(document.getElementById('pf-fee-total').value||0),
+      paid:Number(document.getElementById('pf-fee-paid').value||0),
+      debt:Number(document.getElementById('pf-fee-debt').value||0),
+      resume_date:document.getElementById('pf-fee-resume').value,
+      next_term:Number(document.getElementById('pf-fee-next').value||0)
+    }),
+    dbUpsertRemarks(sid,currentClass,{
+      academic:'',form_master:'',principal:'',
+      days_opened:op,days_present:pr
+    })
+  ]).then(function(){
+    // Refresh local cache
+    DB_FEES[sid]={
+      total:Number(document.getElementById('pf-fee-total').value||0),
+      paid:Number(document.getElementById('pf-fee-paid').value||0),
+      debt:Number(document.getElementById('pf-fee-debt').value||0),
+      resume_date:document.getElementById('pf-fee-resume').value,
+      next_term:Number(document.getElementById('pf-fee-next').value||0)
+    };
+    DB_REMARKS[sid]=DB_REMARKS[sid]||{};
+    DB_REMARKS[sid].days_opened=op;DB_REMARKS[sid].days_present=pr;
+    hideLoading();showToast('Profile saved successfully');
+    closeModal('modal-profile');
+  }).catch(function(){hideLoading();showToast('Save failed','error');});
+}
+
+// ============================================================
 // DASHBOARD
 // ============================================================
 var HOME_GROUPS=[
@@ -2280,10 +2683,14 @@ function renderDash(){
     var feesBadge=fees.total?(bal<=0?'<span class="badge badge-green">Cleared</span>':'<span class="badge badge-red">N'+bal.toLocaleString()+'</span>'):'<span style="color:#ccc">--</span>';
     var rk=ranks[s.id];
     var rkEl=rk?'<span class="rk '+(rk<=3?'rk'+rk:'rkn')+'">'+rk+'</span>':'--';
+    var dept=DEPTS[currentClass]?DEPTS[currentClass].label:'';
+    var deptPart=dept.includes('-')?dept.split('-')[1].trim():dept;
     var deptKey=currentClass.includes('science')?'badge-sci':currentClass.includes('arts')?'badge-arts':'badge-bus';
-    return'<tr><td>'+i+1+'</td><td><strong>'+s.name+'</strong></td>'
+    return'<tr style="cursor:pointer" data-sid="'+s.id+'" onclick="openStudentProfile(this.dataset.sid)" title="View profile">'
+      +'<td>'+( i+1)+'</td>'
+      +'<td><strong style="color:var(--g1)">'+s.name+'</strong> <small style="color:var(--g3);font-size:.7rem">&#128065; View</small></td>'
       +'<td><span class="badge '+(s.gender==='Male'?'badge-blue':'badge-gold')+'">'+s.gender+'</span></td>'
-      +'<td><span class="badge '+deptKey+'">'+DEPTS[currentClass].label.split('-')[1].trim()+'</span></td>'
+      +'<td><span class="badge '+deptKey+'">'+deptPart+'</span></td>'
       +'<td style="font-weight:700;color:'+(avg!==''?gc(avg):'#aaa')+'">'+(avg!==''?avg:'--')+'</td>'
       +'<td>'+rkEl+'</td><td>'+feesBadge+'</td></tr>';
   }).join(''):'<tr><td colspan="7" style="text-align:center;padding:30px;color:#aaa">No students yet</td></tr>';
