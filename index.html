@@ -606,9 +606,6 @@ body.is-mobile .bs-scroll-hint{display:flex}
     <div class="bn-item" onclick="navMobile('broadsheet',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Sheet
     </div>
-    <div class="bn-item" onclick="navMobile('card',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Card
-    </div>
   </div>
 </div>
 <div id="main">
@@ -926,11 +923,33 @@ body.is-mobile .bs-scroll-hint{display:flex}
         <div style="padding:16px">
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
             <select class="sel" id="dept-sel" onchange="renderSubjCfg()" style="min-width:200px">
-              <option value="ss3-science">SS3 - Science</option>
-              <option value="ss3-arts">SS3 - Arts</option>
-              <option value="ss2-science">SS2 - Science</option>
-              <option value="ss2-arts">SS2 - Arts</option>
-              <option value="ss2-business">SS2 - Business</option>
+              <optgroup label="Early Years">
+                <option value="creche">Creche</option>
+                <option value="kg1">KG 1</option>
+                <option value="kg2">KG 2</option>
+                <option value="nursery1">Nursery 1</option>
+                <option value="nursery2">Nursery 2</option>
+              </optgroup>
+              <optgroup label="Primary">
+                <option value="primary1">Primary 1</option>
+                <option value="primary2">Primary 2</option>
+                <option value="primary3">Primary 3</option>
+                <option value="primary4">Primary 4</option>
+                <option value="primary5">Primary 5</option>
+              </optgroup>
+              <optgroup label="Junior Secondary">
+                <option value="jss1">JSS 1</option>
+                <option value="jss2">JSS 2</option>
+                <option value="jss3">JSS 3</option>
+              </optgroup>
+              <optgroup label="Senior Secondary">
+                <option value="ss1-general">SS1 - General</option>
+                <option value="ss2-science">SS2 - Science</option>
+                <option value="ss2-arts">SS2 - Arts</option>
+                <option value="ss2-business">SS2 - Business</option>
+                <option value="ss3-science">SS3 - Science</option>
+                <option value="ss3-arts">SS3 - Arts</option>
+              </optgroup>
             </select>
           </div>
           <div id="subj-cfg-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:14px"></div>
@@ -1907,14 +1926,14 @@ function buildCardHTML(sid,term,session){
 
   //  HEADER 
   if(sec.showHeader){
-    h+='<div style="display:flex;align-items:center;gap:14px;padding:10px 16px 10px;border-bottom:2px solid '+TEAL+';background:'+WHITE+';'+P+'">'
+    h+='<div style="display:flex;align-items:center;gap:14px;padding:10px 16px 10px;border-bottom:2px solid '+TEAL+';background:'+NAVY+';'+P+'">'
       +'<div style="background:'+NAVY+';border-radius:8px;padding:8px 10px;flex-shrink:0;'+P+'">'
       +'<div style="font-family:Arial,sans-serif;font-weight:900;font-size:22pt;line-height:1;color:'+WHITE+'">W<span style="color:'+TEAL+'">T</span>S</div>'
       +'</div>'
       +'<div style="flex:1">'
-      +'<div style="color:'+NAVY+';font-size:16pt;font-weight:900;text-transform:uppercase;letter-spacing:.02em">'+school.name+'</div>'
-      +'<div style="color:#555;font-size:8pt;margin-top:2px">'+school.addr+'</div>'
-      +'<div style="color:#555;font-size:8pt">Phone: '+school.phone+' | Email: '+school.email+'</div>'
+      +'<div style="color:'+TEAL+';font-size:16pt;font-weight:900;text-transform:uppercase;letter-spacing:.02em">'+school.name+'</div>'
+      +'<div style="color:rgba(255,255,255,.8);font-size:8pt;margin-top:2px">'+school.addr+'</div>'
+      +'<div style="color:rgba(255,255,255,.7);font-size:8pt">Phone: '+school.phone+' | Email: '+school.email+'</div>'
       +'</div>'
       +(sec.showPhoto&&s.photo?'<img src="'+s.photo+'" style="width:65px;height:78px;object-fit:cover;border-radius:4px;border:2px solid '+TEAL+';flex-shrink:0"/>':'')
       +'</div>';
@@ -2443,8 +2462,12 @@ function applyResponsive(){
         sidebar.style.position='fixed';sidebar.style.top='0';sidebar.style.left='0';
         sidebar.style.width='260px';sidebar.style.height='100vh';sidebar.style.zIndex='200';
         sidebar.style.display='flex';sidebar.style.transition='transform .25s ease';
-        if(!sidebar.classList.contains('open'))sidebar.style.transform='translateX(-260px)';
-        else sidebar.style.transform='translateX(0)';
+        // Always start closed  only open if user explicitly opened it
+        if(!sidebar.classList.contains('open')){
+          sidebar.style.transform='TranslateX(-260px)'.replace('T','t');
+        } else {
+          sidebar.style.transform='translateX(0)';
+        }
       }else{
         sidebar.style.position='fixed';sidebar.style.transform='translateX(0)';
         sidebar.style.display='flex';sidebar.style.zIndex='100';sidebar.style.width='248px';
@@ -2515,6 +2538,7 @@ window.addEventListener('DOMContentLoaded',function(){
   }catch(e){}
   // Start on home page
   setHomeMode(true);
+  closeSidebar(); // ensure sidebar closed on load
   nav('home', document.getElementById('ni-home'));
 });
 
