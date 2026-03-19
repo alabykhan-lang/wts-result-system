@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WTS Result Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g1:#0a3d2e;--g2:#0d5c43;--g3:#10b981;
+  --gold:#c9922a;--gold2:#e8b547;
+  --bg:#f5f0e8;--white:#fff;
+  --gray:#6b7280;--border:#e5e7eb;
+  --shadow:0 2px 8px rgba(0,0,0,.08);
+  --shadow2:0 8px 32px rgba(0,0,0,.15);
+  --radius:12px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1f2937;min-height:100vh}
+
+/* ── SIDEBAR ── */
+#sidebar{position:fixed;top:0;left:0;width:248px;height:100vh;
+  background:var(--g1);display:flex;flex-direction:column;z-index:100;
+  transition:transform .25s ease}
+.sb-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo h1{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold2);line-height:1.3}
+.sb-logo p{font-size:.68rem;color:rgba(255,255,255,.4);margin-top:2px}
+.sb-class-lbl{display:none;padding:8px 16px;background:rgba(0,0,0,.3);
+  border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-class-lbl span{font-size:.65rem;color:rgba(255,255,255,.4);text-transform:uppercase;display:block}
+.sb-class-lbl strong{font-size:.88rem;color:var(--gold2)}
+nav{flex:1;overflow-y:auto;padding:8px 0}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;
+  color:rgba(255,255,255,.6);font-size:.85rem;font-weight:500;
+  border-left:3px solid transparent;transition:.15s;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.ni:active,.ni:hover{background:rgba(255,255,255,.06);color:#fff}
+.ni.active{background:rgba(201,146,42,.14);color:var(--gold2);border-left-color:var(--gold2)}
+.ni svg{width:17px;height:17px;flex-shrink:0;opacity:.75}
+.ni.active svg{opacity:1}
+.ni-back{color:rgba(255,255,255,.4)!important;font-size:.78rem!important}
+.ni-divider{height:1px;background:rgba(255,255,255,.08);margin:6px 0}
+.sb-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);
+  font-size:.68rem;color:rgba(255,255,255,.3);line-height:1.5}
+.sb-session{display:inline-block;background:var(--gold);color:var(--g1);
+  font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:4px}
+
+/* ── TOPBAR ── */
+#main{margin-left:248px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);
+  padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;gap:10px}
+.tb-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.tb-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--g1)}
+.tb-sub{font-size:.72rem;color:var(--gray);margin-top:1px}
+.tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.class-chip{display:none;align-items:center;gap:4px;background:var(--g1);color:var(--gold2);
+  font-size:.72rem;font-weight:700;padding:3px 10px 3px 8px;border-radius:20px;
+  cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.class-chip svg{width:12px;height:12px}
+#hamburger{display:none;background:none;border:none;cursor:pointer;
+  flex-direction:column;gap:5px;padding:4px;-webkit-tap-highlight-color:transparent}
+#hamburger span{width:22px;height:2px;background:var(--g1);border-radius:2px;transition:.25s;display:block}
+#hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+#hamburger.open span:nth-child(2){opacity:0}
+#hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.saved-msg{font-size:.75rem;color:var(--g3);font-weight:600;opacity:0;transition:.3s}
+.saved-msg.show{opacity:1}
+
+/* ── CONTENT ── */
+.content{flex:1;padding:24px}
+.page{display:none}
+.page.active{display:block}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;
+  border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.85rem;
+  font-weight:600;cursor:pointer;border:none;transition:.15s;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.btn-primary{background:var(--g1);color:#fff}
+.btn-primary:active{background:var(--g2)}
+.btn-outline{background:transparent;border:2px solid var(--g1);color:var(--g1)}
+.btn-outline:active{background:#f0fdf4}
+.btn-gold{background:var(--gold);color:var(--g1)}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-sm{padding:5px 12px;font-size:.78rem}
+.btn-xs{padding:3px 8px;font-size:.72rem}
+
+/* ── CARDS & TABLES ── */
+.stat-card{background:var(--white);border-radius:var(--radius);padding:18px 20px;
+  box-shadow:var(--shadow);border-top:3px solid var(--g3);position:relative;overflow:hidden}
+.stat-card.gold{border-top-color:var(--gold)}
+.stat-card.blue{border-top-color:#3b82f6}
+.stat-card.red{border-top-color:#ef4444}
+.stat-card h3{font-size:2rem;font-weight:700;color:var(--g1)}
+.stat-card p{font-size:.72rem;font-weight:700;color:var(--gray);text-transform:uppercase;margin-top:2px}
+.stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-size:2.5rem;opacity:.08}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+
+.tbl-wrap{background:var(--white);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.tbl-head{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border)}
+.tbl-head h3{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--g1)}
+.data-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.data-table th{background:var(--g1);color:#fff;padding:10px 12px;text-align:left;
+  font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#fafafa}
+.data-table tr[data-clickable]{cursor:pointer}
+.data-table tr[data-clickable]:hover td{background:#f0fdf4}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+  font-size:.7rem;font-weight:700}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-gold{background:#fef3c7;color:#92400e}
+.badge-green{background:#d1fae5;color:#065f46}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-sci{background:#e0f2fe;color:#0369a1}
+.badge-arts{background:#fce7f3;color:#9d174d}
+.badge-bus{background:#fef9c3;color:#713f12}
+.rk{display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;font-size:.72rem;font-weight:700}
+.rk1{background:#fef3c7;color:#92400e}
+.rk2{background:#f3f4f6;color:#374151}
+.rk3{background:#fde8d8;color:#c2410c}
+.rkn{background:#f9fafb;color:#6b7280}
+
+/* ── FORMS ── */
+.inp{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:.88rem;transition:.15s;background:#fff}
+.inp:focus{border-color:var(--g3);outline:none;background:#f0fdf4}
+.sel{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:.88rem;background:#fff;cursor:pointer}
+.sel:focus{border-color:var(--g3);outline:none}
+.fg{margin-bottom:14px}
+.fg label{font-size:.78rem;font-weight:700;color:#374151;display:block;margin-bottom:5px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sec-title{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--g1);
+  margin:20px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--gold)}
+
+/* ── STARS ── */
+.star{color:#d1d5db;font-size:1.2rem;cursor:pointer;transition:.1s;
+  -webkit-tap-highlight-color:transparent}
+.star.on{color:var(--gold)}
+.trait-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--border)}
+.trait-row:last-child{border-bottom:none}
+.trait-name{font-size:.82rem;color:#374151}
+.stars{display:flex;gap:2px}
+
+/* ── FEES ── */
+.fee-field label{font-size:.78rem;font-weight:700;color:#374151;display:block;margin-bottom:5px}
+.fee-field .inp{margin-bottom:0}
+.fees-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.fee-balance{border-radius:10px;padding:16px;text-align:center;
+  background:linear-gradient(135deg,#065f46,#10b981);color:#fff}
+.fee-balance .val{font-size:1.4rem;font-weight:700}
+.fee-balance .lbl{font-size:.72rem;opacity:.8;margin-top:2px}
+
+/* ── HOME PAGE ── */
+.home-level{margin-bottom:20px}
+.home-level-title{font-family:'Playfair Display',serif;font-size:.85rem;color:var(--gray);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;
+  padding-left:10px;border-left:3px solid var(--gold)}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.class-card{background:var(--white);border-radius:var(--radius);padding:16px 12px;
+  text-align:center;cursor:pointer;box-shadow:var(--shadow);
+  border:2px solid transparent;transition:.2s;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.class-card:hover{border-color:var(--g3);background:#f0fdf4;transform:translateY(-2px)}
+.class-card:active{transform:translateY(0);background:#e8f5e9}
+.class-card .cc-icon{font-size:1.6rem;margin-bottom:6px}
+.class-card .cc-name{font-weight:700;font-size:.82rem;color:var(--g1);line-height:1.2}
+.class-card .cc-count{font-size:.68rem;color:var(--gray);margin-top:3px}
+
+/* ── SUBJECT CARDS ── */
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.subj-card{background:var(--white);border-radius:var(--radius);padding:16px;
+  cursor:pointer;box-shadow:var(--shadow);border:2px solid transparent;
+  transition:.2s;position:relative;-webkit-tap-highlight-color:transparent}
+.subj-card:hover{border-color:var(--g3);transform:translateY(-2px)}
+.subj-card:active{transform:translateY(0)}
+.subj-card.published{border-color:#10b981;background:#f0fdf4}
+.subj-badge{position:absolute;top:8px;right:8px;font-size:.62rem;font-weight:700;
+  padding:2px 7px;border-radius:10px}
+.subj-badge.draft{background:#f3f4f6;color:#6b7280}
+.subj-badge.pub{background:#d1fae5;color:#065f46}
+.subj-name{font-weight:700;font-size:.85rem;color:var(--g1);line-height:1.3;
+  margin-top:4px;padding-right:50px}
+.subj-count{font-size:.72rem;color:var(--gray);margin-top:6px}
+
+/* ── SCORE SHEET ── */
+.sheet-header{display:grid;grid-template-columns:30px 1fr 65px 65px 65px 90px 65px 72px 85px;
+  gap:0;background:var(--g1);padding:8px 12px;
+  font-size:.7rem;color:#fff;font-weight:700;text-transform:uppercase;align-items:center}
+.sheet-row{display:grid;grid-template-columns:30px 1fr 65px 65px 65px 90px 65px 72px 85px;
+  gap:0;align-items:center;padding:5px 12px;border-bottom:1px solid var(--border)}
+.sheet-row:nth-child(even){background:#fafafa}
+.sheet-row:hover{background:#f0fdf4}
+.sc-inp{width:100%;border:1.5px solid var(--border);border-radius:6px;
+  padding:5px 4px;text-align:center;font-size:.82rem;font-weight:600;
+  font-family:'DM Sans',sans-serif;background:#fff}
+.sc-inp:focus{border-color:var(--g3);outline:none;background:#f0fdf4}
+.sc-inp.over-limit{border-color:#dc2626!important;background:#fff5f5!important;color:#dc2626}
+
+/* ── BROADSHEET ── */
+.bs-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.bs-table{border-collapse:collapse;font-size:.72rem;white-space:nowrap}
+.bs-table th{background:var(--g1);color:#fff;padding:6px 8px;border:1px solid rgba(255,255,255,.1)}
+.bs-table td{padding:6px 8px;border:1px solid var(--border)}
+.bs-table tr:nth-child(even) td{background:#fafafa}
+
+/* ── SETTINGS ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-desc{font-size:.72rem;color:var(--gray);margin-top:2px}
+.toggle{position:relative;display:inline-block;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#d1d5db;
+  border-radius:24px;transition:.3s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;
+  left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+.toggle-slider{background:var(--g3)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px)}
+.theme-swatch{width:34px;height:34px;border-radius:8px;cursor:pointer;
+  border:3px solid transparent;transition:.15s;flex-shrink:0}
+.theme-swatch.selected{border-color:#fff;box-shadow:0 0 0 2px var(--g1)}
+.subj-tag{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;
+  border:1px solid var(--g3);color:var(--g1);padding:4px 10px;border-radius:20px;
+  font-size:.78rem;font-weight:500}
+.subj-tag button{background:none;border:none;cursor:pointer;color:var(--gray);
+  font-size:.9rem;line-height:1;padding:0 2px}
+.remarks-cfg .remark-range{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.remarks-cfg input[type=number]{width:70px;padding:5px 8px;border:2px solid var(--border);
+  border-radius:6px;font-size:.8rem}
+.remarks-cfg input[type=text]{flex:1;min-width:200px;padding:5px 10px;
+  border:2px solid var(--border);border-radius:6px;font-size:.8rem}
+.sig-preview-wrap{border:2px dashed var(--border);border-radius:10px;
+  min-height:80px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;cursor:pointer;padding:12px;text-align:center}
+.sig-preview-wrap img,.sig-name-preview{max-height:60px;font-family:'Dancing Script',cursive;
+  font-size:1.8rem;color:var(--g1)}
+.grade-cfg-tbody td{padding:4px 6px}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;
+  max-height:90vh;display:flex;flex-direction:column;
+  box-shadow:var(--shadow2);animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-hdr h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--g1)}
+.modal-x{background:none;border:none;font-size:1.5rem;cursor:pointer;
+  color:var(--gray);padding:2px 8px;-webkit-tap-highlight-color:transparent}
+.modal-body{padding:18px 20px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;background:#fff}
+.photo-upload{width:70px;height:84px;border-radius:8px;background:#f3f4f6;
+  border:2px dashed var(--border);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;font-size:.6rem;
+  color:var(--gray);text-align:center;overflow:hidden;flex-shrink:0}
+.photo-upload img{width:100%;height:100%;object-fit:cover}
+
+/* ── ANALYTICS ── */
+.perf-bar-wrap{background:#f3f4f6;border-radius:20px;height:8px;overflow:hidden}
+.perf-bar{height:100%;border-radius:20px;transition:.3s}
+
+/* ── BOTTOM NAV ── */
+#bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:90;
+  background:var(--g1);border-top:1px solid rgba(255,255,255,.1)}
+.bn-strip{display:flex;width:100%}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:8px 4px 6px;cursor:pointer;
+  color:rgba(255,255,255,.5);font-size:.52rem;font-weight:600;gap:2px;
+  border-top:3px solid transparent;transition:.15s;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.bn-item svg{width:18px;height:18px}
+.bn-item.active{color:var(--gold2);border-top-color:var(--gold2)}
+
+/* ── LOADING & TOAST ── */
+#loading-overlay{display:none;position:fixed;inset:0;background:rgba(10,61,46,.85);
+  z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);
+  border-top-color:var(--gold2);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading-text{color:#fff;font-size:1rem;font-weight:500}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:var(--g1);color:#fff;padding:10px 22px;border-radius:24px;
+  font-size:.85rem;font-weight:500;opacity:0;transition:.3s;
+  pointer-events:none;z-index:9998;white-space:nowrap}
+#toast.show{opacity:1}
+#toast.error{background:#dc2626}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+
+/* ── MISC ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 20px;color:var(--gray);text-align:center;gap:12px}
+.empty svg{width:48px;height:48px;opacity:.3}
+.empty h3{font-size:1.1rem;color:#374151}
+.traits-wrap{background:var(--white);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+.traits-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px}
+.fees-wrap{background:var(--white);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+.stu-selector{background:var(--white);border-radius:var(--radius);
+  padding:16px 20px;box-shadow:var(--shadow);margin-bottom:18px;
+  display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.card-sel-bar{background:var(--white);border-radius:var(--radius);
+  padding:14px 18px;box-shadow:var(--shadow);margin-bottom:18px;
+  display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.form-grp{display:flex;flex-direction:column;gap:4px}
+.form-grp label{font-size:.75rem;font-weight:700;color:#374151}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  #main{margin-left:0}
+  #hamburger{display:flex}
+  #sidebar{transform:translateX(-260px)}
+  #sidebar.open{transform:translateX(0);box-shadow:6px 0 40px rgba(0,0,0,.35)}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .settings-grid{grid-template-columns:1fr}
+  .traits-grid{grid-template-columns:1fr}
+  .fees-grid{grid-template-columns:1fr 1fr}
+  .fg-row{grid-template-columns:1fr}
+  .sheet-header,.sheet-row{grid-template-columns:25px 1fr 55px 55px 55px 80px 55px 60px 70px;
+    font-size:.65rem}
+}
+@media(max-width:600px){
+  .content{padding:14px}
+  #bottom-nav{display:block}
+  .content{padding-bottom:74px}
+  .topbar{padding:10px 14px}
+  .stats-row{grid-template-columns:1fr 1fr;gap:10px}
+  .modal{max-width:100%;border-radius:16px 16px 0 0;
+    position:fixed;bottom:0;left:0;right:0;height:90vh;max-height:90vh;margin:0;
+    animation:slideUp .25s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+  .overlay{align-items:flex-end;padding:0}
+  .home-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+  .subj-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── PRINT ── */
+@media print{
+  #sidebar,#main .topbar,.btn,.no-print,#bottom-nav,
+  #sb-overlay,.card-sel-bar,.stu-selector{display:none!important}
+  #main{margin-left:0!important}
+  .content{padding:0!important}
+  .page{display:none!important}
+  .page.print-active{display:block!important}
+  body{background:#fff!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <h1>Result Management System</h1>
+    <p>Way To Success Standard Schools</p>
+  </div>
+  <div class="sb-class-lbl" id="sb-class-lbl">
+    <span>Current Class</span>
+    <strong id="sb-class-name">--</strong>
+  </div>
+  <!-- HOME NAV -->
+  <nav id="nav-home">
+    <div class="ni active" id="ni-home" onclick="navTo('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </div>
+    <div class="ni" onclick="navTo('card',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Result Cards
+    </div>
+    <div class="ni" onclick="navTo('analytics',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Analytics
+    </div>
+    <div class="ni" onclick="navTo('settings',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </div>
+  </nav>
+  <!-- CLASS NAV -->
+  <nav id="nav-class" style="display:none">
+    <div class="ni ni-back" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Classes
+    </div>
+    <div class="ni-divider"></div>
+    <div class="ni active" id="ni-dashboard" onclick="navTo('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="ni" id="ni-students" onclick="navTo('students',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Students
+    </div>
+    <div class="ni" id="ni-scores" onclick="navTo('scores',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+      Score Entry
+    </div>
+    <div class="ni" id="ni-broadsheet" onclick="navTo('broadsheet',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      Broadsheet
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <p>Ifedapo Community, Oko/Ijado Rd<br>Ejigbo, Osun State</p>
+    <span class="sb-session" id="sb-session-lbl">2025/2026 Session</span>
+  </div>
+</div>
+
+<!-- OVERLAYS -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p id="loading-text">Loading...</p>
+</div>
+<div id="toast"></div>
+<div id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- BOTTOM NAV -->
+<div id="bottom-nav">
+  <div class="bn-strip" id="bn-home-strip">
+    <div class="bn-item active" onclick="mobileNav('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+    </div>
+    <div class="bn-item" onclick="mobileNav('card',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Cards
+    </div>
+    <div class="bn-item" onclick="mobileNav('analytics',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Analytics
+    </div>
+    <div class="bn-item" onclick="mobileNav('settings',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
+    </div>
+  </div>
+  <div class="bn-strip" id="bn-class-strip" style="display:none">
+    <div class="bn-item" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Back
+    </div>
+    <div class="bn-item active" onclick="mobileNav('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dash
+    </div>
+    <div class="bn-item" onclick="mobileNav('students',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Students
+    </div>
+    <div class="bn-item" onclick="mobileNav('scores',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Scores
+    </div>
+    <div class="bn-item" onclick="mobileNav('broadsheet',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Sheet
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar no-print">
+    <div class="tb-left">
+      <button id="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <div class="tb-title" id="tb-title">Home</div>
+        <div class="tb-sub" id="tb-sub">Way To Success Standard Schools</div>
+      </div>
+      <div class="class-chip" id="class-chip" onclick="goHome()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        <span id="class-chip-name"></span>
+      </div>
+    </div>
+    <div class="tb-right">
+      <span class="saved-msg" id="saved-msg">Saved</span>
+      <button class="btn btn-outline btn-sm no-print" onclick="exportData()">Export</button>
+      <button class="btn btn-gold btn-sm no-print" onclick="importData()">Import</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div style="max-width:720px;margin:0 auto">
+      <div style="background:var(--g1);border-radius:16px;padding:24px;text-align:center;margin-bottom:24px;box-shadow:var(--shadow2)">
+        <div style="width:60px;height:60px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.3rem;color:var(--g1);margin:0 auto 10px;font-family:serif">WTS</div>
+        <h1 style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:1.3rem;margin-bottom:4px">Way To Success Standard Schools</h1>
+        <p style="color:rgba(255,255,255,.6);font-size:.8rem">Ifedapo Community, Oko/Ijado Road, Ejigbo, Osun State</p>
+        <div id="home-session" style="display:inline-block;background:var(--gold);color:var(--g1);font-size:.72rem;font-weight:700;padding:3px 14px;border-radius:20px;margin-top:10px">2025/2026 Session</div>
+      </div>
+      <p style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--g1);text-align:center;margin-bottom:20px;font-weight:700">Select a Class to Continue</p>
+      <div class="home-level">
+        <div class="home-level-title">Early Years</div>
+        <div class="home-grid" id="hg-early"></div>
+      </div>
+      <div class="home-level">
+        <div class="home-level-title">Primary</div>
+        <div class="home-grid" id="hg-primary"></div>
+      </div>
+      <div class="home-level">
+        <div class="home-level-title">Junior Secondary</div>
+        <div class="home-grid" id="hg-jss"></div>
+      </div>
+      <div class="home-level">
+        <div class="home-level-title">Senior Secondary</div>
+        <div class="home-grid" id="hg-ss"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page" id="page-dashboard">
+    <div class="stats-row">
+      <div class="stat-card"><span class="stat-icon">&#127891;</span><h3 id="d-stu">0</h3><p>Students</p></div>
+      <div class="stat-card gold"><span class="stat-icon">&#128221;</span><h3 id="d-ent">0</h3><p>Scores Entered</p></div>
+      <div class="stat-card blue"><span class="stat-icon">&#128202;</span><h3 id="d-avg">--</h3><p>Class Average</p></div>
+      <div class="stat-card red"><span class="stat-icon">&#10003;</span><h3 id="d-pass">--</h3><p>Pass Rate</p></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <h3 id="d-tbl-title">Students</h3>
+        <button class="btn btn-primary btn-sm" onclick="navTo('students',document.getElementById('ni-students'))">View All</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Name</th><th>Gender</th><th>Dept</th><th>Average</th><th>Rank</th><th>Fees</th></tr></thead>
+        <tbody id="d-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- STUDENTS -->
+  <div class="page" id="page-students">
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <h3>Student Roster</h3>
+        <button class="btn btn-primary btn-sm" onclick="openAddStudent()">+ Add Student</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Full Name</th><th>Gender</th><th>Reg. No.</th><th>House</th><th>Photo</th><th>Actions</th></tr></thead>
+        <tbody id="stu-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SCORES -->
+  <div class="page" id="page-scores">
+    <div id="scores-grid-view">
+      <p class="sec-title">Select a Subject to Enter Scores</p>
+      <div class="subj-grid" id="subj-cards"></div>
+    </div>
+    <div id="scores-sheet-view" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="closeSheet()">&#8592; Back</button>
+        <h3 id="sheet-title" style="font-family:'Playfair Display',serif;color:var(--g1);font-size:1.1rem;flex:1;margin:0"></h3>
+        <span id="sheet-pub-badge" style="display:none;background:#10b981;color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px">Published</span>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:14px">
+        <div class="sheet-header">
+          <span>#</span><span>Student</span>
+          <span style="text-align:center">CA1<br><small style="opacity:.7;font-weight:400">max10</small></span>
+          <span style="text-align:center">CA2<br><small style="opacity:.7;font-weight:400">max10</small></span>
+          <span style="text-align:center">CA3<br><small style="opacity:.7;font-weight:400">max10</small></span>
+          <span style="text-align:center">Exam<br><small style="opacity:.7;font-weight:400">max70</small></span>
+          <span style="text-align:center">Total</span>
+          <span style="text-align:center">Grade</span>
+          <span style="text-align:center">Remark</span>
+        </div>
+        <div id="sheet-rows"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="saveDraft()">Save Draft</button>
+        <button class="btn btn-primary" id="publish-btn" onclick="togglePublish()">Publish Subject</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROADSHEET -->
+  <div class="page" id="page-broadsheet">
+    <div style="margin-bottom:14px;display:flex;justify-content:flex-end" class="no-print">
+      <button class="btn btn-primary btn-sm" onclick="window.print()">Print Broadsheet</button>
+    </div>
+    <div class="bs-wrap">
+      <table class="bs-table" id="bs-table">
+        <thead id="bs-thead"></thead>
+        <tbody id="bs-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="page print-active" id="page-card">
+    <div class="card-sel-bar no-print">
+      <div class="form-grp">
+        <label>Student</label>
+        <select class="sel" id="rc-stu" onchange="renderCard()" style="min-width:200px"><option value="">Select student</option></select>
+      </div>
+      <div class="form-grp">
+        <label>Term</label>
+        <select class="sel" id="rc-term" onchange="renderCard()">
+          <option>1st Term</option><option selected>2nd Term</option><option>3rd Term</option>
+        </select>
+      </div>
+      <div class="form-grp">
+        <label>Session</label>
+        <input class="inp" id="rc-session" value="2025/2026" onchange="renderCard()" style="width:110px"/>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="window.print()">Print Card</button>
+      <button class="btn btn-outline btn-sm" onclick="printAll()">Print All</button>
+    </div>
+    <div id="rc-wrap"></div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="page" id="page-analytics">
+    <div class="stats-row" style="margin-bottom:20px">
+      <div class="stat-card"><h3 id="an-avg">--</h3><p>Class Average</p></div>
+      <div class="stat-card gold"><h3 id="an-pass">--</h3><p>Pass Rate</p></div>
+      <div class="stat-card blue"><h3 id="an-dist">0</h3><p>Distinctions</p></div>
+      <div class="stat-card red"><h3 id="an-fail">0</h3><p>Students with Fails</p></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div class="tbl-wrap" style="margin:0"><div class="tbl-head"><h3>Grade Distribution</h3></div><div style="padding:16px"><canvas id="ch-dist"></canvas></div></div>
+      <div class="tbl-wrap" style="margin:0"><div class="tbl-head"><h3>Subject Averages</h3></div><div style="padding:16px"><canvas id="ch-subj"></canvas></div></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><h3>Student Rankings</h3></div>
+      <div style="padding:16px"><canvas id="ch-rank"></canvas></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><h3>Subject Performance</h3></div>
+      <table class="data-table">
+        <thead><tr><th>Subject</th><th>Avg</th><th>Highest</th><th>Lowest</th><th>Pass Rate</th><th style="min-width:120px">Bar</th></tr></thead>
+        <tbody id="perf-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="settings-grid">
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <div class="tbl-head"><h3>School Information</h3></div>
+        <div style="padding:16px">
+          <div class="fg"><label>School Name</label><input class="inp" id="cfg-name"/></div>
+          <div class="fg"><label>Address</label><input class="inp" id="cfg-addr"/></div>
+          <div class="fg"><label>Phone</label><input class="inp" id="cfg-phone"/></div>
+          <div class="fg"><label>Email</label><input class="inp" id="cfg-email"/></div>
+          <div class="fg-row">
+            <div class="fg"><label>Session</label><input class="inp" id="cfg-session"/></div>
+            <div class="fg"><label>Term</label>
+              <select class="sel" id="cfg-term">
+                <option>1st Term</option><option>2nd Term</option><option>3rd Term</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <div class="tbl-head"><h3>Proprietor Signature</h3></div>
+        <div style="padding:16px">
+          <div class="sig-preview-wrap" id="sig-preview-wrap" onclick="document.getElementById('sig-upload').click()">
+            <p style="font-size:.8rem;color:var(--gray)">Tap to upload signature image</p>
+          </div>
+          <input type="file" id="sig-upload" accept="image/*" style="display:none" onchange="handleSigUpload(event)"/>
+          <div class="fg" style="margin-top:12px"><label>Or type name (cursive)</label><input class="inp" id="cfg-sig-name" oninput="previewSig()"/></div>
+          <div class="fg"><label>Title</label><input class="inp" id="cfg-sig-title" placeholder="School Proprietor"/></div>
+          <button class="btn btn-outline btn-sm" onclick="clearSig()">Clear Signature</button>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <div class="tbl-head"><h3>Card Section Toggles</h3></div>
+        <div style="padding:16px" id="card-toggles"></div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <div class="tbl-head"><h3>Card Colour Theme</h3></div>
+        <div style="padding:16px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px" id="theme-picker"></div>
+          <p style="font-size:.78rem;color:var(--gray)">Selected: <strong id="theme-name">Forest Green</strong></p>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Automated General Remarks</h3></div>
+        <div style="padding:16px" id="remarks-cfg" class="remarks-cfg"></div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Grade Scale</h3></div>
+        <div style="padding:16px"><table class="data-table" style="font-size:.82rem">
+          <thead><tr><th>Grade</th><th>Min</th><th>Max</th><th>Remark</th></tr></thead>
+          <tbody id="grade-cfg-tbody"></tbody>
+        </table></div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Class Subject Configuration</h3></div>
+        <div style="padding:16px">
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <select class="sel" id="dept-sel" onchange="renderSubjCfg()" style="min-width:200px">
+              <optgroup label="Early Years">
+                <option value="creche">Creche</option>
+                <option value="kg1">KG 1</option><option value="kg2">KG 2</option>
+                <option value="nursery1">Nursery 1</option><option value="nursery2">Nursery 2</option>
+              </optgroup>
+              <optgroup label="Primary">
+                <option value="primary1">Primary 1</option><option value="primary2">Primary 2</option>
+                <option value="primary3">Primary 3</option><option value="primary4">Primary 4</option>
+                <option value="primary5">Primary 5</option>
+              </optgroup>
+              <optgroup label="Junior Secondary">
+                <option value="jss1">JSS 1</option><option value="jss2">JSS 2</option>
+                <option value="jss3">JSS 3</option>
+              </optgroup>
+              <optgroup label="Senior Secondary">
+                <option value="ss1-general">SS1 General</option>
+                <option value="ss2-science">SS2 Science</option><option value="ss2-arts">SS2 Arts</option>
+                <option value="ss2-business">SS2 Business</option>
+                <option value="ss3-science">SS3 Science</option><option value="ss3-arts">SS3 Arts</option>
+              </optgroup>
+            </select>
+          </div>
+          <div id="subj-cfg-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input class="inp" id="new-subj-inp" placeholder="Add new subject..." style="max-width:250px"/>
+            <button class="btn btn-primary btn-sm" onclick="addSubject()">+ Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      <button class="btn btn-outline" onclick="resetSettings()">Reset to Defaults</button>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- STUDENT MODAL -->
+<div class="overlay" id="modal-stu">
+  <div class="modal">
+    <div class="modal-hdr"><h3 id="modal-title">Add Student</h3><button class="modal-x" onclick="closeModal('modal-stu')">&#215;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id"/>
+      <div class="fg-row">
+        <div class="fg"><label>Full Name *</label><input class="inp" id="in-name" placeholder="Full name"/></div>
+        <div class="fg"><label>Reg / Adm No.</label><input class="inp" id="in-admno" placeholder="e.g. WTS/SS3/001"/></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Gender *</label>
+          <select class="sel" id="in-gender"><option value="">Select</option><option>Male</option><option>Female</option></select>
+        </div>
+        <div class="fg"><label>House</label><input class="inp" id="in-house" placeholder="e.g. Red House"/></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Age</label><input class="inp" id="in-age" type="number" placeholder="e.g. 17"/></div>
+        <div class="fg"><label>Student Photo</label>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="photo-upload" id="photo-preview">
+              <span style="font-size:1.5rem">&#128247;</span>
+              <span style="font-size:.6rem">No photo</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label for="photo-camera" class="btn btn-primary btn-sm" style="cursor:pointer">&#128247; Camera</label>
+              <label for="photo-file" class="btn btn-outline btn-sm" style="cursor:pointer">&#128193; Gallery</label>
+              <button type="button" class="btn btn-danger btn-sm" id="clear-photo-btn" style="display:none" onclick="clearPhoto()">Remove</button>
+            </div>
+            <input type="file" id="photo-camera" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0" onchange="handlePhoto(event)"/>
+            <input type="file" id="photo-file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0" onchange="handlePhoto(event)"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-stu')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStu()">Save Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT PROFILE MODAL -->
+<div class="overlay" id="modal-profile">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-hdr"><h3 id="pf-name">Student Profile</h3><button class="modal-x" onclick="closeModal('modal-profile')">&#215;</button></div>
+    <div class="modal-body">
+      <div style="display:flex;gap:14px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div id="pf-photo" style="width:68px;height:80px;border-radius:8px;background:#f3f4f6;border:2px solid var(--g3);display:flex;align-items:center;justify-content:center;font-size:2rem;overflow:hidden;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div id="pf-fullname" style="font-size:1.05rem;font-weight:700;color:var(--g1);margin-bottom:8px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.8rem;color:#555">
+            <div><strong>Reg No:</strong> <span id="pf-admno"></span></div>
+            <div><strong>Gender:</strong> <span id="pf-gender"></span></div>
+            <div><strong>Age:</strong> <span id="pf-age"></span></div>
+            <div><strong>Class:</strong> <span id="pf-class"></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="sec-title" style="margin-top:0">Published Subjects</p>
+      <div id="pf-subjects" style="margin-bottom:16px;border:1px solid var(--border);border-radius:10px;overflow:hidden"></div>
+      <p class="sec-title">Affective Traits &amp; Psychomotor Skills</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">
+        <div>
+          <div style="background:var(--g1);color:#fff;padding:6px 12px;font-size:.72rem;font-weight:700;text-transform:uppercase">Affective Traits</div>
+          <div id="pf-aff"></div>
+        </div>
+        <div style="border-left:1px solid var(--border)">
+          <div style="background:var(--g1);color:#fff;padding:6px 12px;font-size:.72rem;font-weight:700;text-transform:uppercase">Psychomotor Skills</div>
+          <div id="pf-psy"></div>
+        </div>
+      </div>
+      <p class="sec-title">School Fees</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="fee-field"><label>Term Fees (N)</label><input class="inp" type="number" id="pf-fee-total" oninput="pfBalance()"/></div>
+        <div class="fee-field"><label>Amount Paid (N)</label><input class="inp" type="number" id="pf-fee-paid" oninput="pfBalance()"/></div>
+        <div class="fee-field"><label>Previous Debt (N)</label><input class="inp" type="number" id="pf-fee-debt" oninput="pfBalance()"/></div>
+        <div class="fee-field"><label>Next Term Fees (N)</label><input class="inp" type="number" id="pf-fee-next"/></div>
+        <div class="fee-field"><label>Next Term Resumption</label><input class="inp" type="date" id="pf-fee-resume"/></div>
+        <div class="fee-balance" id="pf-fee-bal"><div class="val" id="pf-bal-val">N0</div><div class="lbl">Outstanding Balance</div></div>
+      </div>
+      <p class="sec-title">Attendance</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="fee-field"><label>Days Opened</label><input class="inp" type="number" id="pf-att-open"/></div>
+        <div class="fee-field"><label>Days Present</label><input class="inp" type="number" id="pf-att-present" oninput="pfAbsent()"/></div>
+        <div class="fee-field"><label>Days Absent</label><input class="inp" type="number" id="pf-att-absent" readonly style="background:#f3f4f6"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-profile')">Close</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+// ============================================================
+// SUPABASE
+// ============================================================
+var SB_URL='https://wuftzyeajmsxdrbwaawl.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1ZnR6eWVham1zeGRyYndhYXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjczNTgsImV4cCI6MjA4OTQ0MzM1OH0.QUeDRP1IpHCjvecqAOEZAqmMalEFlCLXylZP5D5iLog';
+
+function sbFetch(path,opts){
+  var url=SB_URL+'/rest/v1/'+path;
+  var headers={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+  if(opts&&opts.headers)Object.assign(headers,opts.headers);
+  return fetch(url,Object.assign({},opts,{headers:headers}));
+}
+function dbGet(path){return sbFetch(path).then(function(r){return r.json();});}
+function dbPost(path,body){return sbFetch(path,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();});}
+function dbPatch(path,body){return sbFetch(path,{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
+function dbDelete(path){return sbFetch(path,{method:'DELETE'});}
+function dbUpsert(path,body){return sbFetch(path,{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
+
+// ============================================================
+// CONFIG
+// ============================================================
+var DEFAULT_SCHOOL={name:'WAY TO SUCCESS STANDARD SCHOOLS',addr:'Ifedapo Community, Oko/Ijado Road, Ejigbo, Osun State, Nigeria',phone:'07036521734',email:'sambour12@gmail.com'};
+var DEFAULT_REMARKS=[
+  {min:0,max:39,text:'Needs serious improvement. Must work harder next term.'},
+  {min:40,max:49,text:'Fair performance, but can do better with more effort.'},
+  {min:50,max:59,text:'Satisfactory performance. Can improve with more dedication.'},
+  {min:60,max:69,text:'Good performance. Keep working hard for greater success.'},
+  {min:70,max:79,text:'Very good performance. Keep it up!'},
+  {min:80,max:100,text:'Excellent performance. Keep up the outstanding work!'}
+];
+var DEFAULT_SESSION='2025/2026';
+var DEFAULT_TERM='2nd Term';
+
+function getCfg(){
+  var d=localStorage.getItem('wts_cfg');
+  if(d){try{return JSON.parse(d);}catch(e){}}
+  return{school:Object.assign({},DEFAULT_SCHOOL),remarks:DEFAULT_REMARKS.slice(),session:DEFAULT_SESSION,term:DEFAULT_TERM};
+}
+function saveCfg(cfg){localStorage.setItem('wts_cfg',JSON.stringify(cfg));}
+function getSchool(){return getCfg().school||DEFAULT_SCHOOL;}
+function getAutoRemark(avg){
+  if(avg===''||avg===null)return '--';
+  var r=getCfg().remarks||DEFAULT_REMARKS;
+  for(var i=0;i<r.length;i++){if(avg>=r[i].min&&avg<=r[i].max)return r[i].text;}
+  return '--';
+}
+function isPublished(classKey,idx){
+  var cfg=getCfg();
+  return !!(cfg.published&&cfg.published[classKey]&&cfg.published[classKey][idx]);
+}
+function setPublished(classKey,idx,val){
+  var cfg=getCfg();
+  if(!cfg.published)cfg.published={};
+  if(!cfg.published[classKey])cfg.published[classKey]={};
+  if(val)cfg.published[classKey][idx]=true;
+  else delete cfg.published[classKey][idx];
+  saveCfg(cfg);
+}
+
+// ============================================================
+// SCHOOL DATA
+// ============================================================
+var CORE=['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies'];
+var SIMPLE=['English Language','Mathematics','Phonics','Handwriting','Quantitative Reasoning','Verbal Reasoning','Basic Science','Social Studies','Cultural & Creative Arts','Computer Studies','Religious & National Values'];
+var JSS_CORE=['English Language','Mathematics','Basic Science','Basic Technology','Social Studies','Civic Education','Cultural & Creative Arts','Agricultural Science','Computer Studies','French','Yoruba','Christian Religious Studies','Home Economics','Physical & Health Education','Business Studies'];
+var DEPTS={
+  'creche':      {label:'Creche',        subjects:['English Language','Numeracy','Phonics','Handwriting','Creative Play','Social Skills']},
+  'kg1':         {label:'KG 1',          subjects:SIMPLE.slice()},
+  'kg2':         {label:'KG 2',          subjects:SIMPLE.slice()},
+  'nursery1':    {label:'Nursery 1',     subjects:SIMPLE.slice()},
+  'nursery2':    {label:'Nursery 2',     subjects:SIMPLE.slice()},
+  'primary1':    {label:'Primary 1',     subjects:SIMPLE.slice()},
+  'primary2':    {label:'Primary 2',     subjects:SIMPLE.slice()},
+  'primary3':    {label:'Primary 3',     subjects:SIMPLE.slice()},
+  'primary4':    {label:'Primary 4',     subjects:SIMPLE.slice()},
+  'primary5':    {label:'Primary 5',     subjects:SIMPLE.slice()},
+  'jss1':        {label:'JSS 1',         subjects:JSS_CORE.slice()},
+  'jss2':        {label:'JSS 2',         subjects:JSS_CORE.slice()},
+  'jss3':        {label:'JSS 3',         subjects:JSS_CORE.slice()},
+  'ss1-general': {label:'SS1 - General', subjects:CORE.concat(['Biology','Physics','Chemistry','Literature','Government','I.R.S','Financial Accounting','Commerce','Geography','Agricultural Science'])},
+  'ss2-science': {label:'SS2 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
+  'ss2-arts':    {label:'SS2 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
+  'ss2-business':{label:'SS2 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])},
+  'ss3-science': {label:'SS3 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
+  'ss3-arts':    {label:'SS3 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])}
+};
+var AFF6=['Punctuality','Respect','Attentiveness','Reliability','Neatness','Spirit of Teamwork'];
+var PSY6=['Handwriting','Reading','Verbal Fluency/Diction','Musical Skills','Creative Arts','Physical Education'];
+var GRADE_SCALE=[
+  {min:75,max:100,g:'A1',r:'Excellent', c:'#065f46',bg:'#d1fae5'},
+  {min:70,max:74, g:'B2',r:'Very Good', c:'#065f46',bg:'#d1fae5'},
+  {min:65,max:69, g:'B3',r:'Good',      c:'#065f46',bg:'#d1fae5'},
+  {min:60,max:64, g:'C4',r:'Credit',    c:'#065f46',bg:'#d1fae5'},
+  {min:55,max:59, g:'C5',r:'Credit',    c:'#92400e',bg:'#fef3c7'},
+  {min:50,max:54, g:'C6',r:'Credit',    c:'#92400e',bg:'#fef3c7'},
+  {min:45,max:49, g:'D7',r:'Pass',      c:'#92400e',bg:'#fef3c7'},
+  {min:40,max:44, g:'E8',r:'Pass',      c:'#92400e',bg:'#fef3c7'},
+  {min:0, max:39, g:'F9',r:'Fail',      c:'#991b1b',bg:'#fee2e2'}
+];
+var CARD_THEMES=[
+  {id:'forest',  name:'Forest Green',  primary:'#0a3d2e',accent:'#c9922a',accent2:'#e8b547'},
+  {id:'navy',    name:'Navy & Gold',   primary:'#1e3a5f',accent:'#d4a017',accent2:'#f0c040'},
+  {id:'maroon',  name:'Maroon & Gold', primary:'#6b1f1f',accent:'#c9922a',accent2:'#e8b547'},
+  {id:'purple',  name:'Royal Purple',  primary:'#3d1a6e',accent:'#9b59b6',accent2:'#d7bde2'},
+  {id:'teal',    name:'Teal & Amber',  primary:'#0d6b6b',accent:'#e67e22',accent2:'#f39c12'},
+  {id:'charcoal',name:'Charcoal',      primary:'#2c3e50',accent:'#95a5a6',accent2:'#bdc3c7'}
+];
+var CARD_SECTIONS=[
+  {key:'showHeader',   label:'School Header & Logo'},
+  {key:'showPhoto',    label:'Student Photo'},
+  {key:'showBio',      label:'Bio Section'},
+  {key:'showSummary',  label:'Summary Block'},
+  {key:'showSubjects', label:'Subject Scores Table'},
+  {key:'showAffective',label:'Affective Traits'},
+  {key:'showPsycho',   label:'Psychomotor Skills'},
+  {key:'showFees',     label:'School Fees & Next Term'},
+  {key:'showSignature',label:'Proprietor Signature'}
+];
+
+function subjects(){
+  var cfg=getCfg();
+  if(cfg.depts&&cfg.depts[CLS])return cfg.depts[CLS].subjects;
+  return DEPTS[CLS]?DEPTS[CLS].subjects:[];
+}
+function getGrade(t){
+  if(t===''||t===null||t===undefined)return{g:'',r:'',c:'#aaa',bg:'#f9f9f9'};
+  t=Number(t);
+  for(var i=0;i<GRADE_SCALE.length;i++)if(t>=GRADE_SCALE[i].min&&t<=GRADE_SCALE[i].max)return GRADE_SCALE[i];
+  return{g:'F9',r:'Fail',c:'#991b1b',bg:'#fee2e2'};
+}
+function gc(t){return getGrade(t).c;}
+function computeTotal(sc){
+  if(!sc)return'';
+  var v=[sc.ca1,sc.ca2,sc.ca3,sc.exam];
+  var hasVal=false;
+  for(var i=0;i<v.length;i++)if(v[i]!==''&&v[i]!==null&&v[i]!==undefined)hasVal=true;
+  if(!hasVal)return'';
+  return v.reduce(function(a,x){return a+Number(x||0);},0);
+}
+function getSections(){
+  var cfg=getCfg();
+  var d={};
+  CARD_SECTIONS.forEach(function(s){d[s.key]=true;});
+  return Object.assign(d,cfg.sections||{});
+}
+function getTheme(){
+  var cfg=getCfg();
+  var id=cfg.cardTheme||'forest';
+  for(var i=0;i<CARD_THEMES.length;i++)if(CARD_THEMES[i].id===id)return CARD_THEMES[i];
+  return CARD_THEMES[0];
+}
+
+// ============================================================
+// STATE / DB CACHE
+// ============================================================
+var CLS='ss3-science';
+var photoDataURL='';
+var currentSheetIdx=-1;
+var currentProfileSid='';
+var DB_STUDENTS={};  // classKey -> []
+var DB_SCORES={};    // studentId -> {idx -> {ca1,ca2,ca3,exam}}
+var DB_TRAITS={};    // studentId -> {affective:{},psychomotor:{}}
+var DB_FEES={};      // studentId -> {}
+var DB_REMARKS={};   // studentId -> {}
+var CHARTS={};
+
+function showLoad(msg){
+  var o=document.getElementById('loading-overlay');
+  var t=document.getElementById('loading-text');
+  if(o)o.style.display='flex';
+  if(t)t.textContent=msg||'Loading...';
+}
+function hideLoad(){
+  var o=document.getElementById('loading-overlay');
+  if(o)o.style.display='none';
+}
+function showToast(msg,type){
+  var el=document.getElementById('toast');
+  if(!el)return;
+  el.textContent=msg;
+  el.className='toast show'+(type?' '+type:'');
+  setTimeout(function(){el.className='toast';},3000);
+}
+function showSaved(){
+  var el=document.getElementById('saved-msg');
+  if(el){el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2000);}
+}
+
+function loadClass(key,cb){
+  showLoad('Loading '+DEPTS[key].label+'...');
+  dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc')
+    .then(function(rows){
+      DB_STUDENTS[key]=rows||[];
+      hideLoad();
+      if(cb)cb();
+    })
+    .catch(function(){
+      hideLoad();
+      DB_STUDENTS[key]=DB_STUDENTS[key]||[];
+      showToast('Connection error','error');
+      if(cb)cb();
+    });
+}
+
+function loadStudentData(sid,cb){
+  Promise.all([
+    dbGet('scores?student_id=eq.'+sid),
+    dbGet('traits?student_id=eq.'+sid),
+    dbGet('fees?student_id=eq.'+sid),
+    dbGet('remarks?student_id=eq.'+sid)
+  ]).then(function(res){
+    var scoreMap={};
+    (res[0]||[]).forEach(function(s){
+      scoreMap[s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+    });
+    DB_SCORES[sid]=scoreMap;
+    var traitMap={affective:{},psychomotor:{}};
+    (res[1]||[]).forEach(function(t){
+      if(t.trait_type==='affective')traitMap.affective[t.trait_name]=t.rating;
+      else traitMap.psychomotor[t.trait_name]=t.rating;
+    });
+    DB_TRAITS[sid]=traitMap;
+    DB_FEES[sid]=(res[2]||[])[0]||{};
+    DB_REMARKS[sid]=(res[3]||[])[0]||{};
+    if(cb)cb();
+  }).catch(function(){if(cb)cb();});
+}
+
+function studentSummary(sid){
+  var sc=DB_SCORES[sid]||{};
+  var subjs=subjects();
+  var tots=[],grand=0,cnt=0,pass=0;
+  subjs.forEach(function(_,i){
+    var t=computeTotal(sc[i]);
+    tots.push(t);
+    if(t!==''&&isPublished(CLS,i)){grand+=t;cnt++;if(t>=40)pass++;}
+  });
+  var avg=cnt?Math.round(grand/cnt*10)/10:'';
+  return{tots:tots,grand:cnt?grand:'',avg:avg,pass:cnt?pass:'',cnt:cnt};
+}
+
+function getRanks(){
+  var students=DB_STUDENTS[CLS]||[];
+  var rows=students.map(function(s){return Object.assign({},s,studentSummary(s.id));});
+  rows.sort(function(a,b){return(b.avg||0)-(a.avg||0);});
+  var rank=1;
+  rows.forEach(function(r,i){
+    if(r.avg==='')r.rank='';
+    else{r.rank=(i>0&&rows[i-1].avg===r.avg)?rows[i-1].rank:rank;rank=i+2;}
+  });
+  var map={};rows.forEach(function(r){map[r.id]=r.rank;});
+  return map;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+var IN_CLASS=false;
+
+function setMode(inClass){
+  IN_CLASS=inClass;
+  var nh=document.getElementById('nav-home');
+  var nc=document.getElementById('nav-class');
+  var sl=document.getElementById('sb-class-lbl');
+  var chip=document.getElementById('class-chip');
+  var bnh=document.getElementById('bn-home-strip');
+  var bnc=document.getElementById('bn-class-strip');
+  if(nh)nh.style.display=inClass?'none':'block';
+  if(nc)nc.style.display=inClass?'block':'none';
+  if(sl)sl.style.display=inClass?'block':'none';
+  if(chip)chip.style.display=inClass?'flex':'none';
+  if(bnh)bnh.style.display=inClass?'none':'flex';
+  if(bnc)bnc.style.display=inClass?'flex':'none';
+  if(inClass){
+    var lbl=DEPTS[CLS]?DEPTS[CLS].label:CLS;
+    var sn=document.getElementById('sb-class-name');
+    var cn=document.getElementById('class-chip-name');
+    if(sn)sn.textContent=lbl;
+    if(cn)cn.textContent=lbl;
+  }
+}
+
+function navTo(id,el){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','print-active');});
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
+  var pg=document.getElementById('page-'+id);
+  if(!pg)return;
+  pg.classList.add('active');
+  if(id==='card'||id==='broadsheet')pg.classList.add('print-active');
+  if(el)el.classList.add('active');
+  var titles={
+    home:'Home', dashboard:'Dashboard', students:'Student Roster',
+    scores:'Score Entry', broadsheet:'Class Broadsheet',
+    card:'Result Cards', analytics:'Analytics', settings:'Settings'
+  };
+  document.getElementById('tb-title').textContent=titles[id]||id;
+  var sub=id==='home'?'Way To Success Standard Schools':
+          id==='settings'?'System Configuration':
+          DEPTS[CLS]?DEPTS[CLS].label+' - '+titles[id]:'';
+  document.getElementById('tb-sub').textContent=sub;
+  if(id==='home'){setMode(false);renderHome();}
+  if(id==='dashboard')renderDash();
+  if(id==='students')renderStudents();
+  if(id==='scores')renderScoreGrid();
+  if(id==='broadsheet')renderBroadsheet();
+  if(id==='card'){populateCardSel();renderCard();}
+  if(id==='analytics')renderAnalytics();
+  if(id==='settings')renderSettings();
+  closeSidebar();
+}
+
+function mobileNav(id,el){
+  document.querySelectorAll('.bn-item').forEach(function(b){b.classList.remove('active');});
+  if(el)el.classList.add('active');
+  navTo(id,null);
+}
+
+function goHome(){
+  setMode(false);
+  navTo('home',document.getElementById('ni-home'));
+}
+
+function enterClass(key){
+  if(!DEPTS[key]){showToast('Unknown class','error');return;}
+  CLS=key;
+  setMode(true);
+  loadClass(key,function(){
+    navTo('dashboard',document.getElementById('ni-dashboard'));
+  });
+}
+
+// ============================================================
+// HOME PAGE
+// ============================================================
+var HOME_GROUPS=[
+  {grid:'hg-early',keys:['creche','kg1','kg2','nursery1','nursery2']},
+  {grid:'hg-primary',keys:['primary1','primary2','primary3','primary4','primary5']},
+  {grid:'hg-jss',keys:['jss1','jss2','jss3']},
+  {grid:'hg-ss',keys:['ss1-general','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts']}
+];
+
+function renderHome(){
+  var cfg=getCfg();
+  var badge=document.getElementById('home-session');
+  if(badge)badge.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
+  HOME_GROUPS.forEach(function(group){
+    var el=document.getElementById(group.grid);
+    if(!el)return;
+    var html='';
+    group.keys.forEach(function(key){
+      var d=DEPTS[key];if(!d)return;
+      var count=(DB_STUDENTS[key]||[]).length;
+      html+='<div class="class-card" id="cc-'+key+'">'
+        +'<div class="cc-name">'+d.label+'</div>'
+        +'<div class="cc-count">'+(count?count+' student'+(count===1?'':'s'):'Tap to open')+'</div>'
+        +'</div>';
+    });
+    el.innerHTML=html;
+    // Attach click handlers after rendering
+    group.keys.forEach(function(key){
+      var card=document.getElementById('cc-'+key);
+      if(card){
+        card.onclick=function(){enterClass(key);};
+      }
+    });
+  });
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDash(){
+  var students=DB_STUDENTS[CLS]||[];
+  document.getElementById('d-stu').textContent=students.length;
+  document.getElementById('d-tbl-title').textContent=DEPTS[CLS].label+' - Students';
+  var ent=students.filter(function(s){return DB_SCORES[s.id]&&Object.keys(DB_SCORES[s.id]).some(function(k){return!isNaN(k);});}).length;
+  document.getElementById('d-ent').textContent=ent;
+  var avgs=students.map(function(s){return studentSummary(s.id).avg;}).filter(function(x){return x!=='';});
+  document.getElementById('d-avg').textContent=avgs.length?(avgs.reduce(function(a,x){return a+x;},0)/avgs.length).toFixed(1):'--';
+  document.getElementById('d-pass').textContent=avgs.length?Math.round(avgs.filter(function(x){return x>=40;}).length/avgs.length*100)+'%':'--';
+  var ranks=getRanks();
+  var tbody=document.getElementById('d-tbody');
+  if(!students.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">No students yet. Add students to get started.</td></tr>';
+    return;
+  }
+  var dept=DEPTS[CLS].label;
+  var deptPart=dept.includes('-')?dept.split('-')[1].trim():dept;
+  var deptKey=CLS.includes('science')?'badge-sci':CLS.includes('arts')?'badge-arts':'badge-bus';
+  tbody.innerHTML=students.map(function(s,i){
+    var avg=studentSummary(s.id).avg;
+    var fees=DB_FEES[s.id]||{};
+    var bal=Number(fees.total||0)+Number(fees.debt||0)-Number(fees.paid||0);
+    var feesBadge=fees.total?(bal<=0?'<span class="badge badge-green">Cleared</span>':'<span class="badge badge-red">N'+bal.toLocaleString()+'</span>'):'<span style="color:#ccc">--</span>';
+    var rk=ranks[s.id];
+    var rkEl=rk?'<span class="rk '+(rk<=3?'rk'+rk:'rkn')+'">'+rk+'</span>':'--';
+    return'<tr data-clickable data-sid="'+s.id+'">'
+      +'<td>'+(i+1)+'</td>'
+      +'<td><strong style="color:var(--g1)">'+s.name+'</strong> <small style="color:var(--g3);font-size:.68rem">view</small></td>'
+      +'<td><span class="badge '+(s.gender==='Male'?'badge-blue':'badge-gold')+'">'+s.gender+'</span></td>'
+      +'<td><span class="badge '+deptKey+'">'+deptPart+'</span></td>'
+      +'<td style="font-weight:700;color:'+(avg!==''?gc(avg):'#aaa')+'">'+(avg!==''?avg:'--')+'</td>'
+      +'<td>'+rkEl+'</td><td>'+feesBadge+'</td></tr>';
+  }).join('');
+  // Attach click handlers
+  var rows=tbody.querySelectorAll('tr[data-sid]');
+  rows.forEach(function(row){
+    row.onclick=function(){openProfile(row.getAttribute('data-sid'));};
+  });
+}
+
+// ============================================================
+// STUDENTS
+// ============================================================
+function renderStudents(){
+  var students=DB_STUDENTS[CLS]||[];
+  var tbody=document.getElementById('stu-tbody');
+  if(!students.length){
+    tbody.innerHTML='<tr><td colspan="7"><div class="empty"><h3>No Students</h3><p>Add students to get started</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML=students.map(function(s,i){
+    return'<tr>'
+      +'<td><strong>'+(i+1)+'</strong></td>'
+      +'<td><strong>'+s.name+'</strong></td>'
+      +'<td><span class="badge '+(s.gender==='Male'?'badge-blue':'badge-gold')+'">'+s.gender+'</span></td>'
+      +'<td>'+(s.admno||'--')+'</td>'
+      +'<td>'+(s.house||'--')+'</td>'
+      +'<td>'+(s.photo?'<img src="'+s.photo+'" style="width:30px;height:36px;object-fit:cover;border-radius:4px"/>':'--')+'</td>'
+      +'<td style="display:flex;gap:6px">'
+      +'<button class="btn btn-outline btn-xs" data-edit="'+s.id+'">Edit</button>'
+      +'<button class="btn btn-danger btn-xs" data-del="'+s.id+'">Del</button>'
+      +'</td></tr>';
+  }).join('');
+  tbody.querySelectorAll('[data-edit]').forEach(function(btn){
+    btn.onclick=function(){openEditStu(btn.getAttribute('data-edit'));};
+  });
+  tbody.querySelectorAll('[data-del]').forEach(function(btn){
+    btn.onclick=function(){deleteStu(btn.getAttribute('data-del'));};
+  });
+}
+
+function openAddStudent(){
+  photoDataURL='';
+  document.getElementById('modal-title').textContent='Add Student';
+  document.getElementById('edit-id').value='';
+  ['name','admno','house','age'].forEach(function(f){document.getElementById('in-'+f).value='';});
+  document.getElementById('in-gender').value='';
+  document.getElementById('photo-preview').innerHTML='<span style="font-size:1.5rem">&#128247;</span><span style="font-size:.6rem">No photo</span>';
+  document.getElementById('clear-photo-btn').style.display='none';
+  document.getElementById('modal-stu').style.display='flex';
+}
+function openEditStu(id){
+  var s=(DB_STUDENTS[CLS]||[]).find(function(x){return x.id===id;});
+  if(!s)return;
+  document.getElementById('modal-title').textContent='Edit Student';
+  document.getElementById('edit-id').value=id;
+  document.getElementById('in-name').value=s.name;
+  document.getElementById('in-admno').value=s.admno||'';
+  document.getElementById('in-gender').value=s.gender;
+  document.getElementById('in-house').value=s.house||'';
+  document.getElementById('in-age').value=s.age||'';
+  photoDataURL=s.photo||'';
+  var pp=document.getElementById('photo-preview');
+  if(s.photo){
+    pp.innerHTML='<img src="'+s.photo+'" style="width:100%;height:100%;object-fit:cover"/>';
+    document.getElementById('clear-photo-btn').style.display='block';
+  }else{
+    pp.innerHTML='<span style="font-size:1.5rem">&#128247;</span><span style="font-size:.6rem">No photo</span>';
+    document.getElementById('clear-photo-btn').style.display='none';
+  }
+  document.getElementById('modal-stu').style.display='flex';
+}
+function handlePhoto(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      var MAX_W=200,MAX_H=250,w=img.width,h=img.height;
+      var ratio=Math.min(MAX_W/w,MAX_H/h);
+      if(ratio<1){w=Math.round(w*ratio);h=Math.round(h*ratio);}
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      photoDataURL=canvas.toDataURL('image/jpeg',0.75);
+      document.getElementById('photo-preview').innerHTML='<img src="'+photoDataURL+'" style="width:100%;height:100%;object-fit:cover"/>';
+      document.getElementById('clear-photo-btn').style.display='block';
+    };
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(f);
+}
+function clearPhoto(){
+  photoDataURL='';
+  document.getElementById('photo-preview').innerHTML='<span style="font-size:1.5rem">&#128247;</span><span style="font-size:.6rem">No photo</span>';
+  document.getElementById('clear-photo-btn').style.display='none';
+}
+function saveStu(){
+  var name=document.getElementById('in-name').value.trim();
+  var gender=document.getElementById('in-gender').value;
+  if(!name||!gender){alert('Name and gender required.');return;}
+  var obj={name:name,gender:gender,
+    admno:document.getElementById('in-admno').value.trim(),
+    house:document.getElementById('in-house').value.trim(),
+    age:document.getElementById('in-age').value,
+    photo:photoDataURL};
+  var eid=document.getElementById('edit-id').value;
+  showLoad('Saving...');
+  if(eid){
+    dbPatch('students?id=eq.'+eid,obj).then(function(){
+      var s=(DB_STUDENTS[CLS]||[]).find(function(x){return x.id===eid;});
+      if(s)Object.assign(s,obj);
+      hideLoad();showToast('Student updated');closeModal('modal-stu');renderStudents();
+    }).catch(function(){hideLoad();showToast('Save failed','error');});
+  }else{
+    dbUpsert('students',Object.assign({class_key:CLS},obj)).then(function(res){
+      var ns=Array.isArray(res)?res[0]:res;
+      if(!DB_STUDENTS[CLS])DB_STUDENTS[CLS]=[];
+      DB_STUDENTS[CLS].push(ns);
+      hideLoad();showToast('Student added');closeModal('modal-stu');renderStudents();renderDash();
+    }).catch(function(){hideLoad();showToast('Save failed','error');});
+  }
+}
+function deleteStu(id){
+  if(!confirm('Delete this student and all their records?'))return;
+  showLoad('Deleting...');
+  dbDelete('students?id=eq.'+id).then(function(){
+    DB_STUDENTS[CLS]=(DB_STUDENTS[CLS]||[]).filter(function(s){return s.id!==id;});
+    delete DB_SCORES[id];delete DB_TRAITS[id];delete DB_FEES[id];delete DB_REMARKS[id];
+    hideLoad();showToast('Deleted');renderStudents();renderDash();
+  }).catch(function(){hideLoad();showToast('Delete failed','error');});
+}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+// ============================================================
+// SCORE ENTRY - SUBJECT CENTRIC
+// ============================================================
+function renderScoreGrid(){
+  var students=DB_STUDENTS[CLS]||[];
+  var subjs=subjects();
+  var el=document.getElementById('subj-cards');
+  document.getElementById('scores-grid-view').style.display='block';
+  document.getElementById('scores-sheet-view').style.display='none';
+  if(!students.length){
+    el.innerHTML='<div class="empty"><h3>No Students</h3><p>Add students first</p></div>';
+    return;
+  }
+  var html='';
+  subjs.forEach(function(subj,i){
+    var isPub=isPublished(CLS,i);
+    var filled=students.filter(function(s){
+      var sc=(DB_SCORES[s.id]||{})[i]||{};
+      return sc.ca1!==''&&sc.ca1!==undefined||sc.exam!==''&&sc.exam!==undefined;
+    }).length;
+    html+='<div class="subj-card'+(isPub?' published':'')+'" id="scard-'+i+'">'
+      +'<span class="subj-badge '+(isPub?'pub':'draft')+'">'+(isPub?'Published':'Draft')+'</span>'
+      +'<div class="subj-name">'+(i+1)+'. '+subj+'</div>'
+      +'<div class="subj-count">'+filled+'/'+students.length+' scored</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+  subjs.forEach(function(_,i){
+    var card=document.getElementById('scard-'+i);
+    if(card){
+      card.onclick=(function(idx){return function(){openSheet(idx);};})(i);
+    }
+  });
+}
+
+function openSheet(idx){
+  var students=DB_STUDENTS[CLS]||[];
+  var subjs=subjects();
+  currentSheetIdx=idx;
+  var isPub=isPublished(CLS,idx);
+  document.getElementById('scores-grid-view').style.display='none';
+  document.getElementById('scores-sheet-view').style.display='block';
+  document.getElementById('sheet-title').textContent=(idx+1)+'. '+subjs[idx];
+  var badge=document.getElementById('sheet-pub-badge');
+  var btn=document.getElementById('publish-btn');
+  badge.style.display=isPub?'inline':'none';
+  btn.textContent=isPub?'Unpublish':'Publish Subject';
+  btn.className=isPub?'btn btn-outline':'btn btn-primary';
+  var html='';
+  students.forEach(function(s,rowIdx){
+    var sc=(DB_SCORES[s.id]||{})[idx]||{};
+    var t=computeTotal(sc);var gd=getGrade(t);
+    html+='<div class="sheet-row" style="background:'+(rowIdx%2===0?'#fff':'#fafafa')+'">'
+      +'<span style="font-size:.75rem;color:var(--gray)">'+(rowIdx+1)+'</span>'
+      +'<span style="font-size:.82rem;font-weight:600;color:var(--g1)">'+s.name+'</span>'
+      +'<input class="sc-inp" type="number" min="0" max="10" value="'+(sc.ca1||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="ca1"/>'
+      +'<input class="sc-inp" type="number" min="0" max="10" value="'+(sc.ca2||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="ca2"/>'
+      +'<input class="sc-inp" type="number" min="0" max="10" value="'+(sc.ca3||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="ca3"/>'
+      +'<input class="sc-inp" type="number" min="0" max="70" value="'+(sc.exam||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="exam"/>'
+      +'<span id="st-'+s.id+'" style="text-align:center;font-weight:700;font-size:.82rem;color:var(--g1)">'+(t!==''?t:'--')+'</span>'
+      +'<span style="text-align:center;font-weight:700;font-size:.78rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'--')+'</span>'
+      +'<span style="text-align:center;font-size:.75rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.r||'--')+'</span>'
+      +'</div>';
+  });
+  document.getElementById('sheet-rows').innerHTML=html;
+  // Attach input handlers
+  document.querySelectorAll('#sheet-rows .sc-inp').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      var sid=inp.getAttribute('data-sid');
+      var field=inp.getAttribute('data-field');
+      var max=field==='exam'?70:10;
+      var raw=Number(inp.value)||0;
+      inp.classList.toggle('over-limit',raw>max);
+      if(raw>max){showToast('Max '+(field==='exam'?'Exam':'CA')+' is '+max,'error');return;}
+      if(!DB_SCORES[sid])DB_SCORES[sid]={};
+      if(!DB_SCORES[sid][idx])DB_SCORES[sid][idx]={ca1:'',ca2:'',ca3:'',exam:''};
+      DB_SCORES[sid][idx][field]=Math.min(max,Math.max(0,raw));
+      var t=computeTotal(DB_SCORES[sid][idx]);
+      var gd=getGrade(t);
+      var totEl=document.getElementById('st-'+sid);
+      if(totEl)totEl.textContent=t!==''?t:'--';
+      // Auto-save after 1.5s
+      clearTimeout(inp._timer);
+      inp._timer=setTimeout(function(){
+        dbUpsert('scores',{student_id:sid,class_key:CLS,subject_index:idx,
+          ca1:DB_SCORES[sid][idx].ca1,ca2:DB_SCORES[sid][idx].ca2,
+          ca3:DB_SCORES[sid][idx].ca3,exam:DB_SCORES[sid][idx].exam})
+          .catch(function(){showToast('Score save failed','error');});
+      },1500);
+    });
+  });
+}
+
+function closeSheet(){
+  currentSheetIdx=-1;
+  document.getElementById('scores-sheet-view').style.display='none';
+  document.getElementById('scores-grid-view').style.display='block';
+  renderScoreGrid();
+}
+
+function saveDraft(){
+  var idx=currentSheetIdx;if(idx<0)return;
+  var students=DB_STUDENTS[CLS]||[];
+  showLoad('Saving...');
+  Promise.all(students.map(function(s){
+    var sc=(DB_SCORES[s.id]||{})[idx]||{ca1:'',ca2:'',ca3:'',exam:''};
+    return dbUpsert('scores',{student_id:s.id,class_key:CLS,subject_index:idx,
+      ca1:sc.ca1,ca2:sc.ca2,ca3:sc.ca3,exam:sc.exam});
+  })).then(function(){hideLoad();showToast('Draft saved');})
+  .catch(function(){hideLoad();showToast('Save failed','error');});
+}
+
+function togglePublish(){
+  var idx=currentSheetIdx;if(idx<0)return;
+  var isPub=isPublished(CLS,idx);
+  if(isPub){
+    setPublished(CLS,idx,false);
+    document.getElementById('sheet-pub-badge').style.display='none';
+    var btn=document.getElementById('publish-btn');
+    btn.textContent='Publish Subject';btn.className='btn btn-primary';
+    showToast('Subject unpublished');
+  }else{
+    saveDraft();
+    setPublished(CLS,idx,true);
+    document.getElementById('sheet-pub-badge').style.display='inline';
+    var btn2=document.getElementById('publish-btn');
+    btn2.textContent='Unpublish';btn2.className='btn btn-outline';
+    showToast('Subject published');
+  }
+}
+
+// ============================================================
+// STUDENT PROFILE MODAL
+// ============================================================
+function openProfile(sid){
+  var students=DB_STUDENTS[CLS]||[];
+  var s=students.find(function(x){return x.id===sid;});
+  if(!s)return;
+  currentProfileSid=sid;
+  // Load student data if not cached
+  if(!DB_SCORES[sid]){
+    showLoad('Loading profile...');
+    loadStudentData(sid,function(){hideLoad();renderProfile(s);});
+  }else{renderProfile(s);}
+}
+
+function renderProfile(s){
+  var sid=s.id;
+  document.getElementById('pf-name').textContent=s.name;
+  document.getElementById('pf-fullname').textContent=s.name;
+  document.getElementById('pf-admno').textContent=s.admno||'--';
+  document.getElementById('pf-gender').textContent=s.gender;
+  document.getElementById('pf-age').textContent=s.age||'--';
+  document.getElementById('pf-class').textContent=DEPTS[CLS]?DEPTS[CLS].label:CLS;
+  var photo=document.getElementById('pf-photo');
+  photo.innerHTML=s.photo?'<img src="'+s.photo+'" style="width:100%;height:100%;object-fit:cover"/>':'&#128100;';
+
+  // Published subjects
+  var subjs=subjects();var sc=DB_SCORES[sid]||{};
+  var pubHtml='';
+  subjs.forEach(function(subj,i){
+    if(!isPublished(CLS,i))return;
+    var r=sc[i]||{};var t=computeTotal(r);var gd=getGrade(t);
+    pubHtml+='<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border);font-size:.82rem">'
+      +'<span style="font-weight:600;color:var(--g1)">'+(i+1)+'. '+subj+'</span>'
+      +'<div style="display:flex;gap:12px;font-size:.78rem">'
+      +'<span>CA:'+(Number(r.ca1||0)+Number(r.ca2||0)+Number(r.ca3||0))+'</span>'
+      +'<span>Exam:'+(r.exam||'--')+'</span>'
+      +'<span style="font-weight:700;color:var(--g1)">Total:'+(t!==''?t:'--')+'</span>'
+      +'<span style="font-weight:700;color:'+gd.c+'">'+(gd.g||'--')+'</span>'
+      +'</div></div>';
+  });
+  document.getElementById('pf-subjects').innerHTML=pubHtml||'<div style="padding:12px;color:var(--gray);font-size:.82rem">No published subjects yet.</div>';
+
+  // Traits
+  var traits=DB_TRAITS[sid]||{affective:{},psychomotor:{}};
+  var aff=traits.affective||{};var psy=traits.psychomotor||{};
+  document.getElementById('pf-aff').innerHTML=AFF6.map(function(tr,i){
+    var val=aff[tr]||0;
+    var stars=[1,2,3,4,5].map(function(n){
+      return'<span class="star'+(val>=n?' on':'')+'" data-tr="'+tr+'" data-n="'+n+'" data-sid="'+sid+'" data-type="aff">&#9733;</span>';
+    }).join('');
+    return'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 12px;border-bottom:'+(i<AFF6.length-1?'1px solid var(--border)':'none')+';font-size:.78rem"><span>'+tr+'</span><div class="stars" id="pfa-'+i+'">'+stars+'</div></div>';
+  }).join('');
+  document.getElementById('pf-psy').innerHTML=PSY6.map(function(tr,i){
+    var val=psy[tr]||0;
+    var stars=[1,2,3,4,5].map(function(n){
+      return'<span class="star'+(val>=n?' on':'')+'" data-tr="'+tr+'" data-n="'+n+'" data-sid="'+sid+'" data-type="psy">&#9733;</span>';
+    }).join('');
+    return'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 12px;border-bottom:'+(i<PSY6.length-1?'1px solid var(--border)':'none')+';font-size:.78rem"><span>'+tr+'</span><div class="stars" id="pfp-'+i+'">'+stars+'</div></div>';
+  }).join('');
+  // Star click handlers
+  document.querySelectorAll('#pf-aff .star,#pf-psy .star').forEach(function(sp){
+    sp.onclick=function(){
+      var tr=sp.getAttribute('data-tr');
+      var n=Number(sp.getAttribute('data-n'));
+      var type=sp.getAttribute('data-type');
+      var fsid=sp.getAttribute('data-sid');
+      if(!DB_TRAITS[fsid])DB_TRAITS[fsid]={affective:{},psychomotor:{}};
+      var key=type==='aff'?'affective':'psychomotor';
+      DB_TRAITS[fsid][key][tr]=n;
+      // Update stars in same container
+      var container=sp.parentNode;
+      container.querySelectorAll('.star').forEach(function(s,i){s.classList.toggle('on',i<n);});
+      dbUpsert('traits',{student_id:fsid,class_key:CLS,trait_type:key,trait_name:tr,rating:n})
+        .catch(function(){showToast('Rating failed','error');});
+    };
+  });
+
+  // Fees
+  var fees=DB_FEES[sid]||{};
+  document.getElementById('pf-fee-total').value=fees.total||'';
+  document.getElementById('pf-fee-paid').value=fees.paid||'';
+  document.getElementById('pf-fee-debt').value=fees.debt||'';
+  document.getElementById('pf-fee-next').value=fees.next_term||fees.next||'';
+  document.getElementById('pf-fee-resume').value=fees.resume_date||fees.resume||'';
+  pfBalance();
+
+  // Attendance
+  var rem=DB_REMARKS[sid]||{};
+  document.getElementById('pf-att-open').value=rem.days_opened||'';
+  document.getElementById('pf-att-present').value=rem.days_present||'';
+  document.getElementById('pf-att-absent').value=(Number(rem.days_opened||0)-Number(rem.days_present||0))||'';
+
+  document.getElementById('modal-profile').style.display='flex';
+}
+
+function pfBalance(){
+  var t=Number(document.getElementById('pf-fee-total').value||0);
+  var p=Number(document.getElementById('pf-fee-paid').value||0);
+  var d=Number(document.getElementById('pf-fee-debt').value||0);
+  var bal=t+d-p;
+  document.getElementById('pf-bal-val').textContent='N'+bal.toLocaleString();
+  document.getElementById('pf-fee-bal').style.background=
+    bal<=0?'linear-gradient(135deg,#065f46,#10b981)':'linear-gradient(135deg,#7f1d1d,#c0392b)';
+}
+function pfAbsent(){
+  var op=Number(document.getElementById('pf-att-open').value||0);
+  var pr=Number(document.getElementById('pf-att-present').value||0);
+  document.getElementById('pf-att-absent').value=Math.max(0,op-pr);
+}
+function saveProfile(){
+  var sid=currentProfileSid;if(!sid)return;
+  var op=Number(document.getElementById('pf-att-open').value||0);
+  var pr=Number(document.getElementById('pf-att-present').value||0);
+  showLoad('Saving...');
+  Promise.all([
+    dbUpsert('fees',{student_id:sid,class_key:CLS,
+      total:Number(document.getElementById('pf-fee-total').value||0),
+      paid:Number(document.getElementById('pf-fee-paid').value||0),
+      debt:Number(document.getElementById('pf-fee-debt').value||0),
+      resume_date:document.getElementById('pf-fee-resume').value,
+      next_term:Number(document.getElementById('pf-fee-next').value||0)}),
+    dbUpsert('remarks',{student_id:sid,class_key:CLS,
+      academic:'',form_master:'',principal:'',days_opened:op,days_present:pr})
+  ]).then(function(){
+    DB_FEES[sid]={total:Number(document.getElementById('pf-fee-total').value||0),paid:Number(document.getElementById('pf-fee-paid').value||0),debt:Number(document.getElementById('pf-fee-debt').value||0),resume_date:document.getElementById('pf-fee-resume').value,next_term:Number(document.getElementById('pf-fee-next').value||0)};
+    DB_REMARKS[sid]=DB_REMARKS[sid]||{};
+    DB_REMARKS[sid].days_opened=op;DB_REMARKS[sid].days_present=pr;
+    hideLoad();showToast('Profile saved');closeModal('modal-profile');
+  }).catch(function(){hideLoad();showToast('Save failed','error');});
+}
+
+// ============================================================
+// BROADSHEET
+// ============================================================
+function renderBroadsheet(){
+  var students=DB_STUDENTS[CLS]||[];
+  var subjs=subjects();
+  var fixCols='<th rowspan="2">#</th><th rowspan="2" style="text-align:left">STUDENT</th><th rowspan="2">G</th>';
+  var subjGrpHdrs=subjs.map(function(s){return'<th colspan="5" style="text-align:center;border-left:2px solid rgba(255,255,255,.2)">'+(s.length>12?s.slice(0,12)+'..':s)+'</th>';}).join('');
+  var subjSubHdrs=subjs.map(function(){return'<th style="border-left:2px solid rgba(255,255,255,.15);font-size:.6rem">CA1</th><th style="font-size:.6rem">CA2</th><th style="font-size:.6rem">CA3</th><th style="font-size:.6rem">EXM</th><th style="font-size:.6rem;background:#1a4a38">TOT</th>';}).join('');
+  document.getElementById('bs-thead').innerHTML='<tr>'+fixCols+subjGrpHdrs+'</tr><tr>'+subjSubHdrs+'</tr>';
+  if(!students.length){document.getElementById('bs-tbody').innerHTML='<tr><td colspan="'+(3+subjs.length*5)+'" style="text-align:center;padding:30px;color:var(--gray)">No students</td></tr>';return;}
+  document.getElementById('bs-tbody').innerHTML=students.map(function(s,idx){
+    var sc=DB_SCORES[s.id]||{};
+    var cells=subjs.map(function(_,i){
+      var r=sc[i]||{};var t=computeTotal(r);var gd=getGrade(t);
+      return'<td style="border-left:2px solid var(--border)">'+(r.ca1!==undefined&&r.ca1!==''?r.ca1:'--')+'</td>'
+        +'<td>'+(r.ca2!==undefined&&r.ca2!==''?r.ca2:'--')+'</td>'
+        +'<td>'+(r.ca3!==undefined&&r.ca3!==''?r.ca3:'--')+'</td>'
+        +'<td>'+(r.exam!==undefined&&r.exam!==''?r.exam:'--')+'</td>'
+        +'<td style="font-weight:700;color:'+(t!==''?gd.c:'#aaa')+'">'+(t!==''?t:'--')+'</td>';
+    }).join('');
+    return'<tr><td style="text-align:center">'+(idx+1)+'</td><td style="font-weight:600">'+s.name+'</td><td>'+(s.gender==='Male'?'M':'F')+'</td>'+cells+'</tr>';
+  }).join('');
+}
+
+// ============================================================
+// RESULT CARD
+// ============================================================
+function populateCardSel(){
+  var students=DB_STUDENTS[CLS]||[];
+  var sel=document.getElementById('rc-stu');
+  var cur=sel.value;
+  sel.innerHTML='<option value="">Select student</option>'+students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+  if(cur)sel.value=cur;
+}
+function renderCard(){
+  var sid=document.getElementById('rc-stu').value;
+  var wrap=document.getElementById('rc-wrap');
+  if(!sid){wrap.innerHTML='<div class="empty"><h3>Select a Student</h3><p>Choose a student to generate their result card</p></div>';return;}
+  var term=document.getElementById('rc-term').value;
+  var session=document.getElementById('rc-session').value;
+  if(!DB_SCORES[sid]){
+    showLoad('Loading card data...');
+    loadStudentData(sid,function(){hideLoad();wrap.innerHTML=buildCard(sid,term,session);});
+  }else{wrap.innerHTML=buildCard(sid,term,session);}
+}
+function printAll(){
+  var students=DB_STUDENTS[CLS]||[];
+  if(!students.length){alert('No students.');return;}
+  var term=document.getElementById('rc-term').value;
+  var session=document.getElementById('rc-session').value;
+  var wrap=document.getElementById('rc-wrap');
+  var orig=document.getElementById('rc-stu').value;
+  wrap.innerHTML=students.map(function(s){return buildCard(s.id,term,session);}).join('<div style="page-break-after:always"></div>');
+  setTimeout(function(){window.print();setTimeout(function(){if(orig){document.getElementById('rc-stu').value=orig;renderCard();}},300);},300);
+}
+
+function buildCard(sid,term,session){
+  var students=DB_STUDENTS[CLS]||[];
+  var s=students.find(function(x){return x.id===sid;});
+  if(!s)return'';
+  var subjs=subjects();
+  var sc=DB_SCORES[sid]||{};
+  var fees=DB_FEES[sid]||{};
+  var rem=DB_REMARKS[sid]||{};
+  var traits=DB_TRAITS[sid]||{affective:{},psychomotor:{}};
+  var aff=traits.affective||{};var psy=traits.psychomotor||{};
+  var n=students.length;
+  var sec=getSections();
+  var school=getSchool();
+  var cfg=getCfg();var sig=cfg.signature||{};
+
+  var allAvgs=students.map(function(st){return studentSummary(st.id).avg;}).filter(function(x){return x!=='';});
+  var classAvg=allAvgs.length?Math.round(allAvgs.reduce(function(a,x){return a+x;},0)/allAvgs.length*10)/10:'--';
+  var lowestAvg=allAvgs.length?Math.min.apply(null,allAvgs):'--';
+  var highestAvg=allAvgs.length?Math.max.apply(null,allAvgs):'--';
+  var smry=studentSummary(sid);
+  var tots=smry.tots,grand=smry.grand,avg=smry.avg,pass=smry.pass,cnt=smry.cnt;
+
+  var subjStats=subjs.map(function(_,i){
+    var all=students.map(function(st){var ss=DB_SCORES[st.id]||{};return computeTotal(ss[i]);}).filter(function(x){return x!=='';});
+    var hi=all.length?Math.max.apply(null,all):'--';
+    var ca=all.length?Math.round(all.reduce(function(a,x){return a+x;},0)/all.length*10)/10:'--';
+    var sorted=all.slice().sort(function(a,b){return b-a;});
+    var pos=tots[i]!==''?sorted.indexOf(tots[i])+1:'--';
+    return{hi:hi,ca:ca,pos:pos};
+  });
+
+  var resumeDate=fees.resume_date?new Date(fees.resume_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):fees.resume?new Date(fees.resume).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
+  var feeBal=Number(fees.total||0)+Number(fees.debt||0)-Number(fees.paid||0);
+  var dept=DEPTS[CLS]?DEPTS[CLS].label:CLS;
+  var overallPerf=avg!==''?getGrade(avg).r:'--';
+  var att={opened:rem.days_opened||'',present:rem.days_present||'',absent:Number(rem.days_opened||0)-Number(rem.days_present||0)||''};
+
+  // Card colours - navy/mint school uniform
+  var NAVY='#1a2a44',MINT='#e8f5f1',TEAL='#4f9d86',BORDER='#b2d8ce',WHITE='#ffffff';
+  var P='-webkit-print-color-adjust:exact;print-color-adjust:exact';
+
+  var sigHTML=sig.image?('<img src="'+sig.image+'" style="height:38px;max-width:130px;object-fit:contain"/>')
+    :sig.name?('<div style="font-family:Dancing Script,cursive;font-size:1.3rem;color:'+NAVY+'">'+sig.name+'</div>'):'';
+  var sigTitle=sig.title||'Proprietor';
+
+  var h='<div style="background:'+WHITE+';max-width:800px;font-family:Segoe UI,Tahoma,sans-serif;font-size:9pt;border-top:7px solid '+NAVY+';'+P+'">';
+
+  // HEADER
+  if(sec.showHeader){
+    h+='<div style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:2px solid '+TEAL+';background:'+NAVY+';'+P+'">'
+      +'<div style="background:'+TEAL+';border-radius:8px;padding:7px 10px;flex-shrink:0;'+P+'">'
+      +'<div style="font-weight:900;font-size:20pt;line-height:1;color:'+WHITE+'">W<span style="color:'+NAVY+'">T</span>S</div>'
+      +'</div>'
+      +'<div style="flex:1">'
+      +'<div style="color:'+TEAL+';font-size:15pt;font-weight:900;text-transform:uppercase">'+school.name+'</div>'
+      +'<div style="color:rgba(255,255,255,.75);font-size:8pt;margin-top:2px">'+school.addr+'</div>'
+      +'<div style="color:rgba(255,255,255,.65);font-size:8pt">Phone: '+school.phone+' | Email: '+school.email+'</div>'
+      +'</div>'
+      +(sec.showPhoto&&s.photo?'<img src="'+s.photo+'" style="width:65px;height:78px;object-fit:cover;border-radius:4px;border:2px solid '+TEAL+';flex-shrink:0"/>':'')
+      +'</div>';
+  }
+
+  // BIO
+  if(sec.showBio){
+    h+='<table style="width:100%;border-collapse:collapse;border-bottom:2px solid '+NAVY+'">'
+      +'<tr>'
+      +'<td rowspan="2" style="background:'+NAVY+';color:'+WHITE+';padding:7px 10px;width:92px;vertical-align:top;border-right:2px solid '+TEAL+';'+P+'">'
+      +'<div style="font-size:7.5pt;font-weight:700">REG. NO:</div>'
+      +'<div style="font-size:9pt;font-weight:700;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:4px;margin-bottom:4px">'+(s.admno||'--')+'</div>'
+      +'<div style="font-size:7.5pt;font-weight:700">SESSION:</div>'
+      +'<div style="font-size:9pt;font-weight:700">'+session+'</div>'
+      +'</td>'
+      +'<td colspan="2" style="padding:7px 12px;background:'+MINT+';'+P+'">'
+      +'<div style="font-size:10pt;font-weight:700;color:'+NAVY+'">NAME OF STUDENT: <span style="font-size:11pt;text-transform:uppercase">'+s.name+'</span></div>'
+      +'<div style="margin-top:4px;display:flex;gap:20px;font-size:9pt">'
+      +'<span><strong>GENDER:</strong> '+s.gender+'</span>'
+      +'<span><strong>CLASS:</strong> '+dept+'</span>'
+      +'<span><strong>AGE:</strong> '+(s.age||'--')+'</span>'
+      +'</div>'
+      +'</td>'
+      +'<td style="padding:7px 12px;background:'+MINT+';text-align:right;'+P+'"><div style="font-size:9pt;font-weight:700;color:'+NAVY+'">TERM: '+term+'</div></td>'
+      +'</tr>'
+      +'</table>';
+  }
+
+  // SUMMARY
+  if(sec.showSummary){
+    h+='<table style="width:100%;border-collapse:collapse;border-bottom:1px solid '+BORDER+';font-size:8pt">'
+      +'<tr>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">No. of students: <strong>'+n+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Student avg: <strong>'+(avg!==''?avg:'--')+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Class avg: <strong>'+classAvg+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Overall total: <strong>'+(grand!==''?grand:'--')+'</strong></td>'
+      +'</tr>'
+      +'<tr>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Lowest avg: <strong>'+lowestAvg+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Highest avg: <strong>'+highestAvg+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Overall performance: <strong style="color:'+gc(avg)+'">'+overallPerf+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Days school ended: --</td>'
+      +'</tr>'
+      +'</table>';
+  }
+
+  // SUBJECTS
+  if(sec.showSubjects){
+    h+='<div style="background:'+TEAL+';color:'+WHITE+';text-align:center;padding:5px;font-weight:700;font-size:9.5pt;text-transform:uppercase;'+P+'">Academic Subject Results</div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:8pt">'
+      +'<thead><tr style="background:'+NAVY+';color:'+WHITE+';'+P+'">'
+      +'<th style="padding:5px 6px;text-align:left;border:1px solid '+BORDER+'">SUBJECT</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 1<br/><small>(10%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 2<br/><small>(10%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 3<br/><small>(10%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">EXAM<br/><small>(70%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TOTAL<br/><small>(100%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">GRADE</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">POS.</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">CLASS AVG</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">HIGHEST</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">REMARK</th>'
+      +'</tr></thead><tbody>'
+      +subjs.map(function(subj,i){
+        var rb=i%2===0?WHITE:MINT;
+        if(!isPublished(CLS,i)){
+          return'<tr style="background:'+rb+';'+P+'"><td style="padding:4px 6px;border:1px solid '+BORDER+';color:#aaa;font-style:italic">'+subj+'</td>'
+            +'<td colspan="10" style="padding:4px;text-align:center;border:1px solid '+BORDER+';color:#ccc;font-size:7.5pt">Not yet published</td></tr>';
+        }
+        var r2=sc[i]||{};var t=tots[i];var gd=getGrade(t);var ss=subjStats[i];
+        return'<tr style="background:'+rb+';'+P+'">'
+          +'<td style="padding:4px 6px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+subj+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca1!==undefined&&r2.ca1!==''?r2.ca1:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca2!==undefined&&r2.ca2!==''?r2.ca2:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca3!==undefined&&r2.ca3!==''?r2.ca3:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.exam!==undefined&&r2.exam!==''?r2.exam:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';font-weight:700;background:'+rb+'">'+(t!==''?t:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(t!==''?gd.c:'#999')+'">'+(gd.g||'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(ss.pos!=='--'?ss.pos:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+ss.ca+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';color:#065f46;font-weight:600">'+ss.hi+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';color:'+(t!==''?gd.c:'#999')+'">'+( gd.r||'')+'</td>'
+          +'</tr>';
+      }).join('')+'</tbody></table>';
+  }
+
+  // PERSONAL DEVELOPMENT
+  if(sec.showAffective||sec.showPsycho){
+    h+='<div style="background:'+TEAL+';color:'+WHITE+';text-align:center;padding:5px;font-weight:700;font-size:9.5pt;text-transform:uppercase;'+P+'">Personal Development Assessment</div>'
+      +'<table style="width:100%;border-collapse:collapse"><tr>';
+    if(sec.showAffective){
+      h+='<td style="width:50%;vertical-align:top;border-right:2px solid '+BORDER+';padding:0">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:8pt">'
+        +'<tr style="background:'+NAVY+';color:'+WHITE+';'+P+'"><th style="padding:5px 8px;text-align:left;border:1px solid '+BORDER+'">AFFECTIVE TRAITS</th><th style="padding:5px;text-align:center;border:1px solid '+BORDER+';width:70px">RTG</th></tr>'
+        +AFF6.map(function(tr,i){var rb=i%2===0?WHITE:MINT;return'<tr style="background:'+rb+';'+P+'"><td style="padding:4px 8px;border:1px solid '+BORDER+'">'+tr+'</td><td style="text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+NAVY+'">'+(aff[tr]||'')+'</td></tr>';}).join('')
+        +'</table></td>';
+    }
+    if(sec.showPsycho){
+      h+='<td style="width:50%;vertical-align:top;padding:0">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:8pt">'
+        +'<tr style="background:'+NAVY+';color:'+WHITE+';'+P+'"><th style="padding:5px 8px;text-align:left;border:1px solid '+BORDER+'">PSYCHOMOTOR SKILLS</th><th style="padding:5px;text-align:center;border:1px solid '+BORDER+';width:70px">RTG</th></tr>'
+        +PSY6.map(function(tr,i){var rb=i%2===0?WHITE:MINT;return'<tr style="background:'+rb+';'+P+'"><td style="padding:4px 8px;border:1px solid '+BORDER+'">'+tr+'</td><td style="text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+NAVY+'">'+(psy[tr]||'')+'</td></tr>';}).join('')
+        +'<tr><td colspan="2" style="padding:3px 8px;text-align:right;font-size:7pt;color:#666;border:1px solid '+BORDER+';font-style:italic">5=Excellent, 1=Poor</td></tr>'
+        +'</table></td>';
+    }
+    h+='</tr></table>';
+  }
+
+  // FEES
+  if(sec.showFees){
+    h+='<table style="width:100%;border-collapse:collapse;border-top:2px solid '+NAVY+'">'
+      +'<tr>'
+      +'<td rowspan="2" style="background:'+NAVY+';color:'+WHITE+';padding:8px 10px;text-align:center;font-weight:700;font-size:8pt;width:100px;vertical-align:middle;'+P+'">SCHOOL FEES STATUS</td>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Amount Paid</th>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Previous Debt</th>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Outstanding Balance</th>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Next Term Fees</th>'
+      +'</tr><tr>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+(fees.paid?'N'+Number(fees.paid).toLocaleString():'NO')+'</td>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+(fees.debt?'N'+Number(fees.debt).toLocaleString():'NO')+'</td>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(feeBal>0?'#c0392b':'#065f46')+'">'+(fees.total?'N'+feeBal.toLocaleString():'NO')+'</td>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+(fees.next_term?'N'+Number(fees.next_term).toLocaleString():'NO')+'</td>'
+      +'</tr></table>';
+  }
+
+  // ATTENDANCE + REMARK
+  h+='<div style="display:flex;border-top:1px solid '+BORDER+';border-bottom:1px solid '+BORDER+';font-size:8.5pt">'
+    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'">Days opened: <strong>'+(att.opened||'--')+'</strong></div>'
+    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'">Days present: <strong>'+(att.present||'--')+'</strong></div>'
+    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'">Days absent: <strong>'+(att.absent||'--')+'</strong></div>'
+    +'<div style="flex:1;padding:5px 10px">Subjects passed: <strong>'+(pass!==''?pass+'/'+cnt:'--')+'</strong></div>'
+    +'</div>'
+    +'<div style="padding:6px 12px;border-bottom:1px solid '+BORDER+';display:flex;align-items:center;gap:8px;font-size:8.5pt">'
+    +'<strong style="color:'+NAVY+';white-space:nowrap">GENERAL REMARK</strong>'
+    +'<div style="flex:1;border-bottom:1.5px solid #aaa;padding-bottom:2px;color:'+TEAL+';font-weight:600">'+getAutoRemark(avg)+'</div>'
+    +'</div>';
+
+  // SIGNATURE + NEXT TERM
+  if(sec.showSignature){
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:10px 14px">'
+      +'<div style="text-align:center">'
+      +(sigHTML||'<div style="height:36px;border-bottom:1.5px solid #999;width:160px"></div>')
+      +'<div style="font-size:7.5pt;font-weight:700;color:'+NAVY+';margin-top:3px;text-transform:uppercase;letter-spacing:.05em">'+sigTitle+'</div>'
+      +'</div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-size:8.5pt;font-weight:700;color:'+NAVY+'">NEXT TERM BEGINS:</div>'
+      +'<div style="font-size:10pt;font-weight:700;color:'+TEAL+';margin-top:3px">'+resumeDate+'</div>'
+      +'</div></div>';
+  }
+
+  h+='</div>';
+  return h;
+}
+
+// ============================================================
+// ANALYTICS
+// ============================================================
+function destroyChart(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
+function renderAnalytics(){
+  var students=DB_STUDENTS[CLS]||[];
+  var subjs=subjects();
+  if(!students.length)return;
+  var summaries=students.map(function(s){return Object.assign({},s,studentSummary(s.id));});
+  var withData=summaries.filter(function(s){return s.avg!=='';});
+  var classAvg=withData.length?Math.round(withData.reduce(function(a,s){return a+s.avg;},0)/withData.length*10)/10:'--';
+  var passRate=withData.length?Math.round(withData.filter(function(s){return s.avg>=40;}).length/withData.length*100)+'%':'--';
+  var distinctions=students.reduce(function(a,s){var sc=DB_SCORES[s.id]||{};return a+subjs.filter(function(_,i){var t=computeTotal(sc[i]);return t!==''&&t>=75;}).length;},0);
+  var withFails=students.filter(function(s){var sc=DB_SCORES[s.id]||{};return subjs.some(function(_,i){var t=computeTotal(sc[i]);return t!==''&&t<40;});}).length;
+  document.getElementById('an-avg').textContent=classAvg;
+  document.getElementById('an-pass').textContent=passRate;
+  document.getElementById('an-dist').textContent=distinctions;
+  document.getElementById('an-fail').textContent=withFails;
+  var gc2={A1:0,B2:0,B3:0,C4:0,C5:0,C6:0,D7:0,E8:0,F9:0};
+  students.forEach(function(s){var sc=DB_SCORES[s.id]||{};subjs.forEach(function(_,i){var t=computeTotal(sc[i]);if(t!==''){var g=getGrade(t).g;gc2[g]=(gc2[g]||0)+1;}});});
+  destroyChart('dist');
+  CHARTS.dist=new Chart(document.getElementById('ch-dist'),{type:'doughnut',data:{labels:Object.keys(gc2),datasets:[{data:Object.values(gc2),backgroundColor:['#065f46','#10b981','#34d399','#6ee7b7','#fbbf24','#f59e0b','#f97316','#ef4444','#991b1b'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'right'}}}});
+  var subjAvgs=subjs.map(function(_,i){var vals=students.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});return vals.length?Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10:0;});
+  destroyChart('subj');
+  CHARTS.subj=new Chart(document.getElementById('ch-subj'),{type:'bar',data:{labels:subjs.map(function(s){return s.length>10?s.slice(0,10)+'..':s;}),datasets:[{label:'Avg',data:subjAvgs,backgroundColor:subjAvgs.map(function(v){return v>=70?'#10b981':v>=50?'#f59e0b':'#ef4444';}),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}});
+  var ranked=withData.slice().sort(function(a,b){return b.avg-a.avg;});
+  destroyChart('rank');
+  CHARTS.rank=new Chart(document.getElementById('ch-rank'),{type:'bar',data:{labels:ranked.map(function(s){return s.name.split(' ')[0];}),datasets:[{label:'Average',data:ranked.map(function(s){return s.avg;}),backgroundColor:ranked.map(function(s){return s.avg>=70?'#10b981':s.avg>=50?'#f59e0b':'#ef4444';}),borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}});
+  document.getElementById('perf-tbody').innerHTML=subjs.map(function(subj,i){
+    var vals=students.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});
+    if(!vals.length)return'<tr><td>'+subj+'</td><td colspan="5" style="color:#aaa;text-align:center">No data</td></tr>';
+    var avg2=Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10;
+    var hi=Math.max.apply(null,vals),lo=Math.min.apply(null,vals);
+    var pr=Math.round(vals.filter(function(x){return x>=40;}).length/vals.length*100);
+    return'<tr><td>'+subj+'</td><td style="font-weight:700;color:'+gc(avg2)+'">'+avg2+'</td>'
+      +'<td style="color:#065f46;font-weight:600">'+hi+'</td><td style="color:#991b1b">'+lo+'</td>'
+      +'<td><span class="badge '+(pr>=70?'badge-green':pr>=50?'badge-gold':'badge-red')+'">'+pr+'%</span></td>'
+      +'<td style="min-width:100px"><div class="perf-bar-wrap"><div class="perf-bar" style="width:'+avg2+'%;background:'+(avg2>=70?'#10b981':avg2>=50?'#f59e0b':'#ef4444')+'"></div></div></td></tr>';
+  }).join('');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function renderSettings(){
+  var cfg=getCfg();var sch=cfg.school||DEFAULT_SCHOOL;var sig=cfg.signature||{};var secs=getSections();
+  document.getElementById('cfg-name').value=sch.name||'';
+  document.getElementById('cfg-addr').value=sch.addr||'';
+  document.getElementById('cfg-phone').value=sch.phone||'';
+  document.getElementById('cfg-email').value=sch.email||'';
+  document.getElementById('cfg-session').value=cfg.session||DEFAULT_SESSION;
+  document.getElementById('cfg-term').value=cfg.term||DEFAULT_TERM;
+  document.getElementById('cfg-sig-name').value=sig.name||'';
+  document.getElementById('cfg-sig-title').value=sig.title||'';
+  previewSig();
+  document.getElementById('card-toggles').innerHTML=CARD_SECTIONS.map(function(s){
+    return'<div class="toggle-row"><div><div style="font-size:.85rem;font-weight:600">'+s.label+'</div></div>'
+      +'<label class="toggle"><input type="checkbox" id="tog-'+s.key+'" '+(secs[s.key]?'checked':'')+' onchange="saveSectionToggle(\''+s.key+'\',this.checked)"/><span class="toggle-slider"></span></label></div>';
+  }).join('');
+  var remarks=cfg.remarks||DEFAULT_REMARKS;
+  document.getElementById('remarks-cfg').innerHTML=remarks.map(function(r,i){
+    return'<div class="remark-range"><span style="font-size:.75rem;font-weight:600;color:var(--g1);min-width:55px">'+r.min+'-'+r.max+'%</span>'
+      +'<input type="number" value="'+r.min+'" onchange="updateRemark('+i+',\'min\',this.value)"/>'
+      +'<span style="color:#aaa">-</span>'
+      +'<input type="number" value="'+r.max+'" onchange="updateRemark('+i+',\'max\',this.value)"/>'
+      +'<input type="text" value="'+r.text+'" onchange="updateRemark('+i+',\'text\',this.value)" placeholder="Remark text..."/>'
+      +'</div>';
+  }).join('');
+  document.getElementById('grade-cfg-tbody').innerHTML=GRADE_SCALE.map(function(g,i){
+    return'<tr><td><strong style="color:var(--g1)">'+g.g+'</strong></td>'
+      +'<td><input class="inp" type="number" value="'+g.min+'" onchange="GRADE_SCALE['+i+'].min=Number(this.value)" style="width:70px;padding:5px 8px"/></td>'
+      +'<td><input class="inp" type="number" value="'+g.max+'" onchange="GRADE_SCALE['+i+'].max=Number(this.value)" style="width:70px;padding:5px 8px"/></td>'
+      +'<td><input class="inp" value="'+g.r+'" onchange="GRADE_SCALE['+i+'].r=this.value" style="padding:5px 8px"/></td></tr>';
+  }).join('');
+  renderThemePicker();renderSubjCfg();
+}
+function saveSectionToggle(key,val){var cfg=getCfg();if(!cfg.sections)cfg.sections={};cfg.sections[key]=val;saveCfg(cfg);}
+function previewSig(){
+  var name=document.getElementById('cfg-sig-name').value;
+  var cfg=getCfg();var sigImg=(cfg.signature||{}).image||'';
+  var area=document.getElementById('sig-preview-wrap');if(!area)return;
+  if(sigImg)area.innerHTML='<img src="'+sigImg+'" style="max-height:60px;max-width:200px"/>';
+  else if(name)area.innerHTML='<div style="font-family:\'Dancing Script\',cursive;font-size:1.8rem;color:var(--g1)">'+name+'</div>';
+  else area.innerHTML='<p style="font-size:.8rem;color:var(--gray)">Tap to upload signature image</p>';
+}
+function handleSigUpload(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas');var ratio=Math.min(300/img.width,150/img.height);
+      canvas.width=Math.round(img.width*ratio);canvas.height=Math.round(img.height*ratio);
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      var cfg=getCfg();if(!cfg.signature)cfg.signature={};
+      cfg.signature.image=canvas.toDataURL('image/png',0.9);saveCfg(cfg);previewSig();
+    };img.src=ev.target.result;
+  };r.readAsDataURL(f);
+}
+function clearSig(){var cfg=getCfg();cfg.signature={};saveCfg(cfg);document.getElementById('cfg-sig-name').value='';previewSig();}
+function updateRemark(i,field,val){var cfg=getCfg();var r=cfg.remarks||DEFAULT_REMARKS.slice();if(!r[i])return;r[i][field]=field==='text'?val:Number(val);cfg.remarks=r;saveCfg(cfg);}
+function renderThemePicker(){
+  var cfg=getCfg();var cur=cfg.cardTheme||'forest';
+  var el=document.getElementById('theme-picker');if(!el)return;
+  el.innerHTML=CARD_THEMES.map(function(t){
+    return'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer" id="tp-wrap-'+t.id+'">'
+      +'<div class="theme-swatch'+(t.id===cur?' selected':'')+'" style="background:'+t.primary+'" id="tp-'+t.id+'"></div>'
+      +'<span style="font-size:.6rem;color:#555;text-align:center">'+t.name+'</span>'
+      +'</div>';
+  }).join('');
+  CARD_THEMES.forEach(function(t){
+    var wrap=document.getElementById('tp-wrap-'+t.id);
+    if(wrap)wrap.onclick=function(){
+      var cfg2=getCfg();cfg2.cardTheme=t.id;saveCfg(cfg2);
+      document.getElementById('theme-name').textContent=t.name;
+      CARD_THEMES.forEach(function(tt){var sw=document.getElementById('tp-'+tt.id);if(sw)sw.className='theme-swatch'+(tt.id===t.id?' selected':'');});
+    };
+  });
+  var nm=document.getElementById('theme-name');
+  if(nm){var th=CARD_THEMES.find(function(t){return t.id===cur;});if(th)nm.textContent=th.name;}
+}
+function renderSubjCfg(){
+  var dept=document.getElementById('dept-sel').value;
+  var cfg=getCfg();var cfgDepts=cfg.depts||{};
+  var list=cfgDepts[dept]?cfgDepts[dept].subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[];
+  document.getElementById('subj-cfg-list').innerHTML=list.map(function(s,i){
+    return'<div class="subj-tag">'+s+'<button data-dept="'+dept+'" data-idx="'+i+'" title="Remove">x</button></div>';
+  }).join('');
+  document.querySelectorAll('#subj-cfg-list button[data-dept]').forEach(function(btn){
+    btn.onclick=function(){removeSubject(btn.getAttribute('data-dept'),Number(btn.getAttribute('data-idx')));};
+  });
+}
+function removeSubject(dept,idx){
+  if(!confirm('Remove this subject?'))return;
+  var cfg=getCfg();if(!cfg.depts)cfg.depts={};
+  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[]};
+  cfg.depts[dept].subjects.splice(idx,1);saveCfg(cfg);renderSubjCfg();
+}
+function addSubject(){
+  var val=document.getElementById('new-subj-inp').value.trim();if(!val)return;
+  var dept=document.getElementById('dept-sel').value;
+  var cfg=getCfg();if(!cfg.depts)cfg.depts={};
+  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[]};
+  cfg.depts[dept].subjects.push(val);saveCfg(cfg);
+  document.getElementById('new-subj-inp').value='';renderSubjCfg();
+}
+function saveSettings(){
+  var cfg=getCfg();
+  cfg.school={
+    name:document.getElementById('cfg-name').value.trim()||DEFAULT_SCHOOL.name,
+    addr:document.getElementById('cfg-addr').value.trim()||DEFAULT_SCHOOL.addr,
+    phone:document.getElementById('cfg-phone').value.trim()||DEFAULT_SCHOOL.phone,
+    email:document.getElementById('cfg-email').value.trim()||DEFAULT_SCHOOL.email
+  };
+  cfg.session=document.getElementById('cfg-session').value.trim()||DEFAULT_SESSION;
+  cfg.term=document.getElementById('cfg-term').value||DEFAULT_TERM;
+  if(!cfg.signature)cfg.signature={};
+  cfg.signature.name=document.getElementById('cfg-sig-name').value.trim();
+  cfg.signature.title=document.getElementById('cfg-sig-title').value.trim()||'Proprietor';
+  saveCfg(cfg);
+  var sb=document.getElementById('sb-session-lbl');if(sb)sb.textContent=cfg.session+' Session';
+  var hs=document.getElementById('home-session');if(hs)hs.textContent=cfg.session+' Session';
+  var rcs=document.getElementById('rc-session');if(rcs)rcs.value=cfg.session;
+  var rct=document.getElementById('rc-term');if(rct)rct.value=cfg.term;
+  showToast('Settings saved');showSaved();
+}
+function resetSettings(){if(!confirm('Reset all settings?'))return;localStorage.removeItem('wts_cfg');renderSettings();}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportData(){
+  var data={students:DB_STUDENTS,scores:DB_SCORES,traits:DB_TRAITS,fees:DB_FEES,remarks:DB_REMARKS};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='WTS_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function importData(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=function(e){
+    var f=e.target.files[0];if(!f)return;
+    var r=new FileReader();
+    r.onload=function(ev){
+      try{
+        var d=JSON.parse(ev.target.result);
+        if(d.students)DB_STUDENTS=d.students;
+        if(d.scores)DB_SCORES=d.scores;
+        if(d.traits)DB_TRAITS=d.traits;
+        if(d.fees)DB_FEES=d.fees;
+        if(d.remarks)DB_REMARKS=d.remarks;
+        renderDash();alert('Imported successfully!');
+      }catch(e){alert('Invalid file.');}
+    };r.readAsText(f);
+  };inp.click();
+}
+
+// ============================================================
+// SIDEBAR & RESPONSIVE
+// ============================================================
+function toggleSidebar(){
+  var sb=document.getElementById('sidebar');
+  var ov=document.getElementById('sb-overlay');
+  var hb=document.getElementById('hamburger');
+  if(!sb)return;
+  var open=!sb.classList.contains('open');
+  sb.classList.toggle('open',open);
+  if(ov)ov.style.display=open?'block':'none';
+  if(hb)hb.classList.toggle('open',open);
+}
+function closeSidebar(){
+  var sb=document.getElementById('sidebar');
+  var ov=document.getElementById('sb-overlay');
+  var hb=document.getElementById('hamburger');
+  if(sb)sb.classList.remove('open');
+  if(ov)ov.style.display='none';
+  if(hb)hb.classList.remove('open');
+}
+function applyResponsive(){
+  var w=window.innerWidth;
+  var main=document.getElementById('main');
+  var hb=document.getElementById('hamburger');
+  var bn=document.getElementById('bottom-nav');
+  var sb=document.getElementById('sidebar');
+  if(main)main.style.marginLeft=w>=900?'248px':'0';
+  if(hb)hb.style.display=w<900?'flex':'none';
+  if(bn)bn.style.display=w<600?'block':'none';
+  if(sb&&w>=900)sb.classList.remove('open');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded',function(){
+  applyResponsive();
+  window.addEventListener('resize',applyResponsive);
+  // Set initial session/term from config
+  try{
+    var cfg=getCfg();
+    var rcs=document.getElementById('rc-session');if(rcs)rcs.value=cfg.session||DEFAULT_SESSION;
+    var rct=document.getElementById('rc-term');if(rct)rct.value=cfg.term||DEFAULT_TERM;
+    var sb=document.getElementById('sb-session-lbl');if(sb)sb.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
+  }catch(e){}
+  // Start on home page
+  setMode(false);
+  renderHome();
+});
+</script>
+</body>
+</html>
