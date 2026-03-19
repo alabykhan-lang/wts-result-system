@@ -546,15 +546,6 @@ body.is-mobile .bs-scroll-hint{display:flex}
     <div class="ni" onclick="nav('broadsheet',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Broadsheet
     </div>
-    <div class="ni" onclick="nav('card',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Result Cards
-    </div>
-    <div class="ni" onclick="nav('analytics',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Analytics
-    </div>
-    <div class="ni" onclick="nav('settings',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
-    </div>
   </nav>
 
   <div class="sb-foot">
@@ -617,9 +608,6 @@ body.is-mobile .bs-scroll-hint{display:flex}
     </div>
     <div class="bn-item" onclick="navMobile('card',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Card
-    </div>
-    <div class="bn-item" onclick="navMobile('settings',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
     </div>
   </div>
 </div>
@@ -1874,6 +1862,7 @@ function buildCardHTML(sid,term,session){
   var sig=cfg.signature||{};
   var sec=getSections();
   var school=getSchool();
+  var sc=DB_SCORES[sid]||{};
 
   var allAvgs=(DB_STUDENTS[currentClass]||[]).map(function(st){return studentSummary(st.id).avg;}).filter(function(x){return x!=='';});
   var classAvg=allAvgs.length?Math.round(allAvgs.reduce(function(a,x){return a+x;},0)/allAvgs.length*10)/10:'--';
@@ -1891,101 +1880,108 @@ function buildCardHTML(sid,term,session){
 
   var resumeDate=fees.resume_date?new Date(fees.resume_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):fees.resume?new Date(fees.resume).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
   var feeBal=Number(fees.total||0)+Number(fees.debt||0)-Number(fees.paid||0);
-  var dept=DEPTS[currentClass].label;
+  var dept=DEPTS[currentClass]?DEPTS[currentClass].label:currentClass;
   var overallPerf=avg!==''?getGrade(avg).r:'--';
-  var sc=DB_SCORES[sid]||{};
 
-  // Colours  navy/mint school uniform theme
+  //  Exact colours from design 
   var NAVY='#1a2a44';
   var MINT='#e8f5f1';
-  var GREEN='#4f9d86';
-  var BORDER='#cbd5e0';
+  var TEAL='#4f9d86';
+  var BORDER='#b2d8ce';
   var WHITE='#ffffff';
-  var LGRAY='#f8fafb';
+  var LTMINT='#f0faf7';
+  var P='-webkit-print-color-adjust:exact;print-color-adjust:exact';
 
   // Signature
   var sigHTML=sig.image
-    ?('<img src="'+sig.image+'" style="height:36px;max-width:120px;object-fit:contain;vertical-align:middle"/>')
+    ?('<img src="'+sig.image+'" style="height:38px;max-width:130px;object-fit:contain"/>')
     :sig.name
-      ?('<span style="font-family:Dancing Script,cursive;font-size:1.2rem;color:'+NAVY+'">'+sig.name+'</span>')
+      ?('<div style="font-family:Dancing Script,cursive;font-size:1.3rem;color:'+NAVY+'">'+sig.name+'</div>')
       :'';
-  var sigTitle=sig.title||'School Proprietor';
+  var sigTitle=sig.title||'Proprietor';
 
-  // Reduced affective traits (6 only per new design)
   var AFF6=['Punctuality','Respect','Attentiveness','Reliability','Neatness','Spirit of Teamwork'];
   var PSY6=['Handwriting','Reading','Verbal Fluency/Diction','Musical Skills','Creative Arts','Physical Education'];
 
-  var P='-webkit-print-color-adjust:exact;print-color-adjust:exact';
-
-  var h='<div style="background:#fff;width:100%;max-width:780px;font-family:Segoe UI,Tahoma,sans-serif;font-size:9pt;border-top:7px solid '+NAVY+';box-shadow:0 0 10px rgba(0,0,0,.1);'+P+'">';
+  var h='<div style="background:'+WHITE+';max-width:800px;font-family:Segoe UI,Tahoma,sans-serif;font-size:9pt;border-top:7px solid '+NAVY+';box-shadow:0 2px 12px rgba(0,0,0,.1);'+P+'">';
 
   //  HEADER 
   if(sec.showHeader){
-    h+='<div style="display:flex;align-items:center;gap:12px;padding:10px 14px 8px;border-bottom:2px solid '+GREEN+';'+P+'">'
-      +'<div style="background:'+NAVY+';color:#fff;font-weight:900;font-size:18pt;width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0;'+P+'">W<span style="color:'+GREEN+'">T</span>S</div>'
+    h+='<div style="display:flex;align-items:center;gap:14px;padding:10px 16px 10px;border-bottom:2px solid '+TEAL+';background:'+WHITE+';'+P+'">'
+      +'<div style="background:'+NAVY+';border-radius:8px;padding:8px 10px;flex-shrink:0;'+P+'">'
+      +'<div style="font-family:Arial,sans-serif;font-weight:900;font-size:22pt;line-height:1;color:'+WHITE+'">W<span style="color:'+TEAL+'">T</span>S</div>'
+      +'</div>'
       +'<div style="flex:1">'
-      +'<div style="color:'+NAVY+';font-size:16pt;font-weight:900;text-transform:uppercase;line-height:1.1">'+school.name+'</div>'
+      +'<div style="color:'+NAVY+';font-size:16pt;font-weight:900;text-transform:uppercase;letter-spacing:.02em">'+school.name+'</div>'
       +'<div style="color:#555;font-size:8pt;margin-top:2px">'+school.addr+'</div>'
       +'<div style="color:#555;font-size:8pt">Phone: '+school.phone+' | Email: '+school.email+'</div>'
       +'</div>'
-      +(sec.showPhoto&&s.photo?'<img src="'+s.photo+'" style="width:60px;height:72px;object-fit:cover;border-radius:4px;border:2px solid '+GREEN+'"/>':'')
+      +(sec.showPhoto&&s.photo?'<img src="'+s.photo+'" style="width:65px;height:78px;object-fit:cover;border-radius:4px;border:2px solid '+TEAL+';flex-shrink:0"/>':'')
       +'</div>';
   }
 
-  //  BIO ROW 
+  //  BIO SECTION  matches your image layout exactly 
   if(sec.showBio){
-    h+='<div style="display:grid;grid-template-columns:auto 1fr auto;gap:0;border-bottom:1px solid '+BORDER+'">'
-      // Left: Reg + Session dark box
-      +'<div style="background:'+NAVY+';color:#fff;padding:6px 10px;font-size:8pt;font-weight:700;min-width:90px;'+P+'">'
-      +'<div>REG. NO:</div><div style="font-size:9pt">'+( s.admno||'--')+'</div>'
-      +'<div style="margin-top:4px">SESSION:</div><div style="font-size:9pt">'+session+'</div>'
-      +'</div>'
-      // Middle: name, gender, class
-      +'<div style="background:'+MINT+';padding:6px 12px;'+P+'">'
-      +'<div style="font-size:10pt;font-weight:700;color:'+NAVY+'">NAME OF STUDENT: <span style="font-size:11pt">'+s.name.toUpperCase()+'</span></div>'
-      +'<div style="margin-top:4px;display:flex;gap:20px">'
+    h+='<table style="width:100%;border-collapse:collapse;border-bottom:2px solid '+NAVY+';background:'+MINT+';'+P+'">'
+      +'<tr>'
+      // Dark navy left box  Reg No + Session
+      +'<td rowspan="2" style="background:'+NAVY+';color:'+WHITE+';padding:6px 10px;width:90px;vertical-align:top;border-right:2px solid '+TEAL+';'+P+'">'
+      +'<div style="font-size:7.5pt;font-weight:700;margin-bottom:1px">REG. NO:</div>'
+      +'<div style="font-size:9pt;font-weight:700;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:4px;margin-bottom:4px">'+(s.admno||'--')+'</div>'
+      +'<div style="font-size:7.5pt;font-weight:700;margin-bottom:1px">SESSION:</div>'
+      +'<div style="font-size:9pt;font-weight:700">'+session+'</div>'
+      +'</td>'
+      // Name + Gender + Class + Age
+      +'<td colspan="2" style="padding:6px 12px;background:'+MINT+';'+P+'">'
+      +'<div style="font-size:10pt;font-weight:700;color:'+NAVY+'">NAME OF STUDENT: <span style="font-size:11pt;text-transform:uppercase">'+s.name+'</span></div>'
+      +'<div style="display:flex;gap:24px;margin-top:4px;font-size:9pt">'
       +'<span><strong>GENDER:</strong> '+s.gender+'</span>'
       +'<span><strong>CLASS:</strong> '+dept+'</span>'
       +'<span><strong>AGE:</strong> '+(s.age||'--')+'</span>'
-      +'</div></div>'
-      // Right: Term
-      +'<div style="background:'+MINT+';padding:6px 12px;text-align:right;border-left:1px solid '+BORDER+';'+P+'">'
-      +'<div style="font-weight:700;color:'+NAVY+'">TERM: '+term+'</div>'
       +'</div>'
-      +'</div>';
+      +'</td>'
+      // Term  right box
+      +'<td style="padding:6px 12px;background:'+MINT+';text-align:right;white-space:nowrap;'+P+'">'
+      +'<div style="font-size:9pt;font-weight:700;color:'+NAVY+'">TERM: '+term+'</div>'
+      +'</td>'
+      +'</tr>'
+      +'</table>';
   }
 
-  //  SUMMARY STATS 
+  //  SUMMARY STATS  exact layout from image 
   if(sec.showSummary){
-    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:8pt;border-bottom:1px solid '+BORDER+'">'
-      +'<div style="padding:4px 8px;border-right:1px solid '+BORDER+'"><span style="color:#666">No. of students in class:</span> <strong>'+n+'</strong></div>'
-      +'<div style="padding:4px 8px;border-right:1px solid '+BORDER+'"><span style="color:#666">Student avg score:</span> <strong>'+(avg!==''?avg:'--')+'</strong></div>'
-      +'<div style="padding:4px 8px"><span style="color:#666">Class average score:</span> <strong>'+classAvg+'</strong></div>'
-      +'<div style="padding:4px 8px;border-right:1px solid '+BORDER+';border-top:1px solid '+BORDER+'"><span style="color:#666">Lowest avg in class:</span> <strong>'+lowestAvg+'</strong></div>'
-      +'<div style="padding:4px 8px;border-right:1px solid '+BORDER+';border-top:1px solid '+BORDER+'"><span style="color:#666">Highest avg in class:</span> <strong>'+highestAvg+'</strong></div>'
-      +'<div style="padding:4px 8px;border-top:1px solid '+BORDER+'"><span style="color:#666">Overall performance:</span> <strong style="color:'+gc(avg)+'">'+overallPerf+'</strong></div>'
-      +'<div style="padding:4px 8px;border-right:1px solid '+BORDER+';border-top:1px solid '+BORDER+'"><span style="color:#666">Overall total score:</span> <strong>'+(grand!==''?grand:'--')+'</strong></div>'
-      +'<div style="padding:4px 8px;border-right:1px solid '+BORDER+';border-top:1px solid '+BORDER+'"><span style="color:#666">Days school ended:</span> <strong>--</strong></div>'
-      +'<div style="padding:4px 8px;border-top:1px solid '+BORDER+'"></div>'
-      +'</div>';
+    h+='<table style="width:100%;border-collapse:collapse;border-bottom:1px solid '+BORDER+';font-size:8pt">'
+      +'<tr>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">No. of students in class:</span> <strong>'+n+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">Student avg score:</span> <strong>'+(avg!==''?avg:'--')+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">Class average score:</span> <strong>'+classAvg+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">Overall total score:</span> <strong>'+(grand!==''?grand:'--')+'</strong></td>'
+      +'</tr>'
+      +'<tr>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">Lowest avg in class:</span> <strong>'+lowestAvg+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">Highest avg in class:</span> <strong>'+highestAvg+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">Overall performance:</span> <strong style="color:'+gc(avg)+'">'+overallPerf+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'"><span style="color:#666">Days school ended:</span> <strong>--</strong></td>'
+      +'</tr>'
+      +'</table>';
   }
 
   //  SUBJECT TABLE 
   if(sec.showSubjects){
-    h+='<div style="background:'+GREEN+';color:#fff;padding:5px 10px;font-weight:700;font-size:9pt;text-transform:uppercase;text-align:center;'+P+'">Academic Subject Results</div>'
+    h+='<div style="background:'+TEAL+';color:'+WHITE+';text-align:center;padding:5px;font-weight:700;font-size:9.5pt;text-transform:uppercase;letter-spacing:.05em;'+P+'">Academic Subject Results</div>'
       +'<table style="width:100%;border-collapse:collapse;font-size:8pt">'
-      +'<thead><tr style="background:'+NAVY+';color:#fff;'+P+'">'
+      +'<thead><tr style="background:'+NAVY+';color:'+WHITE+';'+P+'">'
       +'<th style="padding:5px 6px;text-align:left;border:1px solid '+BORDER+'">SUBJECT</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">TEST 1<br/>(10%)</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">TEST 2<br/>(10%)</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">TEST 3<br/>(10%)</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">EXAM<br/>(70%)</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+';background:#2d4a6e;'+P+'">TOTAL<br/>(100%)</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">GRADE</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">POS.</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">CLASS<br/>AVG</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">HIGHEST</th>'
-      +'<th style="padding:5px 4px;text-align:center;border:1px solid '+BORDER+'">REMARK</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 1<br/><small>(10%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 2<br/><small>(10%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 3<br/><small>(10%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">EXAM<br/><small>(70%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TOTAL<br/><small>(100%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">GRADE</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">POS.</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">CLASS<br/>AVG</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">HIGHEST</th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">REMARK</th>'
       +'</tr></thead><tbody>'
       +subjs.map(function(subj,i){
         var r2=sc[i]||{};
@@ -1995,16 +1991,16 @@ function buildCardHTML(sid,term,session){
         var rb=i%2===0?WHITE:MINT;
         return'<tr style="background:'+rb+';'+P+'">'
           +'<td style="padding:4px 6px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+subj+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca1!==undefined&&r2.ca1!==''?r2.ca1:'')+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca2!==undefined&&r2.ca2!==''?r2.ca2:'')+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca3!==undefined&&r2.ca3!==''?r2.ca3:'')+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+(r2.exam!==undefined&&r2.exam!==''?r2.exam:'')+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700;background:'+rb+';'+P+'">'+(t!==''?t:'')+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(t!==''?gd.c:'#999')+'">'+(gd.g||'')+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+ss.pos+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+'">'+ss.ca+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';color:#065f46;font-weight:600">'+ss.hi+'</td>'
-          +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';color:'+(t!==''?gd.c:'#999')+'">'+( gd.r||'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca1!==undefined&&r2.ca1!==''?r2.ca1:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca2!==undefined&&r2.ca2!==''?r2.ca2:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca3!==undefined&&r2.ca3!==''?r2.ca3:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.exam!==undefined&&r2.exam!==''?r2.exam:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';font-weight:700;background:'+rb+'">'+(t!==''?t:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(t!==''?gd.c:'#999')+'">'+(gd.g||'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(ss.pos!=='--'?ss.pos:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+ss.ca+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';color:#065f46;font-weight:600">'+ss.hi+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';color:'+(t!==''?gd.c:'#999')+'">'+( gd.r||'')+'</td>'
           +'</tr>';
       }).join('')
       +'</tbody></table>';
@@ -2014,84 +2010,83 @@ function buildCardHTML(sid,term,session){
   var showAff=sec.showAffective;
   var showPsy=sec.showPsycho;
   if(showAff||showPsy){
-    h+='<div style="background:'+GREEN+';color:#fff;padding:5px 10px;font-weight:700;font-size:9pt;text-align:center;text-transform:uppercase;'+P+'">Personal Development Assessment</div>'
-      +'<div style="display:flex;gap:0;border-bottom:1px solid '+BORDER+'">';
+    h+='<div style="background:'+TEAL+';color:'+WHITE+';text-align:center;padding:5px;font-weight:700;font-size:9.5pt;text-transform:uppercase;letter-spacing:.05em;'+P+'">Personal Development Assessment</div>'
+      +'<table style="width:100%;border-collapse:collapse">'
+      +'<tr>';
     if(showAff){
-      h+='<table style="flex:1;border-collapse:collapse;font-size:8pt;border-right:1px solid '+BORDER+'">'
-        +'<thead><tr style="background:'+NAVY+';color:#fff;'+P+'">'
+      h+='<td style="width:50%;vertical-align:top;border-right:2px solid '+BORDER+';padding:0">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:8pt">'
+        +'<thead><tr style="background:'+NAVY+';color:'+WHITE+';'+P+'">'
         +'<th style="padding:5px 8px;text-align:left;border:1px solid '+BORDER+'">AFFECTIVE TRAITS (Reduced)</th>'
-        +'<th style="padding:5px 6px;text-align:center;border:1px solid '+BORDER+';width:70px">RTG (1-5)</th>'
+        +'<th style="padding:5px 6px;text-align:center;border:1px solid '+BORDER+';width:75px">RTG (1-5)</th>'
         +'</tr></thead><tbody>'
         +AFF6.map(function(tr,i){
           var rb=i%2===0?WHITE:MINT;
           return'<tr style="background:'+rb+';'+P+'"><td style="padding:4px 8px;border:1px solid '+BORDER+'">'+tr+'</td>'
             +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+NAVY+'">'+(aff[tr]||'')+'</td></tr>';
         }).join('')
-        +'</tbody></table>';
+        +'</tbody></table></td>';
     }
     if(showPsy){
-      h+='<table style="flex:1;border-collapse:collapse;font-size:8pt">'
-        +'<thead><tr style="background:'+NAVY+';color:#fff;'+P+'">'
+      h+='<td style="width:50%;vertical-align:top;padding:0">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:8pt">'
+        +'<thead><tr style="background:'+NAVY+';color:'+WHITE+';'+P+'">'
         +'<th style="padding:5px 8px;text-align:left;border:1px solid '+BORDER+'">PSYCHOMOTOR SKILLS</th>'
-        +'<th style="padding:5px 6px;text-align:center;border:1px solid '+BORDER+';width:70px">RTG (1-5)</th>'
+        +'<th style="padding:5px 6px;text-align:center;border:1px solid '+BORDER+';width:75px">RTG (1-5)</th>'
         +'</tr></thead><tbody>'
         +PSY6.map(function(tr,i){
           var rb=i%2===0?WHITE:MINT;
           return'<tr style="background:'+rb+';'+P+'"><td style="padding:4px 8px;border:1px solid '+BORDER+'">'+tr+'</td>'
             +'<td style="padding:4px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+NAVY+'">'+(psy[tr]||'')+'</td></tr>';
         }).join('')
-        +'<tr><td colspan="2" style="padding:3px 8px;font-size:7pt;color:#666;text-align:right;border:1px solid '+BORDER+'">5=Excellent, 1=Poor</td></tr>'
-        +'</tbody></table>';
+        +'<tr><td colspan="2" style="padding:3px 8px;text-align:right;font-size:7.5pt;color:#666;border:1px solid '+BORDER+';font-style:italic">5=Excellent, 1=Poor</td></tr>'
+        +'</tbody></table></td>';
     }
-    h+='</div>';
+    h+='</tr></table>';
   }
 
-  //  SCHOOL FEES 
+  //  FEES 
   if(sec.showFees){
-    h+='<div style="display:flex;border-bottom:1px solid '+BORDER+'">'
-      +'<div style="background:'+NAVY+';color:#fff;padding:8px 10px;font-weight:700;font-size:8.5pt;display:flex;align-items:center;min-width:100px;text-align:center;'+P+'">SCHOOL FEES STATUS</div>'
-      +'<table style="flex:1;border-collapse:collapse;font-size:8pt">'
+    h+='<table style="width:100%;border-collapse:collapse;border-top:2px solid '+NAVY+'">'
       +'<tr>'
-      +'<th style="background:'+MINT+';padding:4px 8px;border:1px solid '+BORDER+';'+P+'">Amount Paid</th>'
-      +'<th style="background:'+MINT+';padding:4px 8px;border:1px solid '+BORDER+';'+P+'">Previous Term Debt</th>'
-      +'<th style="background:'+MINT+';padding:4px 8px;border:1px solid '+BORDER+';'+P+'">Outstanding Balance</th>'
-      +'<th style="background:'+MINT+';padding:4px 8px;border:1px solid '+BORDER+';'+P+'">Next Term Fees</th>'
+      +'<td rowspan="2" style="background:'+NAVY+';color:'+WHITE+';padding:8px 10px;text-align:center;font-weight:700;font-size:8.5pt;width:100px;vertical-align:middle;'+P+'">SCHOOL FEES<br/>STATUS</td>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Amount Paid</th>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Previous Term Debt</th>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Outstanding Balance</th>'
+      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Next Term Fees</th>'
       +'</tr><tr>'
-      +'<td style="padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">N'+(Number(fees.paid||0).toLocaleString()||'--')+'</td>'
-      +'<td style="padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">N'+(Number(fees.debt||0).toLocaleString()||'--')+'</td>'
-      +'<td style="padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(feeBal>0?'#c0392b':'#065f46')+'">N'+feeBal.toLocaleString()+'</td>'
-      +'<td style="padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">N'+(Number(fees.next_term||fees.next||0).toLocaleString()||'--')+'</td>'
-      +'</tr></table></div>';
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;font-size:9pt">'+(fees.paid?'N'+Number(fees.paid).toLocaleString():'NO')+'</td>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;font-size:9pt">'+(fees.debt?'N'+Number(fees.debt).toLocaleString():'NO')+'</td>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;font-size:9pt;color:'+(feeBal>0?'#c0392b':'#065f46')+'">'+(fees.total?'N'+feeBal.toLocaleString():'NO')+'</td>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;font-size:9pt">'+(fees.next_term?'N'+Number(fees.next_term).toLocaleString():'NO')+'</td>'
+      +'</tr></table>';
   }
 
   //  ATTENDANCE + SUBJECTS PASSED 
-  h+='<div style="display:flex;gap:0;border-bottom:1px solid '+BORDER+';font-size:8.5pt">'
-    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'"><span style="color:#666">Days school opened:</span> <strong>'+(att.opened||'--')+'</strong></div>'
-    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'"><span style="color:#666">Days present:</span> <strong>'+(att.present||'--')+'</strong></div>'
-    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'"><span style="color:#666">Days absent:</span> <strong>'+(att.absent||'--')+'</strong></div>'
-    +'<div style="flex:1;padding:5px 10px"><span style="color:#666">Subjects passed:</span> <strong>'+(pass!==''?pass+'/'+cnt:'--')+'</strong></div>'
+  h+='<div style="display:flex;border-top:1px solid '+BORDER+';border-bottom:1px solid '+BORDER+';font-size:8.5pt;background:'+WHITE+'">'
+    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'">Days school opened: <strong>'+(att.opened||'--')+'</strong></div>'
+    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'">Days present: <strong>'+(att.present||'--')+'</strong></div>'
+    +'<div style="flex:1;padding:5px 10px;border-right:1px solid '+BORDER+'">Days absent: <strong>'+(att.absent||'--')+'</strong></div>'
+    +'<div style="flex:1;padding:5px 10px">Subjects passed: <strong>'+(pass!==''?pass+'/'+cnt:'--')+'</strong></div>'
     +'</div>';
 
   //  GENERAL REMARK 
-  h+='<div style="padding:6px 10px;border-bottom:1px solid '+BORDER+'">'
-    +'<strong style="color:'+NAVY+'">GENERAL REMARK &nbsp;</strong>'
-    +'<span style="border-bottom:1px solid #999;display:inline-block;min-width:400px;padding-bottom:2px;color:'+GREEN+';font-weight:600">'+getAutoRemark(avg)+'</span>'
+  h+='<div style="padding:7px 12px;border-bottom:1px solid '+BORDER+';display:flex;align-items:center;gap:8px;font-size:8.5pt">'
+    +'<strong style="color:'+NAVY+';white-space:nowrap">GENERAL REMARK</strong>'
+    +'<div style="flex:1;border-bottom:1.5px solid #aaa;padding-bottom:2px;color:'+TEAL+';font-weight:600">'+getAutoRemark(avg)+'</div>'
     +'</div>';
 
   //  SIGNATURE + NEXT TERM 
-  // Signature + Next Term Begins row
-  h+='<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:10px 14px;border-top:1px solid '+BORDER+'">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:10px 14px">';
   if(sec.showSignature){
     h+='<div style="text-align:center">'
-      +(sigHTML?sigHTML:'<div style="height:40px;border-bottom:1.5px solid #999;width:160px"></div>')
-      +'<div style="font-size:8pt;font-weight:700;color:'+NAVY+';margin-top:4px;letter-spacing:.05em">PROPRIETOR</div>'
+      +(sigHTML?sigHTML:'<div style="height:36px;border-bottom:1.5px solid #999;width:170px"></div>')
+      +'<div style="font-size:7.5pt;font-weight:700;color:'+NAVY+';margin-top:3px;text-transform:uppercase;letter-spacing:.05em">'+sigTitle+'</div>'
       +'</div>';
-  }else{
-    h+='<div></div>';
-  }
+  }else{h+='<div></div>';}
   h+='<div style="text-align:right">'
     +'<div style="font-size:8.5pt;font-weight:700;color:'+NAVY+'">NEXT TERM BEGINS:</div>'
-    +'<div style="font-size:10pt;font-weight:700;color:'+GREEN+';margin-top:4px">'+resumeDate+'</div>'
+    +'<div style="font-size:10pt;font-weight:700;color:'+TEAL+';margin-top:3px">'+resumeDate+'</div>'
     +'</div>'
     +'</div>';
 
