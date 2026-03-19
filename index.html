@@ -134,6 +134,7 @@ nav{flex:1;padding:14px 0;overflow-y:auto}
 .sc-inp{width:100%;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:6px;
   text-align:center;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;transition:.15s}
 .sc-inp:focus{border-color:var(--g3);outline:none;background:#f0fdf4}
+.sc-inp.over-limit{border-color:#c0392b!important;background:#fff5f5!important;color:#c0392b}
 .tot-disp{text-align:center;font-family:'Playfair Display',serif;font-size:1.05rem;
   font-weight:700;padding:5px;border-radius:6px;background:#f0fdf4;color:var(--g1)}
 .grd-disp{text-align:center;font-weight:700;font-size:.8rem;padding:4px 6px;border-radius:6px}
@@ -360,6 +361,20 @@ nav{flex:1;padding:14px 0;overflow-y:auto}
 .theme-preview.selected{border-color:#fff;box-shadow:0 0 0 2px var(--g1)}
 .theme-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 0}
 
+
+.home-level-title{font-family:'Playfair Display',serif;font-size:.9rem;color:var(--gray);
+  text-transform:uppercase;letter-spacing:.08em;margin:18px 0 10px;font-weight:700;
+  padding-left:4px;border-left:3px solid var(--gold);padding-left:10px}
+.home-class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:8px}
+.home-class-card{background:#fff;border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;
+  box-shadow:var(--shadow);border:2px solid transparent;transition:.2s;user-select:none;
+  -webkit-tap-highlight-color:transparent}
+.home-class-card:hover,.home-class-card:active{border-color:var(--g3);background:#f0fdf4;transform:translateY(-2px)}
+.home-class-card .class-icon{font-size:1.6rem;margin-bottom:6px}
+.home-class-card .class-name{font-weight:700;font-size:.85rem;color:var(--g1);line-height:1.2}
+.home-class-card .class-count{font-size:.72rem;color:var(--gray);margin-top:3px}
+.home-class-card.active-class{border-color:var(--g3);background:#e8f5e9}
+
 /* EMPTY STATE */
 .empty{text-align:center;padding:50px 20px;color:var(--gray)}
 .empty svg{width:54px;height:54px;opacity:.25;margin-bottom:12px}
@@ -492,7 +507,10 @@ body.is-mobile .bs-scroll-hint{display:flex}
     </select>
   </div>
   <nav>
-    <div class="ni active" onclick="nav('dashboard',this)">
+    <div class="ni" id="ni-home" onclick="nav('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+    </div>
+    <div class="ni active" id="ni-dashboard" onclick="nav('dashboard',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
     </div>
     <div class="ni" onclick="nav('students',this)">
@@ -540,8 +558,11 @@ body.is-mobile .bs-scroll-hint{display:flex}
 
 <!-- BOTTOM NAV (mobile only) -->
 <div id="bottom-nav" style="display:none">
+  <div class="bn-item" onclick="navMobile('home',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+  </div>
   <div class="bn-item active" onclick="navMobile('dashboard',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dash
   </div>
   <div class="bn-item" onclick="navMobile('students',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Students
@@ -582,8 +603,40 @@ body.is-mobile .bs-scroll-hint{display:flex}
 
   <div class="content">
 
+  <!-- HOME PAGE -->
+  <div class="page print-active" id="page-home">
+    <div style="max-width:700px;margin:0 auto;padding:10px 0">
+      <!-- School header card -->
+      <div style="background:var(--g1);border-radius:16px;padding:28px 24px;text-align:center;margin-bottom:24px;box-shadow:var(--shadow2)">
+        <div style="width:64px;height:64px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:serif;font-size:20px;font-weight:900;color:var(--g1);margin:0 auto 12px">W<span style="color:var(--g1)">T</span>S</div>
+        <h1 style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:1.4rem;margin:0 0 4px">Way To Success Standard Schools</h1>
+        <p style="color:rgba(255,255,255,.65);font-size:.82rem;margin:0">Ifedapo Community, Oko/Ijado Road, Ejigbo, Osun State</p>
+        <div id="home-session-badge" style="display:inline-block;background:var(--gold);color:var(--g1);font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:20px;margin-top:12px">2025/2026 Session</div>
+      </div>
+
+      <!-- Select class label -->
+      <p style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--g1);text-align:center;margin-bottom:18px;font-weight:700">Select a Class to Continue</p>
+
+      <!-- Early Years -->
+      <div class="home-level-title">Early Years</div>
+      <div class="home-class-grid" id="hg-early"></div>
+
+      <!-- Primary -->
+      <div class="home-level-title">Primary</div>
+      <div class="home-class-grid" id="hg-primary"></div>
+
+      <!-- Junior Secondary -->
+      <div class="home-level-title">Junior Secondary</div>
+      <div class="home-class-grid" id="hg-jss"></div>
+
+      <!-- Senior Secondary -->
+      <div class="home-level-title">Senior Secondary</div>
+      <div class="home-class-grid" id="hg-ss"></div>
+    </div>
+  </div>
+
   <!-- DASHBOARD -->
-  <div class="page active print-active" id="page-dashboard">
+  <div class="page print-active" id="page-dashboard">
     <div class="stats-row">
       <div class="stat-card"><span class="stat-icon">&#127891;</span><h3 id="d-stu">0</h3><p>Students</p></div>
       <div class="stat-card gold"><span class="stat-icon">&#128221;</span><h3 id="d-ent">0</h3><p>Scores Entered</p></div>
@@ -632,8 +685,11 @@ body.is-mobile .bs-scroll-hint{display:flex}
       <div class="score-tbl-wrap">
         <div class="score-tbl-hdr" id="sc-hdr" style="grid-template-columns:200px 70px 70px 70px 90px 70px 90px 70px">
           <span style="text-align:left">Subject</span>
-          <span>CA1 /10</span><span>CA2 /10</span><span>CA3 /10</span>
-          <span>Exam /70</span><span>Total</span><span>Grade</span><span>Remark</span>
+          <span>CA1<br/><small style="opacity:.7">max 10</small></span>
+          <span>CA2<br/><small style="opacity:.7">max 10</small></span>
+          <span>CA3<br/><small style="opacity:.7">max 10</small></span>
+          <span>Exam<br/><small style="opacity:.7">max 70</small></span>
+          <span>Total</span><span>Grade</span><span>Remark</span>
         </div>
         <div id="sc-rows"></div>
       </div>
@@ -1154,12 +1210,28 @@ function loadStudentData(studentId, callback) {
 // SCHOOL DATA
 // ============================================================
 var CORE=['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies'];
+var SIMPLE=['English Language','Mathematics','Phonics','Handwriting','Quantitative Reasoning','Verbal Reasoning','Basic Science','Social Studies','Cultural & Creative Arts','Computer Studies','Religious & National Values'];
+var JSS_CORE=['English Language','Mathematics','Basic Science','Basic Technology','Social Studies','Civic Education','Cultural & Creative Arts','Agricultural Science','Computer Studies','French','Yoruba','Christian Religious Studies','Home Economics','Physical & Health Education','Business Studies'];
 var DEPTS={
-  'ss3-science':{label:'SS3 - Science',subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss3-arts':   {label:'SS3 - Arts',   subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
-  'ss2-science':{label:'SS2 - Science',subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss2-arts':   {label:'SS2 - Arts',   subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
-  'ss2-business':{label:'SS2 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])}
+  'creche':      {label:'Creche',        subjects:['English Language','Numeracy','Phonics','Handwriting','Creative Play','Social Skills']},
+  'kg1':         {label:'KG 1',          subjects:SIMPLE.slice()},
+  'kg2':         {label:'KG 2',          subjects:SIMPLE.slice()},
+  'nursery1':    {label:'Nursery 1',     subjects:SIMPLE.slice()},
+  'nursery2':    {label:'Nursery 2',     subjects:SIMPLE.slice()},
+  'primary1':    {label:'Primary 1',     subjects:SIMPLE.slice()},
+  'primary2':    {label:'Primary 2',     subjects:SIMPLE.slice()},
+  'primary3':    {label:'Primary 3',     subjects:SIMPLE.slice()},
+  'primary4':    {label:'Primary 4',     subjects:SIMPLE.slice()},
+  'primary5':    {label:'Primary 5',     subjects:SIMPLE.slice()},
+  'jss1':        {label:'JSS 1',         subjects:JSS_CORE.slice()},
+  'jss2':        {label:'JSS 2',         subjects:JSS_CORE.slice()},
+  'jss3':        {label:'JSS 3',         subjects:JSS_CORE.slice()},
+  'ss1-general': {label:'SS1 - General', subjects:CORE.concat(['Biology','Physics','Chemistry','Literature','Government','I.R.S','Financial Accounting','Commerce','Geography','Agricultural Science'])},
+  'ss2-science': {label:'SS2 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
+  'ss2-arts':    {label:'SS2 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
+  'ss2-business':{label:'SS2 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])},
+  'ss3-science': {label:'SS3 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
+  'ss3-arts':    {label:'SS3 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])}
 };
 
 var AFFECTIVE=['Punctuality','Mental Alertness','Behavior','Reliability','Attentiveness','Respect','Neatness','Politeness','Honesty','Relationship with Staff','Relationship with Students','Attitude to School','Self-control','Spirit of Teamwork','Initiatives','Organizational Ability'];
@@ -1255,8 +1327,9 @@ function nav(id,el){
   if(el)el.classList.add('active');
   var info=PAGE_INFO[id]||['',''];
   document.getElementById('tb-title').textContent=info[0];
-  var sub=id==='settings'?'System':DEPTS[currentClass].label;
+  var sub=id==='settings'?'System':id==='home'?'Way To Success Standard Schools':DEPTS[currentClass].label;
   document.getElementById('tb-sub').textContent=sub+' - '+info[1];
+  if(id==='home'){renderHome();}
   if(id==='dashboard'){
     if(DB_STUDENTS[currentClass]){renderDash();}
     else{loadClassData(currentClass,function(){renderDash();});}
@@ -1525,7 +1598,8 @@ function _renderScoreEntry(sid){
 
   var traits=DB_TRAITS[sid]||{affective:{},psychomotor:{}};
   var aff=traits.affective||{};
-  document.getElementById('aff-rows').innerHTML=AFFECTIVE.map(function(tr){
+  var AFF6=['Punctuality','Respect','Attentiveness','Reliability','Neatness','Spirit of Teamwork'];
+  document.getElementById('aff-rows').innerHTML=AFF6.map(function(tr){
     var val=aff[tr]||0;
     var stars=[1,2,3,4,5].map(function(n){
       return'<span class="star'+(val>=n?' on':'')+'" onclick="setStar(\'aff\',\''+tr+'\','+n+',\''+sid+'\')">&#9733;</span>';
@@ -1534,7 +1608,8 @@ function _renderScoreEntry(sid){
   }).join('');
 
   var psy=traits.psychomotor||{};
-  document.getElementById('psych-rows').innerHTML=PSYCHOMOTOR.map(function(tr){
+  var PSY6=['Handwriting','Reading','Verbal Fluency/Diction','Musical Skills','Creative Arts','Physical Education'];
+  document.getElementById('psych-rows').innerHTML=PSY6.map(function(tr){
     var val=psy[tr]||0;
     var stars=[1,2,3,4,5].map(function(n){
       return'<span class="star'+(val>=n?' on':'')+'" onclick="setStar(\'psy\',\''+tr+'\','+n+',\''+sid+'\')">&#9733;</span>';
@@ -1566,7 +1641,14 @@ function upd(i,field,val,sid){
   if(!DB_SCORES[sid])DB_SCORES[sid]={};
   if(!DB_SCORES[sid][i])DB_SCORES[sid][i]={ca1:'',ca2:'',ca3:'',exam:''};
   var max=field==='exam'?70:10;
-  val=Math.min(max,Math.max(0,Number(val)||0));
+  var raw=Number(val)||0;
+  // Show visual warning if over limit
+  var inputEl=document.activeElement;
+  if(inputEl&&inputEl.classList.contains('sc-inp')){
+    inputEl.classList.toggle('over-limit',raw>max);
+  }
+  if(raw>max){showToast('Maximum '+(field==='exam'?'Exam':'CA')+' score is '+max,'error');return;}
+  val=Math.min(max,Math.max(0,raw));
   DB_SCORES[sid][i][field]=val;
   var t=computeTotal(DB_SCORES[sid][i]);
   var gd=getGrade(t);
@@ -2028,6 +2110,67 @@ function renderAnalytics(){
 // ============================================================
 // DASHBOARD
 // ============================================================
+var HOME_GROUPS=[
+  {grid:'hg-early',classes:[
+    {key:'creche',label:'Creche',icon:'&#9786;'},
+    {key:'kg1',label:'KG 1',icon:'&#9733;'},
+    {key:'kg2',label:'KG 2',icon:'&#9733;'},
+    {key:'nursery1',label:'Nursery 1',icon:'&#9834;'},
+    {key:'nursery2',label:'Nursery 2',icon:'&#9834;'}
+  ]},
+  {grid:'hg-primary',classes:[
+    {key:'primary1',label:'Primary 1',icon:'&#9635;'},
+    {key:'primary2',label:'Primary 2',icon:'&#9635;'},
+    {key:'primary3',label:'Primary 3',icon:'&#9635;'},
+    {key:'primary4',label:'Primary 4',icon:'&#9635;'},
+    {key:'primary5',label:'Primary 5',icon:'&#9635;'}
+  ]},
+  {grid:'hg-jss',classes:[
+    {key:'jss1',label:'JSS 1',icon:'&#9670;'},
+    {key:'jss2',label:'JSS 2',icon:'&#9670;'},
+    {key:'jss3',label:'JSS 3',icon:'&#9670;'}
+  ]},
+  {grid:'hg-ss',classes:[
+    {key:'ss1-general',label:'SS1 General',icon:'&#9679;'},
+    {key:'ss2-science',label:'SS2 Science',icon:'&#9679;'},
+    {key:'ss2-arts',label:'SS2 Arts',icon:'&#9679;'},
+    {key:'ss2-business',label:'SS2 Business',icon:'&#9679;'},
+    {key:'ss3-science',label:'SS3 Science',icon:'&#9679;'},
+    {key:'ss3-arts',label:'SS3 Arts',icon:'&#9679;'}
+  ]}
+];
+
+function renderHome(){
+  var cfg=getCfg();
+  var badge=document.getElementById('home-session-badge');
+  if(badge)badge.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
+  HOME_GROUPS.forEach(function(group){
+    var el=document.getElementById(group.grid);
+    if(!el)return;
+    el.innerHTML=group.classes.map(function(cls){
+      var count=(DB_STUDENTS[cls.key]||[]).length;
+      var isActive=cls.key===currentClass;
+      return'<div class="home-class-card'+(isActive?' active-class':'')+'" data-key="'+cls.key+'" onclick="selectClass(this.dataset.key)">'
+        +'<div class="class-icon">'+cls.icon+'</div>'
+        +'<div class="class-name">'+cls.label+'</div>'
+        +'<div class="class-count">'+(count?count+' student'+(count===1?'':'s'):'Tap to open')+'</div>'
+        +'</div>';
+    }).join('');
+  });
+}
+
+function selectClass(key){
+  currentClass=key;
+  var sel=document.getElementById('class-select');
+  if(sel)sel.value=key;
+  showLoading('Loading '+DEPTS[key].label+'...');
+  loadClassData(key,function(){
+    hideLoading();
+    nav('dashboard',document.getElementById('ni-dashboard'));
+  });
+}
+
+// ============================================================
 function renderDash(){
   var students=DB_STUDENTS[currentClass]||[];
   var n=students.length;
@@ -2300,10 +2443,8 @@ window.addEventListener('DOMContentLoaded',function(){
     var sb=document.querySelector('.sb-session');
     if(sb)sb.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
   }catch(e){}
-  // Load data from Supabase FIRST, then render dashboard
-  loadClassData(currentClass, function(){
-    renderDash();
-  });
+  // Start on home page
+  nav('home', document.getElementById('ni-home'));
 });
 
 </script>
