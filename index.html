@@ -1589,10 +1589,20 @@ function openSheet(idx){
       // Auto-save after 1.5s
       clearTimeout(inp._timer);
       inp._timer=setTimeout(function(){
-        dbUpsert('scores',{student_id:sid,class_key:CLS,subject_index:idx,term:TERM,
+        var scoreData={student_id:sid,class_key:CLS,subject_index:idx,term:TERM,
           ca1:DB_SCORES[sid][idx].ca1,ca2:DB_SCORES[sid][idx].ca2,
-          ca3:DB_SCORES[sid][idx].ca3,exam:DB_SCORES[sid][idx].exam})
-          .catch(function(){showToast('Score save failed','error');});
+          ca3:DB_SCORES[sid][idx].ca3,exam:DB_SCORES[sid][idx].exam};
+        dbUpsert('scores',scoreData)
+          .then(function(res){
+            if(res&&res.code){
+              console.error('Score save error:',JSON.stringify(res));
+              showToast('Score error: '+res.message,'error');
+            }
+          })
+          .catch(function(e){
+            console.error('Score save catch:',e);
+            showToast('Score save failed','error');
+          });
       },1500);
     });
   });
@@ -1613,8 +1623,17 @@ function saveDraft(){
     var sc=(DB_SCORES[s.id]||{})[idx]||{ca1:'',ca2:'',ca3:'',exam:''};
     return dbUpsert('scores',{student_id:s.id,class_key:CLS,subject_index:idx,term:TERM,
       ca1:sc.ca1,ca2:sc.ca2,ca3:sc.ca3,exam:sc.exam});
-  })).then(function(){hideLoad();showToast('Draft saved');})
-  .catch(function(){hideLoad();showToast('Save failed','error');});
+  })).then(function(results){
+    var errors=results.filter(function(r){return r&&r.code;});
+    if(errors.length){
+      console.error('Draft save errors:',JSON.stringify(errors[0]));
+      hideLoad();showToast('Save error: '+errors[0].message,'error');
+    }else{hideLoad();showToast('Draft saved');}
+  })
+  .catch(function(e){
+    console.error('saveDraft catch:',e);
+    hideLoad();showToast('Save failed - check console','error');
+  });
 }
 
 function togglePublish(){
