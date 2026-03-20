@@ -595,8 +595,17 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
   <!-- BROADSHEET -->
   <div class="page" id="page-broadsheet">
-    <div style="margin-bottom:14px;display:flex;justify-content:flex-end" class="no-print">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap" class="no-print">
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
+        <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Class:</label>
+        <div id="bs-class-label" style="font-weight:700;color:var(--g1);font-size:.88rem"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
+        <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Term:</label>
+        <div id="bs-term-label" style="font-weight:700;color:var(--g1);font-size:.88rem"></div>
+      </div>
       <button class="btn btn-primary btn-sm" onclick="window.print()">Print Broadsheet</button>
+      <button class="btn btn-outline btn-sm" onclick="exportBroadsheet()">Export CSV</button>
     </div>
     <div class="bs-wrap">
       <table class="bs-table" id="bs-table">
@@ -640,26 +649,48 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
   <!-- ANALYTICS -->
   <div class="page" id="page-analytics">
+    <!-- Summary stats -->
     <div class="stats-row" style="margin-bottom:20px">
       <div class="stat-card"><h3 id="an-avg">--</h3><p>Class Average</p></div>
       <div class="stat-card gold"><h3 id="an-pass">--</h3><p>Pass Rate</p></div>
       <div class="stat-card blue"><h3 id="an-dist">0</h3><p>Distinctions</p></div>
-      <div class="stat-card red"><h3 id="an-fail">0</h3><p>Students with Fails</p></div>
+      <div class="stat-card red"><h3 id="an-fail">0</h3><p>With Failures</p></div>
     </div>
+    <!-- Student performance ranking -->
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <div class="tbl-head">
+        <h3>Student Performance Overview</h3>
+        <div style="font-size:.75rem;color:var(--gray)" id="an-class-term"></div>
+      </div>
+      <table class="data-table" id="an-student-table">
+        <thead>
+          <tr>
+            <th style="width:40px">Rank</th>
+            <th>Student</th>
+            <th>Total Score</th>
+            <th>Average</th>
+            <th>Percentage</th>
+            <th>Grade</th>
+            <th>Passed</th>
+            <th style="min-width:140px">Performance</th>
+            <th>Remark</th>
+          </tr>
+        </thead>
+        <tbody id="an-student-tbody"></tbody>
+      </table>
+    </div>
+    <!-- Subject performance -->
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <div class="tbl-head"><h3>Subject Performance</h3></div>
+      <table class="data-table">
+        <thead><tr><th>Subject</th><th>Published</th><th>Class Avg</th><th>Highest</th><th>Lowest</th><th>Pass Rate</th><th style="min-width:120px">Bar</th></tr></thead>
+        <tbody id="perf-tbody"></tbody>
+      </table>
+    </div>
+    <!-- Charts -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
       <div class="tbl-wrap" style="margin:0"><div class="tbl-head"><h3>Grade Distribution</h3></div><div style="padding:16px"><canvas id="ch-dist"></canvas></div></div>
       <div class="tbl-wrap" style="margin:0"><div class="tbl-head"><h3>Subject Averages</h3></div><div style="padding:16px"><canvas id="ch-subj"></canvas></div></div>
-    </div>
-    <div class="tbl-wrap">
-      <div class="tbl-head"><h3>Student Rankings</h3></div>
-      <div style="padding:16px"><canvas id="ch-rank"></canvas></div>
-    </div>
-    <div class="tbl-wrap">
-      <div class="tbl-head"><h3>Subject Performance</h3></div>
-      <table class="data-table">
-        <thead><tr><th>Subject</th><th>Avg</th><th>Highest</th><th>Lowest</th><th>Pass Rate</th><th style="min-width:120px">Bar</th></tr></thead>
-        <tbody id="perf-tbody"></tbody>
-      </table>
     </div>
   </div>
 
@@ -1838,6 +1869,11 @@ function saveProfile(){
 function renderBroadsheet(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
+  // Update labels
+  var clsLbl=document.getElementById('bs-class-label');
+  var termLbl=document.getElementById('bs-term-label');
+  if(clsLbl)clsLbl.textContent=DEPTS[CLS]?DEPTS[CLS].label:CLS;
+  if(termLbl)termLbl.textContent=TERM;
   var fixCols='<th rowspan="2">#</th><th rowspan="2" style="text-align:left">STUDENT</th><th rowspan="2">G</th>';
   var subjGrpHdrs=subjs.map(function(s){return'<th colspan="5" style="text-align:center;border-left:2px solid rgba(255,255,255,.2)">'+(s.length>12?s.slice(0,12)+'..':s)+'</th>';}).join('');
   var subjSubHdrs=subjs.map(function(){return'<th style="border-left:2px solid rgba(255,255,255,.15);font-size:.6rem">CA1</th><th style="font-size:.6rem">CA2</th><th style="font-size:.6rem">CA3</th><th style="font-size:.6rem">EXM</th><th style="font-size:.6rem;background:#1a4a38">TOT</th>';}).join('');
@@ -1855,6 +1891,28 @@ function renderBroadsheet(){
     }).join('');
     return'<tr><td style="text-align:center">'+(idx+1)+'</td><td style="font-weight:600">'+s.name+'</td><td>'+(s.gender==='Male'?'M':'F')+'</td>'+cells+'</tr>';
   }).join('');
+}
+
+function exportBroadsheet(){
+  var students=DB_STUDENTS[CLS]||[];
+  var subjs=subjects();
+  if(!students.length){showToast('No students to export','error');return;}
+  var rows=[['#','Student','Gender'].concat(subjs.map(function(s){return[s+' CA1',s+' CA2',s+' CA3',s+' Exam',s+' Total'];})).flat()];
+  students.forEach(function(st,i){
+    var sc=DB_SCORES[st.id]||{};
+    var row=[i+1,st.name,st.gender];
+    subjs.forEach(function(_,idx){
+      var r=sc[idx]||{};var t=computeTotal(r);
+      row.push(r.ca1||'',r.ca2||'',r.ca3||'',r.exam||'',t!==''?t:'');
+    });
+    rows.push(row);
+  });
+  var csv=rows.map(function(r){return r.map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='Broadsheet_'+DEPTS[CLS].label+'_'+TERM+'.csv';
+  a.click();
 }
 
 // ============================================================
@@ -2171,14 +2229,16 @@ function destroyChart(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];
 function renderAnalytics(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
-  // Clear charts first
-  destroyChart('dist');destroyChart('subj');destroyChart('rank');
+  destroyChart('dist');destroyChart('subj');
+  var lbl=document.getElementById('an-class-term');
+  if(lbl)lbl.textContent=(DEPTS[CLS]?DEPTS[CLS].label:CLS)+' - '+TERM;
   if(!students.length){
     document.getElementById('an-avg').textContent='--';
     document.getElementById('an-pass').textContent='--';
     document.getElementById('an-dist').textContent='0';
     document.getElementById('an-fail').textContent='0';
-    document.getElementById('perf-tbody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray)">No students in this class yet</td></tr>';
+    document.getElementById('an-student-tbody').innerHTML='<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray)">No students in this class yet</td></tr>';
+    document.getElementById('perf-tbody').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray)">No data yet</td></tr>';
     return;
   }
   var summaries=students.map(function(s){return Object.assign({},s,studentSummary(s.id));});
@@ -2191,6 +2251,51 @@ function renderAnalytics(){
   document.getElementById('an-pass').textContent=passRate;
   document.getElementById('an-dist').textContent=distinctions;
   document.getElementById('an-fail').textContent=withFails;
+
+  // Student performance table  ranked by average
+  var pubSubjCount=subjs.filter(function(_,i){return isPublished(CLS,i);}).length;
+  var maxTotal=pubSubjCount*100;
+  var ranked=summaries.filter(function(s){return s.avg!=='';})
+    .sort(function(a,b){return b.avg-a.avg;});
+  var unscored=summaries.filter(function(s){return s.avg==='';});
+  var allRanked=ranked.concat(unscored);
+  var rank=1;
+  document.getElementById('an-student-tbody').innerHTML=allRanked.map(function(s,i){
+    var hasData=s.avg!=='';
+    var pct=hasData?Math.round(s.avg):'--';
+    var gd=hasData?getGrade(s.avg):{g:'--',r:'--',c:'#aaa'};
+    var barW=hasData?Math.min(100,Math.round(s.avg))+'%':'0%';
+    var barColor=hasData?(s.avg>=70?'#10b981':s.avg>=50?'#f59e0b':'#ef4444'):'#e5e7eb';
+    var passCount=hasData?s.pass:'--';
+    var totalSubjs=hasData?s.cnt:'--';
+    var rkDisplay='--';
+    if(hasData){rkDisplay=rank;rank++;}
+    var rkClass=rkDisplay===1?'rk1':rkDisplay===2?'rk2':rkDisplay===3?'rk3':'rkn';
+    return'<tr>'
+      +'<td><span class="rk '+rkClass+'">'+rkDisplay+'</span></td>'
+      +'<td><strong style="color:var(--g1)">'+s.name+'</strong></td>'
+      +'<td style="font-weight:700;color:var(--g1)">'+(s.grand!==''?s.grand:'--')+'</td>'
+      +'<td style="font-weight:700;color:'+(hasData?gc(s.avg):'#aaa')+'">'+(hasData?s.avg:'--')+'</td>'
+      +'<td>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="flex:1;background:#f3f4f6;border-radius:20px;height:8px;overflow:hidden">'
+        +'<div style="width:'+barW+';height:100%;background:'+barColor+';border-radius:20px;transition:.3s"></div>'
+        +'</div>'
+        +'<span style="font-size:.75rem;font-weight:700;color:'+(hasData?gd.c:'#aaa')+'">'+pct+'%</span>'
+        +'</div>'
+      +'</td>'
+      +'<td style="font-weight:700;color:'+(hasData?gd.c:'#aaa')+'">'+gd.g+'</td>'
+      +'<td style="font-size:.82rem">'+(hasData?passCount+' / '+totalSubjs:'--')+'</td>'
+      +'<td style="min-width:140px">'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+        +'<div style="flex:1;background:#f3f4f6;border-radius:20px;height:10px;overflow:hidden">'
+        +'<div style="width:'+barW+';height:100%;background:'+barColor+';border-radius:20px"></div>'
+        +'</div>'
+        +'</div>'
+      +'</td>'
+      +'<td style="font-size:.78rem;color:var(--gray)">'+gd.r+'</td>'
+      +'</tr>';
+  }).join('')||'<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray)">No scores published yet</td></tr>';
   var gc2={A1:0,B2:0,B3:0,C4:0,C5:0,C6:0,D7:0,E8:0,F9:0};
   students.forEach(function(s){var sc=DB_SCORES[s.id]||{};subjs.forEach(function(_,i){var t=computeTotal(sc[i]);if(t!==''){var g=getGrade(t).g;gc2[g]=(gc2[g]||0)+1;}});});
   destroyChart('dist');
@@ -2207,10 +2312,16 @@ function renderAnalytics(){
     var avg2=Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10;
     var hi=Math.max.apply(null,vals),lo=Math.min.apply(null,vals);
     var pr=Math.round(vals.filter(function(x){return x>=40;}).length/vals.length*100);
-    return'<tr><td>'+subj+'</td><td style="font-weight:700;color:'+gc(avg2)+'">'+avg2+'</td>'
-      +'<td style="color:#065f46;font-weight:600">'+hi+'</td><td style="color:#991b1b">'+lo+'</td>'
+    var isPub=isPublished(CLS,i);
+    return'<tr>'
+      +'<td>'+subj+'</td>'
+      +'<td><span class="badge '+(isPub?'badge-green':'badge')+'">'+( isPub?'Yes':'No')+'</span></td>'
+      +'<td style="font-weight:700;color:'+gc(avg2)+'">'+avg2+'</td>'
+      +'<td style="color:#065f46;font-weight:600">'+hi+'</td>'
+      +'<td style="color:#991b1b">'+lo+'</td>'
       +'<td><span class="badge '+(pr>=70?'badge-green':pr>=50?'badge-gold':'badge-red')+'">'+pr+'%</span></td>'
-      +'<td style="min-width:100px"><div class="perf-bar-wrap"><div class="perf-bar" style="width:'+avg2+'%;background:'+(avg2>=70?'#10b981':avg2>=50?'#f59e0b':'#ef4444')+'"></div></div></td></tr>';
+      +'<td style="min-width:100px"><div class="perf-bar-wrap"><div class="perf-bar" style="width:'+avg2+'%;background:'+(avg2>=70?'#10b981':avg2>=50?'#f59e0b':'#ef4444')+'"></div></div></td>'
+      +'</tr>';
   }).join('');
 }
 
