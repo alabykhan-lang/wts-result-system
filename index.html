@@ -667,6 +667,42 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
   <!-- ANALYTICS -->
   <div class="page" id="page-analytics">
+    <!-- Class & Term filter -->
+    <div class="card-sel-bar no-print" style="margin-bottom:20px">
+      <div class="form-grp">
+        <label>Class</label>
+        <select class="sel" id="an-class-filter" onchange="changeAnalyticsClass(this.value)" style="min-width:180px">
+          <optgroup label="Early Years">
+            <option value="creche">Creche</option>
+            <option value="kg1">KG 1</option><option value="kg2">KG 2</option>
+            <option value="nursery1">Nursery 1</option><option value="nursery2">Nursery 2</option>
+          </optgroup>
+          <optgroup label="Primary">
+            <option value="primary1">Primary 1</option><option value="primary2">Primary 2</option>
+            <option value="primary3">Primary 3</option><option value="primary4">Primary 4</option>
+            <option value="primary5">Primary 5</option>
+          </optgroup>
+          <optgroup label="Junior Secondary">
+            <option value="jss1">JSS 1</option><option value="jss2">JSS 2</option>
+            <option value="jss3">JSS 3</option>
+          </optgroup>
+          <optgroup label="Senior Secondary">
+            <option value="ss1-general">SS1 General</option>
+            <option value="ss2-science">SS2 Science</option><option value="ss2-arts">SS2 Arts</option>
+            <option value="ss2-business">SS2 Business</option>
+            <option value="ss3-science">SS3 Science</option><option value="ss3-arts">SS3 Arts</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-grp">
+        <label>Term</label>
+        <select class="sel" id="an-term-filter" onchange="changeAnalyticsTerm(this.value)" style="min-width:130px">
+          <option value="1st Term" selected>1st Term</option>
+          <option value="2nd Term">2nd Term</option>
+          <option value="3rd Term">3rd Term</option>
+        </select>
+      </div>
+    </div>
     <!-- Summary stats -->
     <div class="stats-row" style="margin-bottom:20px">
       <div class="stat-card"><h3 id="an-avg">--</h3><p>Class Average</p></div>
@@ -724,11 +760,6 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
           <div class="fg"><label>Email</label><input class="inp" id="cfg-email"/></div>
           <div class="fg-row">
             <div class="fg"><label>Session</label><input class="inp" id="cfg-session"/></div>
-            <div class="fg"><label>Term</label>
-              <select class="sel" id="cfg-term">
-                <option>1st Term</option><option>2nd Term</option><option>3rd Term</option>
-              </select>
-            </div>
           </div>
         </div>
       </div>
@@ -917,6 +948,9 @@ function filterCardByClass(key){
   CLS=key;
   var tbSub=document.getElementById('tb-sub');
   if(tbSub)tbSub.textContent=(DEPTS[key]?DEPTS[key].label:key)+' - Result Cards';
+  // Sync rc-term to current TERM
+  var rct=document.getElementById('rc-term');
+  if(rct)rct.value=TERM;
   // Load students + scores + published subjects
   var students=DB_STUDENTS[key]||[];
   if(!students.length){
@@ -1328,7 +1362,19 @@ function navTo(id,el){
     if(cf&&CLS)cf.value=CLS;
     populateCardSel();renderCard();
   }
-  if(id==='analytics')renderAnalytics();
+  if(id==='analytics'){
+    // Set dropdown to current CLS before rendering
+    var acf=document.getElementById('an-class-filter');
+    var atf=document.getElementById('an-term-filter');
+    if(acf)acf.value=CLS;
+    if(atf)atf.value=TERM;
+    // Load data if not yet loaded for this class
+    if(!DB_STUDENTS[CLS]||!DB_STUDENTS[CLS].length){
+      changeAnalyticsClass(CLS);
+    }else{
+      renderAnalytics();
+    }
+  }
   if(id==='settings')renderSettings();
   closeSidebar();
 }
@@ -2028,13 +2074,63 @@ function renderCard(){
   var sid=sel.value;
   var wrap=document.getElementById('rc-wrap');
   if(!sid){wrap.innerHTML='<div class="empty"><h3>Select a Student</h3><p>Choose a student to generate their result card</p></div>';return;}
-  var term=document.getElementById('rc-term').value;
+  var cardTerm=document.getElementById('rc-term').value;
   var session=document.getElementById('rc-session').value;
-  wrap.innerHTML=buildCard(sid,term,session);
+  // If card term differs from current TERM, reload scores for card term
+  if(cardTerm!==TERM){
+    var savedTERM=TERM;
+    TERM=cardTerm;
+    showLoad('Loading card data...');
+    Promise.all([
+      dbGet('scores?student_id=eq.'+sid),
+      dbGet('traits?student_id=eq.'+sid),
+      dbGet('fees?student_id=eq.'+sid),
+      dbGet('remarks?student_id=eq.'+sid),
+      dbGet('published_subjects?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(cardTerm))
+    ]).then(function(res){
+      var scoreMap={};
+      (res[0]||[]).filter(function(s){return s.term===cardTerm;}).forEach(function(s){
+        scoreMap[s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+      });
+      DB_SCORES[sid]=scoreMap;
+      var traitMap={affective:{},psychomotor:{}};
+      (res[1]||[]).filter(function(t){return t.term===cardTerm;}).forEach(function(t){
+        if(t.trait_type==='affective')traitMap.affective[t.trait_name]=t.rating;
+        else traitMap.psychomotor[t.trait_name]=t.rating;
+      });
+      DB_TRAITS[sid]=traitMap;
+      var feeRows=(res[2]||[]).filter(function(f){return f.term===cardTerm;});
+      DB_FEES[sid]=feeRows.length?feeRows[0]:{};
+      var remRows=(res[3]||[]).filter(function(r){return r.term===cardTerm;});
+      DB_REMARKS[sid]=remRows.length?remRows[0]:{};
+      // Load published subjects for card term
+      (res[4]||[]).forEach(function(r){
+        PUB_CACHE[pubKey(r.class_key,cardTerm,r.subject_index)]=true;
+      });
+      hideLoad();
+      wrap.innerHTML=buildCard(sid,cardTerm,session);
+      TERM=savedTERM; // restore global term
+    }).catch(function(){
+      hideLoad();
+      TERM=savedTERM;
+      wrap.innerHTML=buildCard(sid,cardTerm,session);
+    });
+  }else{
+    // Same term - use cached data or load normally
+    if(!DB_SCORES[sid]){
+      showLoad('Loading...');
+      loadStudentData(sid,function(){
+        hideLoad();
+        wrap.innerHTML=buildCard(sid,cardTerm,session);
+      });
+    }else{
+      wrap.innerHTML=buildCard(sid,cardTerm,session);
+    }
+  }
 }
 function printAll(){
   var students=DB_STUDENTS[CLS]||[];
-  if(!students.length){alert('No students.');return;}
+  if(!students.length){showToast('No students to print','error');return;}
   var term=document.getElementById('rc-term').value;
   var session=document.getElementById('rc-session').value;
   var wrap=document.getElementById('rc-wrap');
@@ -2265,12 +2361,93 @@ function buildCard(sid,term,session){
 // ANALYTICS
 // ============================================================
 function destroyChart(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
+function changeAnalyticsClass(key){
+  if(!key)return;
+  CLS=key;
+  var atf=document.getElementById('an-term-filter');
+  if(atf)atf.value=TERM;
+  // Load class data if not cached
+  if(!DB_STUDENTS[key]||!DB_STUDENTS[key].length){
+    showLoad('Loading '+DEPTS[key].label+'...');
+    Promise.all([
+      dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc'),
+      dbGet('scores?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM)),
+      dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
+    ]).then(function(res){
+      DB_STUDENTS[key]=res[0]||[];
+      (res[1]||[]).forEach(function(s){
+        if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+        DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+      });
+      (res[2]||[]).forEach(function(r){PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;});
+      hideLoad();renderAnalytics();
+    }).catch(function(){hideLoad();showToast('Load failed','error');});
+  }else{
+    // Students cached but scores might not be for this term - reload scores
+    var students=DB_STUDENTS[key]||[];
+    var hasScores=students.some(function(s){return DB_SCORES[s.id]&&Object.keys(DB_SCORES[s.id]).length>0;});
+    if(!hasScores){
+      showLoad('Loading scores...');
+      Promise.all([
+        dbGet('scores?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM)),
+        dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
+      ]).then(function(res){
+        (res[0]||[]).forEach(function(s){
+          if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+          DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+        });
+        (res[1]||[]).forEach(function(r){PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;});
+        hideLoad();renderAnalytics();
+      }).catch(function(){hideLoad();renderAnalytics();});
+    }else{
+      renderAnalytics();
+    }
+  }
+}
+
+function changeAnalyticsTerm(newTerm){
+  if(!newTerm)return;
+  TERM=newTerm;
+  // Sync global term selector in topbar
+  var ts=document.getElementById('global-term-sel');
+  if(ts)ts.value=TERM;
+  // Clear cached scores for current class  reload with new term
+  var students=DB_STUDENTS[CLS]||[];
+  students.forEach(function(s){delete DB_SCORES[s.id];});
+  Object.keys(PUB_CACHE).forEach(function(k){if(k.startsWith(CLS+'|'))delete PUB_CACHE[k];});
+  // Reload
+  showLoad('Loading '+TERM+'...');
+  Promise.all([
+    dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM)),
+    dbGet('published_subjects?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
+  ]).then(function(res){
+    (res[0]||[]).forEach(function(s){
+      if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+      DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+    });
+    (res[1]||[]).forEach(function(r){PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;});
+    hideLoad();renderAnalytics();
+  }).catch(function(){hideLoad();renderAnalytics();});
+}
+
 function renderAnalytics(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
   destroyChart('dist');destroyChart('subj');
+  // Always sync header AND dropdowns together
+  var clsLabel=DEPTS[CLS]?DEPTS[CLS].label:CLS;
   var lbl=document.getElementById('an-class-term');
-  if(lbl)lbl.textContent=(DEPTS[CLS]?DEPTS[CLS].label:CLS)+' - '+TERM;
+  if(lbl)lbl.textContent=clsLabel+' - '+TERM;
+  // Update topbar to match current filter selection
+  var tbTitle=document.getElementById('tb-title');
+  var tbSub=document.getElementById('tb-sub');
+  if(tbTitle)tbTitle.textContent='Analytics';
+  if(tbSub)tbSub.textContent=clsLabel+' - Analytics';
+  // Sync dropdowns
+  var acf=document.getElementById('an-class-filter');
+  var atf=document.getElementById('an-term-filter');
+  if(acf)acf.value=CLS;
+  if(atf)atf.value=TERM;
   if(!students.length){
     document.getElementById('an-avg').textContent='--';
     document.getElementById('an-pass').textContent='--';
@@ -2375,7 +2552,6 @@ function renderSettings(){
   document.getElementById('cfg-phone').value=sch.phone||'';
   document.getElementById('cfg-email').value=sch.email||'';
   document.getElementById('cfg-session').value=cfg.session||DEFAULT_SESSION;
-  document.getElementById('cfg-term').value=cfg.term||DEFAULT_TERM;
   document.getElementById('cfg-sig-name').value=sig.name||'';
   document.getElementById('cfg-sig-title').value=sig.title||'';
   previewSig();
@@ -2479,7 +2655,6 @@ function saveSettings(){
     email:document.getElementById('cfg-email').value.trim()||DEFAULT_SCHOOL.email
   };
   cfg.session=document.getElementById('cfg-session').value.trim()||DEFAULT_SESSION;
-  cfg.term=document.getElementById('cfg-term').value||DEFAULT_TERM;
   if(!cfg.signature)cfg.signature={};
   cfg.signature.name=document.getElementById('cfg-sig-name').value.trim();
   cfg.signature.title=document.getElementById('cfg-sig-title').value.trim()||'Proprietor';
@@ -2487,7 +2662,6 @@ function saveSettings(){
   var sb=document.getElementById('sb-session-lbl');if(sb)sb.textContent=cfg.session+' Session';
   var hs=document.getElementById('home-session');if(hs)hs.textContent=cfg.session+' Session';
   var rcs=document.getElementById('rc-session');if(rcs)rcs.value=cfg.session;
-  var rct=document.getElementById('rc-term');if(rct)rct.value=cfg.term;
   showToast('Settings saved');showSaved();
 }
 function resetSettings(){if(!confirm('Reset all settings?'))return;localStorage.removeItem('wts_cfg');renderSettings();}
