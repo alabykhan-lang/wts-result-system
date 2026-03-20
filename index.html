@@ -1276,6 +1276,13 @@ function mobileNav(id,el){
 
 function goHome(){
   setMode(false);
+  // Reset card selector completely when going home
+  var rcStu=document.getElementById('rc-stu');
+  if(rcStu)rcStu.innerHTML='<option value="">Select student</option>';
+  var rcWrap=document.getElementById('rc-wrap');
+  if(rcWrap)rcWrap.innerHTML='';
+  var rcClass=document.getElementById('rc-class-bar');
+  if(rcClass)rcClass.style.display='none';
   navTo('home',document.getElementById('ni-home'));
 }
 
@@ -1284,6 +1291,16 @@ function enterClass(key){
   CLS=key;
   var cfg=getCfg();
   TERM=cfg.term||DEFAULT_TERM;
+  // Reset card selector to avoid showing previous class students
+  var rcStu=document.getElementById('rc-stu');
+  if(rcStu)rcStu.innerHTML='<option value="">Select student</option>';
+  var rcWrap=document.getElementById('rc-wrap');
+  if(rcWrap)rcWrap.innerHTML='';
+  // Sync term selectors
+  var ts=document.getElementById('global-term-sel');
+  if(ts)ts.value=TERM;
+  var rct=document.getElementById('rc-term');
+  if(rct)rct.value=TERM;
   setMode(true);
   loadClass(key,function(){
     navTo('dashboard',document.getElementById('ni-dashboard'));
@@ -1750,6 +1767,13 @@ function renderProfile(s){
       var container=sp.parentNode;
       container.querySelectorAll('.star').forEach(function(s,i){s.classList.toggle('on',i<n);});
       dbUpsert('traits',{student_id:fsid,class_key:CLS,term:TERM,trait_type:key,trait_name:tr,rating:n})
+        .then(function(res){
+          if(res&&res.code){
+            // Try without term as fallback
+            dbUpsert('traits',{student_id:fsid,class_key:CLS,trait_type:key,trait_name:tr,rating:n})
+              .catch(function(){showToast('Rating failed','error');});
+          }
+        })
         .catch(function(){showToast('Rating failed','error');});
     };
   });
@@ -1796,7 +1820,7 @@ function saveProfile(){
       total:Number(document.getElementById('pf-fee-total').value||0),
       paid:Number(document.getElementById('pf-fee-paid').value||0),
       debt:Number(document.getElementById('pf-fee-debt').value||0),
-      resume_date:document.getElementById('pf-fee-resume').value,
+      resume_date:document.getElementById('pf-fee-resume').value||null,
       next_term:Number(document.getElementById('pf-fee-next').value||0)}),
     dbUpsert('remarks',{student_id:sid,class_key:CLS,term:TERM,
       academic:'',form_master:'',principal:'',days_opened:op,days_present:pr})
@@ -1857,7 +1881,11 @@ function populateCardSel(){
     });
     sel.innerHTML=html;
   }
-  if(cur)sel.value=cur;
+  // Only restore selection if it belongs to current class
+  if(cur){
+    var opt=sel.querySelector('option[value="'+cur+'"]');
+    if(opt)sel.value=cur;
+  }
 }
 
 function renderCardHome(){
