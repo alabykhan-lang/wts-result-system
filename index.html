@@ -619,8 +619,34 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   <div class="page print-active" id="page-card">
     <div class="card-sel-bar no-print">
       <div class="form-grp">
+        <label>Class</label>
+        <select class="sel" id="rc-class-filter" onchange="filterCardByClass(this.value)" style="min-width:180px">
+          <option value="">-- Select Class --</option>
+          <optgroup label="Early Years">
+            <option value="creche">Creche</option>
+            <option value="kg1">KG 1</option><option value="kg2">KG 2</option>
+            <option value="nursery1">Nursery 1</option><option value="nursery2">Nursery 2</option>
+          </optgroup>
+          <optgroup label="Primary">
+            <option value="primary1">Primary 1</option><option value="primary2">Primary 2</option>
+            <option value="primary3">Primary 3</option><option value="primary4">Primary 4</option>
+            <option value="primary5">Primary 5</option>
+          </optgroup>
+          <optgroup label="Junior Secondary">
+            <option value="jss1">JSS 1</option><option value="jss2">JSS 2</option>
+            <option value="jss3">JSS 3</option>
+          </optgroup>
+          <optgroup label="Senior Secondary">
+            <option value="ss1-general">SS1 General</option>
+            <option value="ss2-science">SS2 Science</option><option value="ss2-arts">SS2 Arts</option>
+            <option value="ss2-business">SS2 Business</option>
+            <option value="ss3-science">SS3 Science</option><option value="ss3-arts">SS3 Arts</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-grp">
         <label>Student</label>
-        <select class="sel" id="rc-stu" onchange="renderCard()" style="min-width:200px"><option value="">Select student</option></select>
+        <select class="sel" id="rc-stu" onchange="renderCard()" style="min-width:180px"><option value="">-- Select Student --</option></select>
       </div>
       <div class="form-grp">
         <label>Term</label>
@@ -635,15 +661,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       <button class="btn btn-primary btn-sm" onclick="window.print()">Print Card</button>
       <button class="btn btn-outline btn-sm" onclick="printAll()">Print All</button>
     </div>
-    <!-- Class selector for homepage card access -->
-    <div id="rc-class-bar" class="card-sel-bar no-print" style="display:none">
-      <div class="form-grp">
-        <label>Filter by Class</label>
-        <select class="sel" id="rc-class-filter" onchange="filterCardByClass(this.value)" style="min-width:200px">
-          <option value="">All classes</option>
-        </select>
-      </div>
-    </div>
+
     <div id="rc-wrap"></div>
   </div>
 
@@ -890,21 +908,39 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
 function filterCardByClass(key){
-  if(!key){populateCardSel();return;}
   var sel=document.getElementById('rc-stu');
+  var wrap=document.getElementById('rc-wrap');
+  sel.innerHTML='<option value="">-- Select Student --</option>';
+  if(wrap)wrap.innerHTML='';
+  if(!key)return;
+  // Switch CLS so card builds with correct class data and header
+  CLS=key;
+  var tbSub=document.getElementById('tb-sub');
+  if(tbSub)tbSub.textContent=(DEPTS[key]?DEPTS[key].label:key)+' - Result Cards';
+  // Load students + scores + published subjects
   var students=DB_STUDENTS[key]||[];
   if(!students.length){
     showLoad('Loading '+DEPTS[key].label+'...');
-    dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc')
-      .then(function(rows){
-        DB_STUDENTS[key]=rows||[];
-        hideLoad();
-        sel.innerHTML='<option value="">Select student</option>'+
-          (rows||[]).map(function(s){return'<option value="'+s.id+'" data-cls="'+key+'">'+s.name+'</option>';}).join('');
-      }).catch(function(){hideLoad();});
+    Promise.all([
+      dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc'),
+      dbGet('scores?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM)),
+      dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
+    ]).then(function(res){
+      DB_STUDENTS[key]=res[0]||[];
+      (res[1]||[]).forEach(function(s){
+        if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+        DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+      });
+      (res[2]||[]).forEach(function(r){
+        PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
+      });
+      hideLoad();
+      sel.innerHTML='<option value="">-- Select Student --</option>'+
+        (res[0]||[]).map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+    }).catch(function(){hideLoad();showToast('Failed to load','error');});
   }else{
-    sel.innerHTML='<option value="">Select student</option>'+
-      students.map(function(s){return'<option value="'+s.id+'" data-cls="'+key+'">'+s.name+'</option>';}).join('');
+    sel.innerHTML='<option value="">-- Select Student --</option>'+
+      students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
   }
 }
 
@@ -1285,14 +1321,10 @@ function navTo(id,el){
   if(id==='scores')renderScoreGrid();
   if(id==='broadsheet')renderBroadsheet();
   if(id==='card'){
-    var rcClass=document.getElementById('rc-class-bar');
-    if(IN_CLASS){
-      if(rcClass)rcClass.style.display='none';
-      var rct=document.getElementById('rc-term');if(rct)rct.value=TERM;
-      populateCardSel();renderCard();
-    }else{
-      renderCardHome();renderCard();
-    }
+    var rct=document.getElementById('rc-term');if(rct)rct.value=TERM;
+    var cf=document.getElementById('rc-class-filter');
+    if(cf&&CLS)cf.value=CLS;
+    populateCardSel();renderCard();
   }
   if(id==='analytics')renderAnalytics();
   if(id==='settings')renderSettings();
@@ -1312,8 +1344,6 @@ function goHome(){
   if(rcStu)rcStu.innerHTML='<option value="">Select student</option>';
   var rcWrap=document.getElementById('rc-wrap');
   if(rcWrap)rcWrap.innerHTML='';
-  var rcClass=document.getElementById('rc-class-bar');
-  if(rcClass)rcClass.style.display='none';
   navTo('home',document.getElementById('ni-home'));
 }
 
@@ -1869,30 +1899,66 @@ function saveProfile(){
 function renderBroadsheet(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
-  // Update labels
   var clsLbl=document.getElementById('bs-class-label');
   var termLbl=document.getElementById('bs-term-label');
   if(clsLbl)clsLbl.textContent=DEPTS[CLS]?DEPTS[CLS].label:CLS;
   if(termLbl)termLbl.textContent=TERM;
-  var fixCols='<th rowspan="2">#</th><th rowspan="2" style="text-align:left">STUDENT</th><th rowspan="2">G</th>';
-  var subjGrpHdrs=subjs.map(function(s){return'<th colspan="5" style="text-align:center;border-left:2px solid rgba(255,255,255,.2)">'+(s.length>12?s.slice(0,12)+'..':s)+'</th>';}).join('');
-  var subjSubHdrs=subjs.map(function(){return'<th style="border-left:2px solid rgba(255,255,255,.15);font-size:.6rem">CA1</th><th style="font-size:.6rem">CA2</th><th style="font-size:.6rem">CA3</th><th style="font-size:.6rem">EXM</th><th style="font-size:.6rem;background:#1a4a38">TOT</th>';}).join('');
-  document.getElementById('bs-thead').innerHTML='<tr>'+fixCols+subjGrpHdrs+'</tr><tr>'+subjSubHdrs+'</tr>';
-  if(!students.length){document.getElementById('bs-tbody').innerHTML='<tr><td colspan="'+(3+subjs.length*5)+'" style="text-align:center;padding:30px;color:var(--gray)">No students</td></tr>';return;}
-  document.getElementById('bs-tbody').innerHTML=students.map(function(s,idx){
-    var sc=DB_SCORES[s.id]||{};
-    var cells=subjs.map(function(_,i){
-      var r=sc[i]||{};var t=computeTotal(r);var gd=getGrade(t);
-      return'<td style="border-left:2px solid var(--border)">'+(r.ca1!==undefined&&r.ca1!==''?r.ca1:'--')+'</td>'
-        +'<td>'+(r.ca2!==undefined&&r.ca2!==''?r.ca2:'--')+'</td>'
-        +'<td>'+(r.ca3!==undefined&&r.ca3!==''?r.ca3:'--')+'</td>'
-        +'<td>'+(r.exam!==undefined&&r.exam!==''?r.exam:'--')+'</td>'
-        +'<td style="font-weight:700;color:'+(t!==''?gd.c:'#aaa')+'">'+(t!==''?t:'--')+'</td>';
-    }).join('');
-    return'<tr><td style="text-align:center">'+(idx+1)+'</td><td style="font-weight:600">'+s.name+'</td><td>'+(s.gender==='Male'?'M':'F')+'</td>'+cells+'</tr>';
-  }).join('');
+  var bsWrap=document.querySelector('.bs-wrap');
+  if(!bsWrap)return;
+  if(!students.length){
+    bsWrap.innerHTML='<div class="empty"><h3>No Students</h3></div>';
+    return;
+  }
+  var CHUNK=3;
+  var html='';
+  for(var g=0;g<subjs.length;g+=CHUNK){
+    var group=subjs.slice(g,g+CHUNK);
+    var groupIdx=[];
+    for(var x=g;x<Math.min(g+CHUNK,subjs.length);x++)groupIdx.push(x);
+    if(g>0)html+='<div style="page-break-before:always;height:20px"></div>';
+    html+='<div style="background:var(--g1);color:#fff;padding:6px 12px;font-size:.78rem;font-weight:700;border-radius:6px 6px 0 0">'
+      +(DEPTS[CLS]?DEPTS[CLS].label:CLS)+' | '+TERM
+      +' | Subjects '+(g+1)+'-'+(Math.min(g+CHUNK,subjs.length))+' of '+subjs.length
+      +'</div>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:16px">';
+    html+='<thead><tr style="background:var(--g1);color:#fff">'
+      +'<th style="padding:6px 8px;border:1px solid rgba(255,255,255,.2);width:28px">#</th>'
+      +'<th style="padding:6px 8px;text-align:left;border:1px solid rgba(255,255,255,.2)">STUDENT NAME</th>'
+      +'<th style="padding:6px 4px;text-align:center;border:1px solid rgba(255,255,255,.2);width:22px">G</th>';
+    group.forEach(function(subj){
+      html+='<th colspan="5" style="padding:5px 4px;text-align:center;border:1px solid rgba(255,255,255,.2)">'+subj+'</th>';
+    });
+    html+='</tr><tr style="background:#1a4a38;color:rgba(255,255,255,.75);font-size:.63rem">'
+      +'<th style="border:1px solid rgba(255,255,255,.1)"></th>'
+      +'<th style="border:1px solid rgba(255,255,255,.1)"></th>'
+      +'<th style="border:1px solid rgba(255,255,255,.1)"></th>';
+    group.forEach(function(){
+      ['CA1','CA2','CA3','EXM','TOT'].forEach(function(h,hi){
+        html+='<th style="padding:2px 3px;text-align:center;border:1px solid rgba(255,255,255,.1)'+(hi===4?';background:#0a3d2e':'')+'">'+h+'</th>';
+      });
+    });
+    html+='</tr></thead><tbody>';
+    students.forEach(function(s,idx){
+      var sc=DB_SCORES[s.id]||{};
+      var bg=idx%2===0?'#fff':'#f0fdf9';
+      html+='<tr style="background:'+bg+'">'
+        +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb;color:#9ca3af;font-size:.7rem">'+(idx+1)+'</td>'
+        +'<td style="padding:4px 8px;border:1px solid #e5e7eb;font-weight:600;color:var(--g1)">'+s.name+'</td>'
+        +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb;font-size:.7rem">'+(s.gender==='Male'?'M':'F')+'</td>';
+      groupIdx.forEach(function(i){
+        var r=sc[i]||{};var t=computeTotal(r);var gd=getGrade(t);
+        html+='<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.ca1!==undefined&&r.ca1!==''?r.ca1:'')+'</td>'
+          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.ca2!==undefined&&r.ca2!==''?r.ca2:'')+'</td>'
+          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.ca3!==undefined&&r.ca3!==''?r.ca3:'')+'</td>'
+          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.exam!==undefined&&r.exam!==''?r.exam:'')+'</td>'
+          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb;font-weight:700;color:'+(t!==''?gd.c:'#ccc')+'">'+(t!==''?t:'')+'</td>';
+      });
+      html+='</tr>';
+    });
+    html+='</tbody></table>';
+  }
+  bsWrap.innerHTML=html;
 }
-
 function exportBroadsheet(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
@@ -1921,29 +1987,10 @@ function exportBroadsheet(){
 function populateCardSel(){
   var sel=document.getElementById('rc-stu');
   var cur=sel.value;
-  if(IN_CLASS){
-    // In class mode - show only current class students
-    var students=DB_STUDENTS[CLS]||[];
-    sel.innerHTML='<option value="">Select student</option>'+students.map(function(s){return'<option value="'+s.id+'" data-cls="'+CLS+'">'+s.name+'</option>';}).join('');
-  }else{
-    // Home mode - show all classes with loaded students
-    var html='<option value="">Select student (all classes)</option>';
-    Object.keys(DEPTS).forEach(function(key){
-      var students=DB_STUDENTS[key]||[];
-      if(!students.length)return;
-      html+='<optgroup label="'+DEPTS[key].label+'">';
-      students.forEach(function(s){
-        html+='<option value="'+s.id+'" data-cls="'+key+'">'+s.name+'</option>';
-      });
-      html+='</optgroup>';
-    });
-    sel.innerHTML=html;
-  }
-  // Only restore selection if it belongs to current class
-  if(cur){
-    var opt=sel.querySelector('option[value="'+cur+'"]');
-    if(opt)sel.value=cur;
-  }
+  var students=DB_STUDENTS[CLS]||[];
+  sel.innerHTML='<option value="">Select student</option>'+
+    students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+  if(cur){var opt=sel.querySelector('option[value="'+cur+'"]');if(opt)sel.value=cur;}
 }
 
 function renderCardHome(){
@@ -1979,26 +2026,9 @@ function renderCard(){
   var sid=sel.value;
   var wrap=document.getElementById('rc-wrap');
   if(!sid){wrap.innerHTML='<div class="empty"><h3>Select a Student</h3><p>Choose a student to generate their result card</p></div>';return;}
-  // Get class from option data attribute
-  var opt=sel.options[sel.selectedIndex];
-  var cardCls=opt?opt.getAttribute('data-cls'):CLS;
-  if(cardCls&&cardCls!==CLS){
-    // Temporarily switch context for card building
-    var savedCLS=CLS;CLS=cardCls;
-    var term=document.getElementById('rc-term').value;
-    var session=document.getElementById('rc-session').value;
-    if(!DB_SCORES[sid]){
-      showLoad('Loading card data...');
-      loadStudentData(sid,function(){hideLoad();wrap.innerHTML=buildCard(sid,term,session);CLS=savedCLS;});
-    }else{wrap.innerHTML=buildCard(sid,term,session);CLS=savedCLS;}
-  }else{
-    var term=document.getElementById('rc-term').value;
-    var session=document.getElementById('rc-session').value;
-    if(!DB_SCORES[sid]){
-      showLoad('Loading card data...');
-      loadStudentData(sid,function(){hideLoad();wrap.innerHTML=buildCard(sid,term,session);});
-    }else{wrap.innerHTML=buildCard(sid,term,session);}
-  }
+  var term=document.getElementById('rc-term').value;
+  var session=document.getElementById('rc-session').value;
+  wrap.innerHTML=buildCard(sid,term,session);
 }
 function printAll(){
   var students=DB_STUDENTS[CLS]||[];
@@ -2261,16 +2291,17 @@ function renderAnalytics(){
   var allRanked=ranked.concat(unscored);
   var rank=1;
   document.getElementById('an-student-tbody').innerHTML=allRanked.map(function(s,i){
-    var hasData=s.avg!=='';
-    var pct=hasData?Math.round(s.avg):'--';
-    var gd=hasData?getGrade(s.avg):{g:'--',r:'--',c:'#aaa'};
-    var barW=hasData?Math.min(100,Math.round(s.avg))+'%':'0%';
-    var barColor=hasData?(s.avg>=70?'#10b981':s.avg>=50?'#f59e0b':'#ef4444'):'#e5e7eb';
+    var hasData=s.avg!==''&&s.avg!==null&&s.cnt>0;
+    var avgNum=hasData?Number(s.avg):0;
+    var pct=hasData?Math.round(avgNum):'--';
+    var gd=hasData?getGrade(avgNum):{g:'--',r:'--',c:'#aaa',bg:'#f9f9f9'};
+    var barW=hasData?Math.min(100,Math.round(avgNum))+'%':'0%';
+    var barColor=hasData?(avgNum>=70?'#10b981':avgNum>=50?'#f59e0b':'#ef4444'):'#e5e7eb';
     var passCount=hasData?s.pass:'--';
     var totalSubjs=hasData?s.cnt:'--';
     var rkDisplay='--';
     if(hasData){rkDisplay=rank;rank++;}
-    var rkClass=rkDisplay===1?'rk1':rkDisplay===2?'rk2':rkDisplay===3?'rk3':'rkn';
+    var rkClass=typeof rkDisplay==='number'?(rkDisplay===1?'rk1':rkDisplay===2?'rk2':rkDisplay===3?'rk3':'rkn'):'rkn';
     return'<tr>'
       +'<td><span class="rk '+rkClass+'">'+rkDisplay+'</span></td>'
       +'<td><strong style="color:var(--g1)">'+s.name+'</strong></td>'
