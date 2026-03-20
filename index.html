@@ -482,6 +482,14 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       </div>
     </div>
     <div class="tb-right">
+      <div id="term-selector-wrap" style="display:none;align-items:center;gap:6px">
+        <label style="font-size:.72rem;font-weight:700;color:var(--gray);white-space:nowrap">Term:</label>
+        <select id="global-term-sel" class="sel" style="padding:5px 10px;font-size:.78rem;min-width:100px" onchange="changeTerm(this.value)">
+          <option value="1st Term">1st Term</option>
+          <option value="2nd Term" selected>2nd Term</option>
+          <option value="3rd Term">3rd Term</option>
+        </select>
+      </div>
       <span class="saved-msg" id="saved-msg">Saved</span>
       <button class="btn btn-outline btn-sm no-print" onclick="exportData()">Export</button>
       <button class="btn btn-gold btn-sm no-print" onclick="importData()">Import</button>
@@ -617,6 +625,15 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       </div>
       <button class="btn btn-primary btn-sm" onclick="window.print()">Print Card</button>
       <button class="btn btn-outline btn-sm" onclick="printAll()">Print All</button>
+    </div>
+    <!-- Class selector for homepage card access -->
+    <div id="rc-class-bar" class="card-sel-bar no-print" style="display:none">
+      <div class="form-grp">
+        <label>Filter by Class</label>
+        <select class="sel" id="rc-class-filter" onchange="filterCardByClass(this.value)" style="min-width:200px">
+          <option value="">All classes</option>
+        </select>
+      </div>
     </div>
     <div id="rc-wrap"></div>
   </div>
@@ -841,6 +858,26 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
+function filterCardByClass(key){
+  if(!key){populateCardSel();return;}
+  var sel=document.getElementById('rc-stu');
+  var students=DB_STUDENTS[key]||[];
+  if(!students.length){
+    showLoad('Loading '+DEPTS[key].label+'...');
+    dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc')
+      .then(function(rows){
+        DB_STUDENTS[key]=rows||[];
+        hideLoad();
+        sel.innerHTML='<option value="">Select student</option>'+
+          (rows||[]).map(function(s){return'<option value="'+s.id+'" data-cls="'+key+'">'+s.name+'</option>';}).join('');
+      }).catch(function(){hideLoad();});
+  }else{
+    sel.innerHTML='<option value="">Select student</option>'+
+      students.map(function(s){return'<option value="'+s.id+'" data-cls="'+key+'">'+s.name+'</option>';}).join('');
+  }
+}
+
+
 // ============================================================
 // SUPABASE
 // ============================================================
@@ -887,17 +924,35 @@ function getAutoRemark(avg){
   for(var i=0;i<r.length;i++){if(avg>=r[i].min&&avg<=r[i].max)return r[i].text;}
   return '--';
 }
+// Published subjects cache (loaded from Supabase, keyed by classKey+term+idx)
+var PUB_CACHE={};
+
+function pubKey(classKey,term,idx){return classKey+'|'+term+'|'+idx;}
+
 function isPublished(classKey,idx){
-  var cfg=getCfg();
-  return !!(cfg.published&&cfg.published[classKey]&&cfg.published[classKey][idx]);
+  return !!PUB_CACHE[pubKey(classKey,TERM,idx)];
 }
-function setPublished(classKey,idx,val){
-  var cfg=getCfg();
-  if(!cfg.published)cfg.published={};
-  if(!cfg.published[classKey])cfg.published[classKey]={};
-  if(val)cfg.published[classKey][idx]=true;
-  else delete cfg.published[classKey][idx];
-  saveCfg(cfg);
+
+function loadPublished(classKey,term,cb){
+  dbGet('published_subjects?class_key=eq.'+encodeURIComponent(classKey)+'&term=eq.'+encodeURIComponent(term))
+    .then(function(rows){
+      (rows||[]).forEach(function(r){
+        PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
+      });
+      if(cb)cb();
+    }).catch(function(){if(cb)cb();});
+}
+
+function setPublishedRemote(classKey,term,idx,val,cb){
+  if(val){
+    dbUpsert('published_subjects',{class_key:classKey,term:term,subject_index:idx})
+      .then(function(){PUB_CACHE[pubKey(classKey,term,idx)]=true;if(cb)cb();})
+      .catch(function(){showToast('Publish sync failed','error');if(cb)cb();});
+  }else{
+    dbDelete('published_subjects?class_key=eq.'+encodeURIComponent(classKey)+'&term=eq.'+encodeURIComponent(term)+'&subject_index=eq.'+idx)
+      .then(function(){delete PUB_CACHE[pubKey(classKey,term,idx)];if(cb)cb();})
+      .catch(function(){showToast('Unpublish sync failed','error');if(cb)cb();});
+  }
 }
 
 // ============================================================
@@ -997,6 +1052,7 @@ function getTheme(){
 // STATE / DB CACHE
 // ============================================================
 var CLS='ss3-science';
+var TERM='2nd Term';
 var photoDataURL='';
 var currentSheetIdx=-1;
 var currentProfileSid='';
@@ -1031,26 +1087,30 @@ function showSaved(){
 
 function loadClass(key,cb){
   showLoad('Loading '+DEPTS[key].label+'...');
-  dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc')
-    .then(function(rows){
-      DB_STUDENTS[key]=rows||[];
-      hideLoad();
-      if(cb)cb();
-    })
-    .catch(function(){
-      hideLoad();
-      DB_STUDENTS[key]=DB_STUDENTS[key]||[];
-      showToast('Connection error','error');
-      if(cb)cb();
+  Promise.all([
+    dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc'),
+    dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
+  ]).then(function(res){
+    DB_STUDENTS[key]=res[0]||[];
+    (res[1]||[]).forEach(function(r){
+      PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
     });
+    hideLoad();
+    if(cb)cb();
+  }).catch(function(){
+    hideLoad();
+    DB_STUDENTS[key]=DB_STUDENTS[key]||[];
+    showToast('Connection error','error');
+    if(cb)cb();
+  });
 }
 
 function loadStudentData(sid,cb){
   Promise.all([
-    dbGet('scores?student_id=eq.'+sid),
-    dbGet('traits?student_id=eq.'+sid),
-    dbGet('fees?student_id=eq.'+sid),
-    dbGet('remarks?student_id=eq.'+sid)
+    dbGet('scores?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
+    dbGet('traits?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
+    dbGet('fees?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
+    dbGet('remarks?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM))
   ]).then(function(res){
     var scoreMap={};
     (res[0]||[]).forEach(function(s){
@@ -1108,18 +1168,23 @@ function setMode(inClass){
   var chip=document.getElementById('class-chip');
   var bnh=document.getElementById('bn-home-strip');
   var bnc=document.getElementById('bn-class-strip');
+  var ts=document.getElementById('term-selector-wrap');
   if(nh)nh.style.display=inClass?'none':'block';
   if(nc)nc.style.display=inClass?'block':'none';
   if(sl)sl.style.display=inClass?'block':'none';
   if(chip)chip.style.display=inClass?'flex':'none';
   if(bnh)bnh.style.display=inClass?'none':'flex';
   if(bnc)bnc.style.display=inClass?'flex':'none';
+  if(ts)ts.style.display=inClass?'flex':'none';
   if(inClass){
     var lbl=DEPTS[CLS]?DEPTS[CLS].label:CLS;
     var sn=document.getElementById('sb-class-name');
     var cn=document.getElementById('class-chip-name');
     if(sn)sn.textContent=lbl;
     if(cn)cn.textContent=lbl;
+    // Sync term selector
+    var tsel=document.getElementById('global-term-sel');
+    if(tsel)tsel.value=TERM;
   }
 }
 
@@ -1146,7 +1211,16 @@ function navTo(id,el){
   if(id==='students')renderStudents();
   if(id==='scores')renderScoreGrid();
   if(id==='broadsheet')renderBroadsheet();
-  if(id==='card'){populateCardSel();renderCard();}
+  if(id==='card'){
+    var rcClass=document.getElementById('rc-class-bar');
+    if(IN_CLASS){
+      if(rcClass)rcClass.style.display='none';
+      var rct=document.getElementById('rc-term');if(rct)rct.value=TERM;
+      populateCardSel();renderCard();
+    }else{
+      renderCardHome();renderCard();
+    }
+  }
   if(id==='analytics')renderAnalytics();
   if(id==='settings')renderSettings();
   closeSidebar();
@@ -1166,9 +1240,35 @@ function goHome(){
 function enterClass(key){
   if(!DEPTS[key]){showToast('Unknown class','error');return;}
   CLS=key;
+  var cfg=getCfg();
+  TERM=cfg.term||DEFAULT_TERM;
   setMode(true);
   loadClass(key,function(){
     navTo('dashboard',document.getElementById('ni-dashboard'));
+  });
+}
+
+function changeTerm(newTerm){
+  if(newTerm===TERM)return;
+  TERM=newTerm;
+  // Clear cached data for current class to force reload with new term
+  DB_SCORES={};DB_TRAITS={};DB_FEES={};DB_REMARKS={};
+  // Clear published cache for this class
+  Object.keys(PUB_CACHE).forEach(function(k){
+    if(k.startsWith(CLS+'|'))delete PUB_CACHE[k];
+  });
+  showToast('Switched to '+newTerm);
+  // Reload class data with new term
+  loadClass(CLS,function(){
+    // Refresh current page
+    var activePages=['dashboard','students','scores','broadsheet','card','analytics'];
+    for(var i=0;i<activePages.length;i++){
+      var pg=document.getElementById('page-'+activePages[i]);
+      if(pg&&pg.classList.contains('active')){
+        navTo(activePages[i],null);
+        break;
+      }
+    }
   });
 }
 
@@ -1460,7 +1560,7 @@ function openSheet(idx){
       // Auto-save after 1.5s
       clearTimeout(inp._timer);
       inp._timer=setTimeout(function(){
-        dbUpsert('scores',{student_id:sid,class_key:CLS,subject_index:idx,
+        dbUpsert('scores',{student_id:sid,class_key:CLS,subject_index:idx,term:TERM,
           ca1:DB_SCORES[sid][idx].ca1,ca2:DB_SCORES[sid][idx].ca2,
           ca3:DB_SCORES[sid][idx].ca3,exam:DB_SCORES[sid][idx].exam})
           .catch(function(){showToast('Score save failed','error');});
@@ -1482,7 +1582,7 @@ function saveDraft(){
   showLoad('Saving...');
   Promise.all(students.map(function(s){
     var sc=(DB_SCORES[s.id]||{})[idx]||{ca1:'',ca2:'',ca3:'',exam:''};
-    return dbUpsert('scores',{student_id:s.id,class_key:CLS,subject_index:idx,
+    return dbUpsert('scores',{student_id:s.id,class_key:CLS,subject_index:idx,term:TERM,
       ca1:sc.ca1,ca2:sc.ca2,ca3:sc.ca3,exam:sc.exam});
   })).then(function(){hideLoad();showToast('Draft saved');})
   .catch(function(){hideLoad();showToast('Save failed','error');});
@@ -1492,18 +1592,22 @@ function togglePublish(){
   var idx=currentSheetIdx;if(idx<0)return;
   var isPub=isPublished(CLS,idx);
   if(isPub){
-    setPublished(CLS,idx,false);
-    document.getElementById('sheet-pub-badge').style.display='none';
-    var btn=document.getElementById('publish-btn');
-    btn.textContent='Publish Subject';btn.className='btn btn-primary';
-    showToast('Subject unpublished');
+    setPublishedRemote(CLS,TERM,idx,false,function(){
+      document.getElementById('sheet-pub-badge').style.display='none';
+      var btn=document.getElementById('publish-btn');
+      btn.textContent='Publish Subject';btn.className='btn btn-primary';
+      showToast('Subject unpublished');
+      renderScoreGrid();
+    });
   }else{
     saveDraft();
-    setPublished(CLS,idx,true);
-    document.getElementById('sheet-pub-badge').style.display='inline';
-    var btn2=document.getElementById('publish-btn');
-    btn2.textContent='Unpublish';btn2.className='btn btn-outline';
-    showToast('Subject published');
+    setPublishedRemote(CLS,TERM,idx,true,function(){
+      document.getElementById('sheet-pub-badge').style.display='inline';
+      var btn2=document.getElementById('publish-btn');
+      btn2.textContent='Unpublish';btn2.className='btn btn-outline';
+      showToast('Subject published and synced');
+      renderScoreGrid();
+    });
   }
 }
 
@@ -1580,7 +1684,7 @@ function renderProfile(s){
       // Update stars in same container
       var container=sp.parentNode;
       container.querySelectorAll('.star').forEach(function(s,i){s.classList.toggle('on',i<n);});
-      dbUpsert('traits',{student_id:fsid,class_key:CLS,trait_type:key,trait_name:tr,rating:n})
+      dbUpsert('traits',{student_id:fsid,class_key:CLS,term:TERM,trait_type:key,trait_name:tr,rating:n})
         .catch(function(){showToast('Rating failed','error');});
     };
   });
@@ -1623,13 +1727,13 @@ function saveProfile(){
   var pr=Number(document.getElementById('pf-att-present').value||0);
   showLoad('Saving...');
   Promise.all([
-    dbUpsert('fees',{student_id:sid,class_key:CLS,
+    dbUpsert('fees',{student_id:sid,class_key:CLS,term:TERM,
       total:Number(document.getElementById('pf-fee-total').value||0),
       paid:Number(document.getElementById('pf-fee-paid').value||0),
       debt:Number(document.getElementById('pf-fee-debt').value||0),
       resume_date:document.getElementById('pf-fee-resume').value,
       next_term:Number(document.getElementById('pf-fee-next').value||0)}),
-    dbUpsert('remarks',{student_id:sid,class_key:CLS,
+    dbUpsert('remarks',{student_id:sid,class_key:CLS,term:TERM,
       academic:'',form_master:'',principal:'',days_opened:op,days_present:pr})
   ]).then(function(){
     DB_FEES[sid]={total:Number(document.getElementById('pf-fee-total').value||0),paid:Number(document.getElementById('pf-fee-paid').value||0),debt:Number(document.getElementById('pf-fee-debt').value||0),resume_date:document.getElementById('pf-fee-resume').value,next_term:Number(document.getElementById('pf-fee-next').value||0)};
@@ -1668,22 +1772,82 @@ function renderBroadsheet(){
 // RESULT CARD
 // ============================================================
 function populateCardSel(){
-  var students=DB_STUDENTS[CLS]||[];
   var sel=document.getElementById('rc-stu');
   var cur=sel.value;
-  sel.innerHTML='<option value="">Select student</option>'+students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+  if(IN_CLASS){
+    // In class mode - show only current class students
+    var students=DB_STUDENTS[CLS]||[];
+    sel.innerHTML='<option value="">Select student</option>'+students.map(function(s){return'<option value="'+s.id+'" data-cls="'+CLS+'">'+s.name+'</option>';}).join('');
+  }else{
+    // Home mode - show all classes with loaded students
+    var html='<option value="">Select student (all classes)</option>';
+    Object.keys(DEPTS).forEach(function(key){
+      var students=DB_STUDENTS[key]||[];
+      if(!students.length)return;
+      html+='<optgroup label="'+DEPTS[key].label+'">';
+      students.forEach(function(s){
+        html+='<option value="'+s.id+'" data-cls="'+key+'">'+s.name+'</option>';
+      });
+      html+='</optgroup>';
+    });
+    sel.innerHTML=html;
+  }
   if(cur)sel.value=cur;
 }
+
+function renderCardHome(){
+  // Show class filter bar
+  var rcClass=document.getElementById('rc-class-bar');
+  if(rcClass)rcClass.style.display='flex';
+  // Populate class filter
+  var cf=document.getElementById('rc-class-filter');
+  if(cf){
+    cf.innerHTML='<option value="">All classes</option>'+
+      Object.keys(DEPTS).map(function(k){return'<option value="'+k+'">'+DEPTS[k].label+'</option>';}).join('');
+  }
+  // Load students for all classes that have data in DB
+  var loadedAny=Object.keys(DB_STUDENTS).some(function(k){return DB_STUDENTS[k].length>0;});
+  if(!loadedAny){
+    showLoad('Loading students...');
+    var keys=Object.keys(DEPTS);
+    var loaded=0;
+    keys.forEach(function(key){
+      dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc')
+        .then(function(rows){
+          if(rows&&rows.length)DB_STUDENTS[key]=rows;
+          loaded++;
+          if(loaded===keys.length){hideLoad();populateCardSel();}
+        }).catch(function(){loaded++;if(loaded===keys.length){hideLoad();populateCardSel();}});
+    });
+  }else{
+    populateCardSel();
+  }
+}
 function renderCard(){
-  var sid=document.getElementById('rc-stu').value;
+  var sel=document.getElementById('rc-stu');
+  var sid=sel.value;
   var wrap=document.getElementById('rc-wrap');
   if(!sid){wrap.innerHTML='<div class="empty"><h3>Select a Student</h3><p>Choose a student to generate their result card</p></div>';return;}
-  var term=document.getElementById('rc-term').value;
-  var session=document.getElementById('rc-session').value;
-  if(!DB_SCORES[sid]){
-    showLoad('Loading card data...');
-    loadStudentData(sid,function(){hideLoad();wrap.innerHTML=buildCard(sid,term,session);});
-  }else{wrap.innerHTML=buildCard(sid,term,session);}
+  // Get class from option data attribute
+  var opt=sel.options[sel.selectedIndex];
+  var cardCls=opt?opt.getAttribute('data-cls'):CLS;
+  if(cardCls&&cardCls!==CLS){
+    // Temporarily switch context for card building
+    var savedCLS=CLS;CLS=cardCls;
+    var term=document.getElementById('rc-term').value;
+    var session=document.getElementById('rc-session').value;
+    if(!DB_SCORES[sid]){
+      showLoad('Loading card data...');
+      loadStudentData(sid,function(){hideLoad();wrap.innerHTML=buildCard(sid,term,session);CLS=savedCLS;});
+    }else{wrap.innerHTML=buildCard(sid,term,session);CLS=savedCLS;}
+  }else{
+    var term=document.getElementById('rc-term').value;
+    var session=document.getElementById('rc-session').value;
+    if(!DB_SCORES[sid]){
+      showLoad('Loading card data...');
+      loadStudentData(sid,function(){hideLoad();wrap.innerHTML=buildCard(sid,term,session);});
+    }else{wrap.innerHTML=buildCard(sid,term,session);}
+  }
 }
 function printAll(){
   var students=DB_STUDENTS[CLS]||[];
