@@ -1106,21 +1106,36 @@ function showSaved(){
 
 function loadClass(key,cb){
   showLoad('Loading '+DEPTS[key].label+'...');
-  // Load students first (critical), published_subjects optional
+  // Load students first
   dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc')
     .then(function(rows){
       DB_STUDENTS[key]=rows||[];
-      hideLoad();
-      // Try to load published subjects (optional - table may not exist)
-      dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
-        .then(function(prows){
-          (prows||[]).forEach(function(r){
-            PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
+      if(!rows||!rows.length){hideLoad();if(cb)cb();return;}
+      // Preload ALL scores for this class (needed for broadsheet, analytics, cards)
+      showLoad('Loading scores...');
+      dbGet('scores?class_key=eq.'+encodeURIComponent(key))
+        .then(function(scoreRows){
+          (scoreRows||[]).forEach(function(s){
+            if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+            DB_SCORES[s.student_id][s.subject_index]={
+              ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''
+            };
           });
-        }).catch(function(){
-          // published_subjects table not ready yet - localStorage fallback handles it
+          // Load published subjects
+          dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
+            .then(function(prows){
+              (prows||[]).forEach(function(r){
+                PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
+              });
+            }).catch(function(){});
+          hideLoad();
+          if(cb)cb();
+        })
+        .catch(function(){
+          // Scores failed - still proceed
+          hideLoad();
+          if(cb)cb();
         });
-      if(cb)cb();
     })
     .catch(function(){
       hideLoad();
@@ -1132,10 +1147,10 @@ function loadClass(key,cb){
 
 function loadStudentData(sid,cb){
   Promise.all([
-    dbGet('scores?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
-    dbGet('traits?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
-    dbGet('fees?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
-    dbGet('remarks?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM))
+    dbGet('scores?student_id=eq.'+sid),
+    dbGet('traits?student_id=eq.'+sid),
+    dbGet('fees?student_id=eq.'+sid),
+    dbGet('remarks?student_id=eq.'+sid)
   ]).then(function(res){
     var scoreMap={};
     (res[0]||[]).forEach(function(s){
@@ -2126,7 +2141,16 @@ function destroyChart(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];
 function renderAnalytics(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
-  if(!students.length)return;
+  // Clear charts first
+  destroyChart('dist');destroyChart('subj');destroyChart('rank');
+  if(!students.length){
+    document.getElementById('an-avg').textContent='--';
+    document.getElementById('an-pass').textContent='--';
+    document.getElementById('an-dist').textContent='0';
+    document.getElementById('an-fail').textContent='0';
+    document.getElementById('perf-tbody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray)">No students in this class yet</td></tr>';
+    return;
+  }
   var summaries=students.map(function(s){return Object.assign({},s,studentSummary(s.id));});
   var withData=summaries.filter(function(s){return s.avg!=='';});
   var classAvg=withData.length?Math.round(withData.reduce(function(a,s){return a+s.avg;},0)/withData.length*10)/10:'--';
