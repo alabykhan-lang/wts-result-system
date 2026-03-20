@@ -1113,8 +1113,10 @@ function loadClass(key,cb){
       if(!rows||!rows.length){hideLoad();if(cb)cb();return;}
       // Preload ALL scores for this class (needed for broadsheet, analytics, cards)
       showLoad('Loading scores...');
-      dbGet('scores?class_key=eq.'+encodeURIComponent(key))
+      dbGet('scores?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
         .then(function(scoreRows){
+          // Clear scores for this class before loading new term
+          (DB_STUDENTS[key]||[]).forEach(function(st){delete DB_SCORES[st.id];});
           (scoreRows||[]).forEach(function(s){
             if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
             DB_SCORES[s.student_id][s.subject_index]={
@@ -1291,7 +1293,7 @@ function enterClass(key){
 function changeTerm(newTerm){
   if(newTerm===TERM)return;
   TERM=newTerm;
-  // Clear cached data for current class to force reload with new term
+  // Clear ALL cached score/trait/fee/remark data to force fresh load
   DB_SCORES={};DB_TRAITS={};DB_FEES={};DB_REMARKS={};
   // Clear published cache for this class
   Object.keys(PUB_CACHE).forEach(function(k){
