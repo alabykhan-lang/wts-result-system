@@ -924,13 +924,17 @@ function getAutoRemark(avg){
   for(var i=0;i<r.length;i++){if(avg>=r[i].min&&avg<=r[i].max)return r[i].text;}
   return '--';
 }
-// Published subjects cache (loaded from Supabase, keyed by classKey+term+idx)
+// Published subjects - stored in Supabase published_subjects table
+// Falls back to localStorage if table doesn't exist yet
 var PUB_CACHE={};
 
 function pubKey(classKey,term,idx){return classKey+'|'+term+'|'+idx;}
 
 function isPublished(classKey,idx){
-  return !!PUB_CACHE[pubKey(classKey,TERM,idx)];
+  // Check Supabase cache first, then localStorage fallback
+  if(PUB_CACHE[pubKey(classKey,TERM,idx)])return true;
+  var cfg=getCfg();
+  return !!(cfg.published&&cfg.published[classKey]&&cfg.published[classKey][idx]);
 }
 
 function loadPublished(classKey,term,cb){
@@ -940,19 +944,34 @@ function loadPublished(classKey,term,cb){
         PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
       });
       if(cb)cb();
-    }).catch(function(){if(cb)cb();});
+    }).catch(function(){
+      // Table doesn't exist yet - use localStorage
+      if(cb)cb();
+    });
 }
 
 function setPublishedRemote(classKey,term,idx,val,cb){
+  // Save to localStorage immediately (works always)
+  var cfg=getCfg();
+  if(!cfg.published)cfg.published={};
+  if(!cfg.published[classKey])cfg.published[classKey]={};
+  if(val){
+    cfg.published[classKey][idx]=true;
+    PUB_CACHE[pubKey(classKey,term,idx)]=true;
+  }else{
+    delete cfg.published[classKey][idx];
+    delete PUB_CACHE[pubKey(classKey,term,idx)];
+  }
+  saveCfg(cfg);
+  // Also try Supabase (gracefully fails if table missing)
   if(val){
     dbUpsert('published_subjects',{class_key:classKey,term:term,subject_index:idx})
-      .then(function(){PUB_CACHE[pubKey(classKey,term,idx)]=true;if(cb)cb();})
-      .catch(function(){showToast('Publish sync failed','error');if(cb)cb();});
+      .catch(function(){});
   }else{
     dbDelete('published_subjects?class_key=eq.'+encodeURIComponent(classKey)+'&term=eq.'+encodeURIComponent(term)+'&subject_index=eq.'+idx)
-      .then(function(){delete PUB_CACHE[pubKey(classKey,term,idx)];if(cb)cb();})
-      .catch(function(){showToast('Unpublish sync failed','error');if(cb)cb();});
+      .catch(function(){});
   }
+  if(cb)cb();
 }
 
 // ============================================================
@@ -1087,22 +1106,28 @@ function showSaved(){
 
 function loadClass(key,cb){
   showLoad('Loading '+DEPTS[key].label+'...');
-  Promise.all([
-    dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc'),
-    dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
-  ]).then(function(res){
-    DB_STUDENTS[key]=res[0]||[];
-    (res[1]||[]).forEach(function(r){
-      PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
+  // Load students first (critical), published_subjects optional
+  dbGet('students?class_key=eq.'+encodeURIComponent(key)+'&order=created_at.asc')
+    .then(function(rows){
+      DB_STUDENTS[key]=rows||[];
+      hideLoad();
+      // Try to load published subjects (optional - table may not exist)
+      dbGet('published_subjects?class_key=eq.'+encodeURIComponent(key)+'&term=eq.'+encodeURIComponent(TERM))
+        .then(function(prows){
+          (prows||[]).forEach(function(r){
+            PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
+          });
+        }).catch(function(){
+          // published_subjects table not ready yet - localStorage fallback handles it
+        });
+      if(cb)cb();
+    })
+    .catch(function(){
+      hideLoad();
+      DB_STUDENTS[key]=DB_STUDENTS[key]||[];
+      showToast('Connection error - check your internet','error');
+      if(cb)cb();
     });
-    hideLoad();
-    if(cb)cb();
-  }).catch(function(){
-    hideLoad();
-    DB_STUDENTS[key]=DB_STUDENTS[key]||[];
-    showToast('Connection error','error');
-    if(cb)cb();
-  });
 }
 
 function loadStudentData(sid,cb){
@@ -1462,7 +1487,11 @@ function saveStu(){
       if(!DB_STUDENTS[CLS])DB_STUDENTS[CLS]=[];
       DB_STUDENTS[CLS].push(ns);
       hideLoad();showToast('Student added');closeModal('modal-stu');renderStudents();renderDash();
-    }).catch(function(){hideLoad();showToast('Save failed','error');});
+    }).catch(function(err){
+      hideLoad();
+      console.error('Save student error:',err);
+      showToast('Save failed - check connection','error');
+    });
   }
 }
 function deleteStu(id){
@@ -2306,6 +2335,13 @@ function applyResponsive(){
 window.addEventListener('DOMContentLoaded',function(){
   applyResponsive();
   window.addEventListener('resize',applyResponsive);
+  // Test Supabase connection on startup
+  dbGet('students?limit=1')
+    .then(function(){console.log('Supabase connected OK');})
+    .catch(function(e){
+      console.error('Supabase connection failed:',e);
+      showToast('Database connection failed - check internet','error');
+    });
   // Set initial session/term from config
   try{
     var cfg=getCfg();
