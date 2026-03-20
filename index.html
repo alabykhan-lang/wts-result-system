@@ -485,8 +485,8 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       <div id="term-selector-wrap" style="display:none;align-items:center;gap:6px">
         <label style="font-size:.72rem;font-weight:700;color:var(--gray);white-space:nowrap">Term:</label>
         <select id="global-term-sel" class="sel" style="padding:5px 10px;font-size:.78rem;min-width:100px" onchange="changeTerm(this.value)">
-          <option value="1st Term">1st Term</option>
-          <option value="2nd Term" selected>2nd Term</option>
+          <option value="1st Term" selected>1st Term</option>
+          <option value="2nd Term">2nd Term</option>
           <option value="3rd Term">3rd Term</option>
         </select>
       </div>
@@ -616,7 +616,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       <div class="form-grp">
         <label>Term</label>
         <select class="sel" id="rc-term" onchange="renderCard()">
-          <option>1st Term</option><option selected>2nd Term</option><option>3rd Term</option>
+          <option selected>1st Term</option><option>2nd Term</option><option>3rd Term</option>
         </select>
       </div>
       <div class="form-grp">
@@ -909,7 +909,7 @@ var DEFAULT_REMARKS=[
   {min:80,max:100,text:'Excellent performance. Keep up the outstanding work!'}
 ];
 var DEFAULT_SESSION='2025/2026';
-var DEFAULT_TERM='2nd Term';
+var DEFAULT_TERM='1st Term';
 
 function getCfg(){
   var d=localStorage.getItem('wts_cfg');
@@ -1071,7 +1071,7 @@ function getTheme(){
 // STATE / DB CACHE
 // ============================================================
 var CLS='ss3-science';
-var TERM='2nd Term';
+var TERM='1st Term';
 var photoDataURL='';
 var currentSheetIdx=-1;
 var currentProfileSid='';
