@@ -379,14 +379,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </div>
-    <div class="ni" onclick="navTo('card',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Result Cards
-    </div>
-    <div class="ni" onclick="navTo('analytics',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Analytics
-    </div>
+
     <div class="ni" onclick="navTo('settings',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
@@ -415,6 +408,14 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
       Broadsheet
     </div>
+    <div class="ni" id="ni-card" onclick="navTo('card',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Result Cards
+    </div>
+    <div class="ni" id="ni-analytics" onclick="navTo('analytics',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Analytics
+    </div>
   </nav>
   <div class="sb-foot">
     <p>Ifedapo Community, Oko/Ijado Rd<br>Ejigbo, Osun State</p>
@@ -436,12 +437,6 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
     <div class="bn-item active" onclick="mobileNav('home',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
     </div>
-    <div class="bn-item" onclick="mobileNav('card',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Cards
-    </div>
-    <div class="bn-item" onclick="mobileNav('analytics',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Analytics
-    </div>
     <div class="bn-item" onclick="mobileNav('settings',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
     </div>
@@ -461,6 +456,12 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
     </div>
     <div class="bn-item" onclick="mobileNav('broadsheet',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Sheet
+    </div>
+    <div class="bn-item" onclick="mobileNav('card',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Cards
+    </div>
+    <div class="bn-item" onclick="mobileNav('analytics',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Stats
     </div>
   </div>
 </div>
@@ -619,34 +620,8 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   <div class="page print-active" id="page-card">
     <div class="card-sel-bar no-print">
       <div class="form-grp">
-        <label>Class</label>
-        <select class="sel" id="rc-class-filter" onchange="filterCardByClass(this.value)" style="min-width:180px">
-          <option value="">-- Select Class --</option>
-          <optgroup label="Early Years">
-            <option value="creche">Creche</option>
-            <option value="kg1">KG 1</option><option value="kg2">KG 2</option>
-            <option value="nursery1">Nursery 1</option><option value="nursery2">Nursery 2</option>
-          </optgroup>
-          <optgroup label="Primary">
-            <option value="primary1">Primary 1</option><option value="primary2">Primary 2</option>
-            <option value="primary3">Primary 3</option><option value="primary4">Primary 4</option>
-            <option value="primary5">Primary 5</option>
-          </optgroup>
-          <optgroup label="Junior Secondary">
-            <option value="jss1">JSS 1</option><option value="jss2">JSS 2</option>
-            <option value="jss3">JSS 3</option>
-          </optgroup>
-          <optgroup label="Senior Secondary">
-            <option value="ss1-general">SS1 General</option>
-            <option value="ss2-science">SS2 Science</option><option value="ss2-arts">SS2 Arts</option>
-            <option value="ss2-business">SS2 Business</option>
-            <option value="ss3-science">SS3 Science</option><option value="ss3-arts">SS3 Arts</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="form-grp">
         <label>Student</label>
-        <select class="sel" id="rc-stu" onchange="renderCard()" style="min-width:180px"><option value="">-- Select Student --</option></select>
+        <select class="sel" id="rc-stu" onchange="renderCard()" style="min-width:200px"><option value="">-- Select Student --</option></select>
       </div>
       <div class="form-grp">
         <label>Term</label>
@@ -667,41 +642,9 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
   <!-- ANALYTICS -->
   <div class="page" id="page-analytics">
-    <!-- Class & Term filter -->
-    <div class="card-sel-bar no-print" style="margin-bottom:20px">
-      <div class="form-grp">
-        <label>Class</label>
-        <select class="sel" id="an-class-filter" onchange="changeAnalyticsClass(this.value)" style="min-width:180px">
-          <optgroup label="Early Years">
-            <option value="creche">Creche</option>
-            <option value="kg1">KG 1</option><option value="kg2">KG 2</option>
-            <option value="nursery1">Nursery 1</option><option value="nursery2">Nursery 2</option>
-          </optgroup>
-          <optgroup label="Primary">
-            <option value="primary1">Primary 1</option><option value="primary2">Primary 2</option>
-            <option value="primary3">Primary 3</option><option value="primary4">Primary 4</option>
-            <option value="primary5">Primary 5</option>
-          </optgroup>
-          <optgroup label="Junior Secondary">
-            <option value="jss1">JSS 1</option><option value="jss2">JSS 2</option>
-            <option value="jss3">JSS 3</option>
-          </optgroup>
-          <optgroup label="Senior Secondary">
-            <option value="ss1-general">SS1 General</option>
-            <option value="ss2-science">SS2 Science</option><option value="ss2-arts">SS2 Arts</option>
-            <option value="ss2-business">SS2 Business</option>
-            <option value="ss3-science">SS3 Science</option><option value="ss3-arts">SS3 Arts</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="form-grp">
-        <label>Term</label>
-        <select class="sel" id="an-term-filter" onchange="changeAnalyticsTerm(this.value)" style="min-width:130px">
-          <option value="1st Term" selected>1st Term</option>
-          <option value="2nd Term">2nd Term</option>
-          <option value="3rd Term">3rd Term</option>
-        </select>
-      </div>
+    <!-- Term info bar -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap" class="no-print">
+      <div style="background:var(--g1);color:var(--gold2);padding:7px 16px;border-radius:8px;font-weight:700;font-size:.88rem" id="an-class-term-bar">--</div>
     </div>
     <!-- Summary stats -->
     <div class="stats-row" style="margin-bottom:20px">
@@ -840,6 +783,32 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
   </div><!-- /content -->
 </div><!-- /main -->
+
+<!-- TERM SELECTION MODAL -->
+<div class="overlay" id="modal-term" style="display:flex;display:none">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hdr">
+      <h3 id="modal-term-title">Select Term</h3>
+      <button class="modal-x" onclick="closeModal('modal-term')">&#215;</button>
+    </div>
+    <div class="modal-body" style="padding:24px 20px">
+      <p style="font-size:.88rem;color:var(--gray);margin-bottom:20px;text-align:center">
+        Choose the term you want to work on for <strong id="modal-term-class"></strong>
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <button class="btn btn-primary" style="padding:14px;font-size:1rem;justify-content:center" onclick="confirmTerm('1st Term')">
+          1st Term
+        </button>
+        <button class="btn btn-outline" style="padding:14px;font-size:1rem;justify-content:center" onclick="confirmTerm('2nd Term')">
+          2nd Term
+        </button>
+        <button class="btn btn-outline" style="padding:14px;font-size:1rem;justify-content:center" onclick="confirmTerm('3rd Term')">
+          3rd Term
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- STUDENT MODAL -->
 <div class="overlay" id="modal-stu">
@@ -1358,22 +1327,13 @@ function navTo(id,el){
   if(id==='broadsheet')renderBroadsheet();
   if(id==='card'){
     var rct=document.getElementById('rc-term');if(rct)rct.value=TERM;
-    var cf=document.getElementById('rc-class-filter');
-    if(cf&&CLS)cf.value=CLS;
     populateCardSel();renderCard();
   }
   if(id==='analytics'){
-    // Set dropdown to current CLS before rendering
-    var acf=document.getElementById('an-class-filter');
-    var atf=document.getElementById('an-term-filter');
-    if(acf)acf.value=CLS;
-    if(atf)atf.value=TERM;
-    // Load data if not yet loaded for this class
     if(!DB_STUDENTS[CLS]||!DB_STUDENTS[CLS].length){
-      changeAnalyticsClass(CLS);
-    }else{
-      renderAnalytics();
+      showToast('No data. Select a class and term first.','error');return;
     }
+    renderAnalytics();
   }
   if(id==='settings')renderSettings();
   closeSidebar();
@@ -1397,12 +1357,28 @@ function goHome(){
 
 function enterClass(key){
   if(!DEPTS[key]){showToast('Unknown class','error');return;}
+  // Show term selection modal first
+  var titleEl=document.getElementById('modal-term-title');
+  var clsEl=document.getElementById('modal-term-class');
+  if(titleEl)titleEl.textContent='Select Term';
+  if(clsEl)clsEl.textContent=DEPTS[key].label;
+  // Store pending class key
+  window._pendingClassKey=key;
+  document.getElementById('modal-term').style.display='flex';
+}
+
+function confirmTerm(term){
+  var key=window._pendingClassKey;
+  if(!key)return;
+  closeModal('modal-term');
   CLS=key;
-  var cfg=getCfg();
-  TERM=cfg.term||DEFAULT_TERM;
-  // Reset card selector to avoid showing previous class students
+  TERM=term;
+  // Reset stale data
+  DB_SCORES={};DB_TRAITS={};DB_FEES={};DB_REMARKS={};
+  Object.keys(PUB_CACHE).forEach(function(k){delete PUB_CACHE[k];});
+  // Reset card/card selector
   var rcStu=document.getElementById('rc-stu');
-  if(rcStu)rcStu.innerHTML='<option value="">Select student</option>';
+  if(rcStu)rcStu.innerHTML='<option value="">-- Select Student --</option>';
   var rcWrap=document.getElementById('rc-wrap');
   if(rcWrap)rcWrap.innerHTML='';
   // Sync term selectors
@@ -2481,20 +2457,13 @@ function renderAnalytics(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
   destroyChart('dist');destroyChart('subj');
-  // Always sync header AND dropdowns together
   var clsLabel=DEPTS[CLS]?DEPTS[CLS].label:CLS;
   var lbl=document.getElementById('an-class-term');
   if(lbl)lbl.textContent=clsLabel+' - '+TERM;
-  // Update topbar to match current filter selection
-  var tbTitle=document.getElementById('tb-title');
+  var bar=document.getElementById('an-class-term-bar');
+  if(bar)bar.textContent=clsLabel+' - '+TERM;
   var tbSub=document.getElementById('tb-sub');
-  if(tbTitle)tbTitle.textContent='Analytics';
   if(tbSub)tbSub.textContent=clsLabel+' - Analytics';
-  // Sync dropdowns
-  var acf=document.getElementById('an-class-filter');
-  var atf=document.getElementById('an-term-filter');
-  if(acf)acf.value=CLS;
-  if(atf)atf.value=TERM;
   if(!students.length){
     document.getElementById('an-avg').textContent='--';
     document.getElementById('an-pass').textContent='--';
