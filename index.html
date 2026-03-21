@@ -483,7 +483,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       </div>
     </div>
     <div class="tb-right">
-      <span class="saved-msg" id="saved-msg">Saved</span>
+            <span class="saved-msg" id="saved-msg">Saved</span>
       <button class="btn btn-outline btn-sm no-print" onclick="exportData()">Export</button>
       <button class="btn btn-gold btn-sm no-print" onclick="importData()">Import</button>
     </div>
@@ -597,8 +597,8 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
         <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Term:</label>
         <div id="bs-term-label" style="font-weight:700;color:var(--g1);font-size:.88rem"></div>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="refreshBroadsheet()">&#8635; Refresh</button>
-      <button class="btn btn-outline btn-sm" onclick="window.print()">Print Broadsheet</button>
+      <button class="btn btn-gold btn-sm no-print" onclick="refreshBroadsheet()">&#8635; Refresh Data</button>
+      <button class="btn btn-primary btn-sm" onclick="window.print()">Print Broadsheet</button>
       <button class="btn btn-outline btn-sm" onclick="exportBroadsheet()">Export CSV</button>
     </div>
     <div class="bs-wrap">
@@ -625,7 +625,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
         <label>Session</label>
         <input class="inp" id="rc-session" value="2025/2026" onchange="renderCard()" style="width:110px"/>
       </div>
-      <button class="btn btn-gold btn-sm" onclick="refreshCard()">&#8635; Refresh</button>
+      <button class="btn btn-gold btn-sm" onclick="refreshCard()">&#8635; Refresh Data</button>
       <button class="btn btn-primary btn-sm" onclick="window.print()">Print Card</button>
       <button class="btn btn-outline btn-sm" onclick="printAll()">Print All</button>
     </div>
@@ -1682,8 +1682,8 @@ function openSheet(idx){
       +'<input class="sc-inp" type="number" min="0" max="10" value="'+(sc.ca3||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="ca3"/>'
       +'<input class="sc-inp" type="number" min="0" max="70" value="'+(sc.exam||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="exam"/>'
       +'<span id="st-'+s.id+'" style="text-align:center;font-weight:700;font-size:.82rem;color:var(--g1)">'+(t!==''?t:'--')+'</span>'
-      +'<span style="text-align:center;font-weight:700;font-size:.78rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'--')+'</span>'
-      +'<span style="text-align:center;font-size:.75rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.r||'--')+'</span>'
+      +'<span id="sg-'+s.id+'" style="text-align:center;font-weight:700;font-size:.78rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'--')+'</span>'
+      +'<span id="sr-'+s.id+'" style="text-align:center;font-size:.75rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.r||'--')+'</span>'
       +'</div>';
   });
   document.getElementById('sheet-rows').innerHTML=html;
@@ -1703,6 +1703,10 @@ function openSheet(idx){
       var gd=getGrade(t);
       var totEl=document.getElementById('st-'+sid);
       if(totEl)totEl.textContent=t!==''?t:'--';
+      var grEl=document.getElementById('sg-'+sid);
+      var rmEl=document.getElementById('sr-'+sid);
+      if(grEl){grEl.textContent=t!==''?gd.g:'--';grEl.style.color=t!==''?gd.c:'#aaa';}
+      if(rmEl){rmEl.textContent=t!==''?gd.r:'--';rmEl.style.color=t!==''?gd.c:'#aaa';}
       // Auto-save after 1.5s
       clearTimeout(inp._timer);
       inp._timer=setTimeout(function(){
@@ -1758,19 +1762,21 @@ function togglePublish(){
   var isPub=isPublished(CLS,idx);
   if(isPub){
     setPublishedRemote(CLS,TERM,idx,false,function(){
+      delete PUB_CACHE[pubKey(CLS,TERM,idx)];
       document.getElementById('sheet-pub-badge').style.display='none';
       var btn=document.getElementById('publish-btn');
       btn.textContent='Publish Subject';btn.className='btn btn-primary';
-      showToast('Subject unpublished');
+      showToast('Unpublished - removed from cards and broadsheet');
       renderScoreGrid();
     });
   }else{
     saveDraft();
     setPublishedRemote(CLS,TERM,idx,true,function(){
+      PUB_CACHE[pubKey(CLS,TERM,idx)]=true;
       document.getElementById('sheet-pub-badge').style.display='inline';
       var btn2=document.getElementById('publish-btn');
       btn2.textContent='Unpublish';btn2.className='btn btn-outline';
-      showToast('Subject published and synced');
+      showToast('Published - added to cards and broadsheet');
       renderScoreGrid();
     });
   }
@@ -1929,13 +1935,13 @@ function refreshBroadsheet(){
       if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
       DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
     });
-    Object.keys(PUB_CACHE).forEach(function(k){if(k.startsWith(CLS+'|'))delete PUB_CACHE[k];});
+    Object.keys(PUB_CACHE).forEach(function(k){if(k.startsWith(CLS+'|'+TERM+'|'))delete PUB_CACHE[k];});
     (res[1]||[]).forEach(function(r){PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;});
-    hideLoad();renderBroadsheet();
-    showToast('Broadsheet updated');
+    hideLoad();
+    renderBroadsheet();
+    showToast('Broadsheet refreshed with latest published data');
   }).catch(function(){hideLoad();showToast('Refresh failed','error');});
 }
-
 function refreshCard(){
   var sid=document.getElementById('rc-stu').value;
   showLoad('Refreshing...');
@@ -1948,14 +1954,14 @@ function refreshCard(){
       if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
       DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
     });
-    Object.keys(PUB_CACHE).forEach(function(k){if(k.startsWith(CLS+'|'))delete PUB_CACHE[k];});
+    Object.keys(PUB_CACHE).forEach(function(k){if(k.startsWith(CLS+'|'+TERM+'|'))delete PUB_CACHE[k];});
     (res[1]||[]).forEach(function(r){PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;});
-    hideLoad();populateCardSel();
+    hideLoad();
+    populateCardSel();
     if(sid){document.getElementById('rc-stu').value=sid;renderCard();}
-    showToast('Card updated');
+    showToast('Card refreshed with latest published data');
   }).catch(function(){hideLoad();showToast('Refresh failed','error');});
 }
-
 function renderBroadsheet(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
