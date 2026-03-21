@@ -990,7 +990,12 @@ function doLogin(){
       var user=rows[0];
       // Check password from localStorage
       var stored=localStorage.getItem('wts_pw_'+email);
-      if(!stored){authErr('login-err','Account exists but no password set. Please register.');return;}
+      if(!stored){
+        // First login for pre-created account - set password now
+        localStorage.setItem('wts_pw_'+email,btoa(pass));
+        loginSuccess(user);
+        return;
+      }
       if(stored!==btoa(pass)){authErr('login-err','Incorrect password');return;}
       loginSuccess(user);
     }).catch(function(){authErr('login-err','Connection error. Check internet.');});
@@ -1011,7 +1016,12 @@ function doRegister(){
       // Check if email already registered
       return dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
         .then(function(existing){
-          if(existing&&existing.length){authErr('reg-err','Email already registered. Please login.');return;}
+          if(existing&&existing.length){
+            // Pre-created admin account - set password and login
+            localStorage.setItem('wts_pw_'+email,btoa(pass));
+            loginSuccess(existing[0]);
+            return;
+          }
           // Create profile
           return dbUpsert('user_profiles',{email:email,full_name:name,role:'teacher'})
             .then(function(){
