@@ -250,7 +250,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
-  align-items:center;justify-content:center;padding:20px}
+  display:none;align-items:center;justify-content:center;padding:20px}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:520px;
   max-height:90vh;display:flex;flex-direction:column;
   box-shadow:var(--shadow2);animation:fadeUp .2s ease}
@@ -483,7 +483,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       </div>
     </div>
     <div class="tb-right">
-            <span class="saved-msg" id="saved-msg">Saved</span>
+<span class="saved-msg" id="saved-msg">Saved</span>
       <button class="btn btn-outline btn-sm no-print" onclick="exportData()">Export</button>
       <button class="btn btn-gold btn-sm no-print" onclick="importData()">Import</button>
     </div>
@@ -777,7 +777,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 </div><!-- /main -->
 
 <!-- TERM SELECTION MODAL -->
-<div class="overlay" id="modal-term" style="display:none">
+<div class="overlay" id="modal-term" style="display:flex;display:none">
   <div class="modal" style="max-width:380px">
     <div class="modal-hdr">
       <h3 id="modal-term-title">Select Term</h3>
@@ -1274,6 +1274,7 @@ function setMode(inClass){
   var chip=document.getElementById('class-chip');
   var bnh=document.getElementById('bn-home-strip');
   var bnc=document.getElementById('bn-class-strip');
+  var ts=document.getElementById('term-selector-wrap');
   if(nh)nh.style.display=inClass?'none':'block';
   if(nc)nc.style.display=inClass?'block':'none';
   if(sl)sl.style.display=inClass?'block':'none';
@@ -1288,6 +1289,7 @@ function setMode(inClass){
     if(sn)sn.textContent=lbl;
     if(cn)cn.textContent=lbl;
     // Sync term selector
+    var tsel=document.getElementById('global-term-sel');
     if(tsel)tsel.value=TERM;
   }
 }
@@ -1372,6 +1374,7 @@ function confirmTerm(term){
   var rcWrap=document.getElementById('rc-wrap');
   if(rcWrap)rcWrap.innerHTML='';
   // Sync term selectors
+  var ts=document.getElementById('global-term-sel');
   if(ts)ts.value=TERM;
   var rct=document.getElementById('rc-term');
   if(rct)rct.value=TERM;
@@ -1752,7 +1755,7 @@ function togglePublish(){
       document.getElementById('sheet-pub-badge').style.display='none';
       var btn=document.getElementById('publish-btn');
       btn.textContent='Publish Subject';btn.className='btn btn-primary';
-      showToast('Unpublished - fix scores then re-publish');
+      showToast('Unpublished - fix then re-publish');
       dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
         .then(function(rows){
           DB_SCORES={};
@@ -2437,6 +2440,7 @@ function changeAnalyticsTerm(newTerm){
   if(!newTerm)return;
   TERM=newTerm;
   // Sync global term selector in topbar
+  var ts=document.getElementById('global-term-sel');
   if(ts)ts.value=TERM;
   // Clear cached scores for current class  reload with new term
   var students=DB_STUDENTS[CLS]||[];
