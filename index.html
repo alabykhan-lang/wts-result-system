@@ -72,6 +72,32 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 .page{display:none}
 .page.active{display:block}
 
+
+/* ── AUTH ── */
+#auth-screen{position:fixed;inset:0;background:var(--g1);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-box{background:#fff;border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-header{background:var(--g1);padding:28px 24px 20px;text-align:center;border-bottom:3px solid var(--g3)}
+.auth-header img{width:80px;height:80px;object-fit:contain;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto}
+.auth-header h2{color:var(--g3);font-family:'Playfair Display',serif;font-size:1.1rem;margin-bottom:2px}
+.auth-header p{color:rgba(255,255,255,.6);font-size:.75rem}
+.auth-body{padding:24px}
+.auth-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px}
+.auth-tab{flex:1;padding:10px;text-align:center;font-size:.85rem;font-weight:700;cursor:pointer;color:var(--gray);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+.auth-tab.active{color:var(--g1);border-bottom-color:var(--g3)}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:.75rem;font-weight:700;color:var(--gray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.auth-field input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;outline:none;box-sizing:border-box;transition:border .2s}
+.auth-field input:focus{border-color:var(--g3)}
+.auth-btn{width:100%;padding:12px;background:var(--g1);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:6px;transition:background .2s}
+.auth-btn:hover{background:var(--g2)}
+.auth-err{background:#fee2e2;color:#dc2626;padding:10px 12px;border-radius:8px;font-size:.8rem;margin-bottom:12px;display:none}
+.auth-err.show{display:block}
+.auth-footer{text-align:center;padding:0 24px 20px;font-size:.75rem;color:var(--gray)}
+/* Role badge in sidebar */
+#sb-role-badge{font-size:.62rem;padding:2px 8px;border-radius:10px;font-weight:700;margin-top:3px;display:inline-block}
+.badge-admin{background:var(--g3);color:var(--g1)}
+.badge-teacher{background:rgba(255,255,255,.15);color:rgba(255,255,255,.8)}
+
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;
   border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.85rem;
@@ -364,6 +390,40 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 <body>
 
 <!-- SIDEBAR -->
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-header">
+      <img id="auth-logo" src="" alt="WTS"/>
+      <h2>Way To Success Standard Schools</h2>
+      <p>Result Management System</p>
+    </div>
+    <div class="auth-body">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="showAuthTab('login')">Login</div>
+        <div class="auth-tab" id="tab-register" onclick="showAuthTab('register')">Register</div>
+      </div>
+      <!-- LOGIN FORM -->
+      <div id="form-login">
+        <div id="login-err" class="auth-err"></div>
+        <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="your@email.com"/></div>
+        <div class="auth-field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"/></div>
+        <button class="auth-btn" onclick="doLogin()">Login</button>
+      </div>
+      <!-- REGISTER FORM -->
+      <div id="form-register" style="display:none">
+        <div id="reg-err" class="auth-err"></div>
+        <div class="auth-field"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your full name"/></div>
+        <div class="auth-field"><label>Email</label><input type="email" id="reg-email" placeholder="your@email.com"/></div>
+        <div class="auth-field"><label>Password</label><input type="password" id="reg-pass" placeholder="Min 6 characters"/></div>
+        <div class="auth-field"><label>Invite Code</label><input type="text" id="reg-code" placeholder="Enter invite code"/></div>
+        <button class="auth-btn" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+    <div class="auth-footer">Way To Success Standard Schools &copy; 2026</div>
+  </div>
+</div>
+
 <div id="sidebar">
   <div class="sb-logo" style="display:flex;align-items:center;gap:10px">
     <img id="sb-logo" src="" style="width:42px;height:42px;object-fit:contain;border-radius:6px;background:#fff;padding:3px;flex-shrink:0"/>
@@ -380,7 +440,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       Home
     </div>
 
-    <div class="ni" onclick="navTo('settings',this)">
+    <div class="ni admin-only" onclick="navTo('settings',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
     </div>
@@ -408,11 +468,11 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
       Broadsheet
     </div>
-    <div class="ni" id="ni-card" onclick="navTo('card',this)">
+    <div class="ni admin-only" id="ni-card" onclick="navTo('card',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Result Cards
     </div>
-    <div class="ni" id="ni-analytics" onclick="navTo('analytics',this)">
+    <div class="ni admin-only" id="ni-analytics" onclick="navTo('analytics',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Analytics
     </div>
@@ -437,7 +497,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
     <div class="bn-item active" onclick="mobileNav('home',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
     </div>
-    <div class="bn-item" onclick="mobileNav('settings',this)">
+    <div class="bn-item" class="admin-only-bn" onclick="mobileNav('settings',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
     </div>
   </div>
@@ -900,6 +960,136 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
+// ============================================================
+// AUTH
+// ============================================================
+var CURRENT_USER=null;
+
+function showAuthTab(tab){
+  document.getElementById('form-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('form-register').style.display=tab==='register'?'block':'none';
+  document.getElementById('tab-login').className='auth-tab'+(tab==='login'?' active':'');
+  document.getElementById('tab-register').className='auth-tab'+(tab==='register'?' active':'');
+}
+
+function authErr(id,msg){
+  var el=document.getElementById(id);
+  el.textContent=msg;el.className='auth-err show';
+}
+function authErrClear(id){document.getElementById(id).className='auth-err';}
+
+function doLogin(){
+  var email=document.getElementById('login-email').value.trim().toLowerCase();
+  var pass=document.getElementById('login-pass').value;
+  authErrClear('login-err');
+  if(!email||!pass){authErr('login-err','Please fill in all fields');return;}
+  // Check against user_profiles + simple password hash in localStorage
+  dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
+    .then(function(rows){
+      if(!rows||!rows.length){authErr('login-err','Account not found');return;}
+      var user=rows[0];
+      // Check password from localStorage
+      var stored=localStorage.getItem('wts_pw_'+email);
+      if(!stored){authErr('login-err','Account exists but no password set. Please register.');return;}
+      if(stored!==btoa(pass)){authErr('login-err','Incorrect password');return;}
+      loginSuccess(user);
+    }).catch(function(){authErr('login-err','Connection error. Check internet.');});
+}
+
+function doRegister(){
+  var name=document.getElementById('reg-name').value.trim();
+  var email=document.getElementById('reg-email').value.trim().toLowerCase();
+  var pass=document.getElementById('reg-pass').value;
+  var code=document.getElementById('reg-code').value.trim();
+  authErrClear('reg-err');
+  if(!name||!email||!pass||!code){authErr('reg-err','Please fill in all fields');return;}
+  if(pass.length<6){authErr('reg-err','Password must be at least 6 characters');return;}
+  // Verify invite code
+  dbGet('invite_codes?code=eq.'+encodeURIComponent(code)+'&active=eq.true')
+    .then(function(rows){
+      if(!rows||!rows.length){authErr('reg-err','Invalid invite code');return;}
+      // Check if email already registered
+      return dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
+        .then(function(existing){
+          if(existing&&existing.length){authErr('reg-err','Email already registered. Please login.');return;}
+          // Create profile
+          return dbUpsert('user_profiles',{email:email,full_name:name,role:'teacher'})
+            .then(function(){
+              localStorage.setItem('wts_pw_'+email,btoa(pass));
+              authErr('reg-err','');
+              // Auto login
+              dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
+                .then(function(r){if(r&&r.length)loginSuccess(r[0]);});
+            });
+        });
+    }).catch(function(){authErr('reg-err','Connection error. Check internet.');});
+}
+
+function loginSuccess(user){
+  CURRENT_USER=user;
+  localStorage.setItem('wts_session',JSON.stringify(user));
+  document.getElementById('auth-screen').style.display='none';
+  // Set user info in sidebar
+  document.getElementById('sb-user-name').textContent=user.full_name;
+  var badge=document.getElementById('sb-role-badge');
+  if(user.role==='admin'){
+    badge.textContent='Admin';badge.className='badge-admin';
+    // Show admin-only items
+    document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='';});
+    document.querySelectorAll('.admin-only-bn').forEach(function(el){el.style.display='';});
+  }else{
+    badge.textContent='Teacher';badge.className='badge-teacher';
+  }
+  // Set logo on auth screen
+  var lg=document.getElementById('wts-logo');
+  if(lg)document.getElementById('auth-logo').src=lg.src;
+}
+
+function doLogout(){
+  CURRENT_USER=null;
+  localStorage.removeItem('wts_session');
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('login-email').value='';
+  document.getElementById('login-pass').value='';
+  // Hide admin items again
+  document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
+  document.querySelectorAll('.admin-only-bn').forEach(function(el){el.style.display='none';});
+  navTo('home',document.getElementById('ni-home'));
+}
+
+function checkSession(){
+  var saved=localStorage.getItem('wts_session');
+  if(saved){
+    try{
+      var user=JSON.parse(saved);
+      // Verify still valid in DB
+      dbGet('user_profiles?email=eq.'+encodeURIComponent(user.email))
+        .then(function(rows){
+          if(rows&&rows.length){loginSuccess(rows[0]);}
+          else{doLogout();}
+        }).catch(function(){
+          // Offline - use cached session
+          loginSuccess(user);
+        });
+    }catch(e){doLogout();}
+  }
+}
+
+// Admin must set their password on first login if not set
+function adminSetupPassword(email){
+  var stored=localStorage.getItem('wts_pw_'+email);
+  if(!stored){
+    var pw=prompt('First time login - set your admin password:');
+    if(pw&&pw.length>=6){
+      localStorage.setItem('wts_pw_'+email,btoa(pw));
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
+
+
 function filterCardByClass(key){
   var sel=document.getElementById('rc-stu');
   var wrap=document.getElementById('rc-wrap');
@@ -2805,18 +2995,23 @@ window.addEventListener('DOMContentLoaded',function(){
     var rct=document.getElementById('rc-term');if(rct)rct.value=cfg.term||DEFAULT_TERM;
     var sb=document.getElementById('sb-session-lbl');if(sb)sb.textContent=(cfg.session||DEFAULT_SESSION)+' Session';
   }catch(e){}
-  // Start on home page
-  setMode(false);
-  renderHome();
-  // Load school logo from embedded tag
+  // Set auth logo
   var _lg=document.getElementById('wts-logo');
   if(_lg){
     window.SCHOOL_LOGO=_lg.src;
     var _hl=document.getElementById('home-logo');
     var _sl=document.getElementById('sb-logo');
+    var _al=document.getElementById('auth-logo');
     if(_hl)_hl.src=window.SCHOOL_LOGO;
     if(_sl)_sl.src=window.SCHOOL_LOGO;
+    if(_al)_al.src=window.SCHOOL_LOGO;
   }
+  // Start on home page
+  setMode(false);
+  renderHome();
+  // Check for existing session
+  checkSession();
+
 });
 </script>
 
