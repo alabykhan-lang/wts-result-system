@@ -483,7 +483,15 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       </div>
     </div>
     <div class="tb-right">
-<span class="saved-msg" id="saved-msg">Saved</span>
+      <div id="term-selector-wrap" style="display:none;align-items:center;gap:6px">
+        <label style="font-size:.72rem;font-weight:700;color:var(--gray);white-space:nowrap">Term:</label>
+        <select id="global-term-sel" class="sel" style="padding:5px 10px;font-size:.78rem;min-width:100px" onchange="changeTerm(this.value)">
+          <option value="1st Term" selected>1st Term</option>
+          <option value="2nd Term">2nd Term</option>
+          <option value="3rd Term">3rd Term</option>
+        </select>
+      </div>
+      <span class="saved-msg" id="saved-msg">Saved</span>
       <button class="btn btn-outline btn-sm no-print" onclick="exportData()">Export</button>
       <button class="btn btn-gold btn-sm no-print" onclick="importData()">Import</button>
     </div>
@@ -617,9 +625,8 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
       </div>
       <div class="form-grp">
         <label>Term</label>
-        <select class="sel" id="rc-term" onchange="renderCard()">
-          <option selected>1st Term</option><option>2nd Term</option><option>3rd Term</option>
-        </select>
+        <div style="padding:9px 14px;background:var(--g1);color:var(--gold2);border-radius:8px;font-weight:700;font-size:.88rem;min-width:100px" id="rc-term-display">1st Term</div>
+        <input type="hidden" id="rc-term" value="1st Term"/>
       </div>
       <div class="form-grp">
         <label>Session</label>
@@ -912,6 +919,8 @@ function filterCardByClass(key){
   // Sync rc-term to current TERM
   var rct=document.getElementById('rc-term');
   if(rct)rct.value=TERM;
+  var rcd=document.getElementById('rc-term-display');
+  if(rcd)rcd.textContent=TERM;
   // Load students + scores + published subjects
   var students=DB_STUDENTS[key]||[];
   if(!students.length){
@@ -1313,12 +1322,34 @@ function navTo(id,el){
           DEPTS[CLS]?DEPTS[CLS].label+' - '+titles[id]:'';
   document.getElementById('tb-sub').textContent=sub;
   if(id==='home'){setMode(false);renderHome();}
-  if(id==='dashboard')renderDash();
+  if(id==='dashboard'){
+    dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
+      .then(function(rows){
+        DB_SCORES={};
+        (rows||[]).forEach(function(s){
+          if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+          DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+        });
+        renderDash();
+      }).catch(function(){renderDash();});
+  }
   if(id==='students')renderStudents();
   if(id==='scores')renderScoreGrid();
-  if(id==='broadsheet')renderBroadsheet();
+  if(id==='broadsheet'){
+    // Reload scores to get latest drafts
+    dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
+      .then(function(rows){
+        DB_SCORES={};
+        (rows||[]).forEach(function(s){
+          if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+          DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+        });
+        renderBroadsheet();
+      }).catch(function(){renderBroadsheet();});
+  }
   if(id==='card'){
     var rct=document.getElementById('rc-term');if(rct)rct.value=TERM;
+    var rcd=document.getElementById('rc-term-display');if(rcd)rcd.textContent=TERM;
     populateCardSel();renderCard();
   }
   if(id==='analytics'){
@@ -1378,6 +1409,8 @@ function confirmTerm(term){
   if(ts)ts.value=TERM;
   var rct=document.getElementById('rc-term');
   if(rct)rct.value=TERM;
+  var rcd=document.getElementById('rc-term-display');
+  if(rcd)rcd.textContent=TERM;
   setMode(true);
   loadClass(key,function(){
     navTo('dashboard',document.getElementById('ni-dashboard'));
@@ -1676,8 +1709,8 @@ function openSheet(idx){
       +'<input class="sc-inp" type="number" min="0" max="10" value="'+(sc.ca3||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="ca3"/>'
       +'<input class="sc-inp" type="number" min="0" max="70" value="'+(sc.exam||'')+'" placeholder="-" data-sid="'+s.id+'" data-field="exam"/>'
       +'<span id="st-'+s.id+'" style="text-align:center;font-weight:700;font-size:.82rem;color:var(--g1)">'+(t!==''?t:'--')+'</span>'
-      +'<span style="text-align:center;font-weight:700;font-size:.78rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'--')+'</span>'
-      +'<span style="text-align:center;font-size:.75rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.r||'--')+'</span>'
+      +'<span id="sg-'+s.id+'" style="text-align:center;font-weight:700;font-size:.78rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'--')+'</span>'
+      +'<span id="sr-'+s.id+'" style="text-align:center;font-size:.75rem;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.r||'--')+'</span>'
       +'</div>';
   });
   document.getElementById('sheet-rows').innerHTML=html;
@@ -1697,6 +1730,13 @@ function openSheet(idx){
       var gd=getGrade(t);
       var totEl=document.getElementById('st-'+sid);
       if(totEl)totEl.textContent=t!==''?t:'--';
+      // Update grade and remark live
+      var gradeEl=document.getElementById('sg-'+sid);
+      var remEl=document.getElementById('sr-'+sid);
+      if(gradeEl)gradeEl.textContent=t!==''?gd.g:'--';
+      if(remEl)remEl.textContent=t!==''?gd.r:'--';
+      if(gradeEl&&t!=='')gradeEl.style.color=gd.c;
+      if(remEl&&t!=='')remEl.style.color=gd.c;
       // Auto-save after 1.5s
       clearTimeout(inp._timer);
       inp._timer=setTimeout(function(){
@@ -1755,16 +1795,8 @@ function togglePublish(){
       document.getElementById('sheet-pub-badge').style.display='none';
       var btn=document.getElementById('publish-btn');
       btn.textContent='Publish Subject';btn.className='btn btn-primary';
-      showToast('Unpublished - fix then re-publish');
-      dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
-        .then(function(rows){
-          DB_SCORES={};
-          (rows||[]).forEach(function(s){
-            if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
-            DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
-          });
-          renderScoreGrid();
-        }).catch(function(){renderScoreGrid();});
+      showToast('Subject unpublished');
+      renderScoreGrid();
     });
   }else{
     saveDraft();
@@ -1772,16 +1804,8 @@ function togglePublish(){
       document.getElementById('sheet-pub-badge').style.display='inline';
       var btn2=document.getElementById('publish-btn');
       btn2.textContent='Unpublish';btn2.className='btn btn-outline';
-      showToast('Published - all sections updated');
-      dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
-        .then(function(rows){
-          DB_SCORES={};
-          (rows||[]).forEach(function(s){
-            if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
-            DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
-          });
-          renderScoreGrid();
-        }).catch(function(){renderScoreGrid();});
+      showToast('Subject published and synced');
+      renderScoreGrid();
     });
   }
 }
