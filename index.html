@@ -250,7 +250,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
-  display:none;align-items:center;justify-content:center;padding:20px}
+  align-items:center;justify-content:center;padding:20px}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:520px;
   max-height:90vh;display:flex;flex-direction:column;
   box-shadow:var(--shadow2);animation:fadeUp .2s ease}
@@ -777,7 +777,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 </div><!-- /main -->
 
 <!-- TERM SELECTION MODAL -->
-<div class="overlay" id="modal-term" style="display:flex;display:none">
+<div class="overlay" id="modal-term" style="display:none">
   <div class="modal" style="max-width:380px">
     <div class="modal-hdr">
       <h3 id="modal-term-title">Select Term</h3>
@@ -1747,33 +1747,21 @@ function saveDraft(){
 function togglePublish(){
   var idx=currentSheetIdx;if(idx<0)return;
   var isPub=isPublished(CLS,idx);
-
-  function reloadClassData(cb){
-    // Reload scores + published subjects so all pages reflect latest state
-    DB_SCORES={};DB_TRAITS={};DB_FEES={};DB_REMARKS={};
-    Promise.all([
-      dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM)),
-      dbGet('published_subjects?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
-    ]).then(function(res){
-      (res[0]||[]).forEach(function(s){
-        if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
-        DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
-      });
-      (res[1]||[]).forEach(function(r){
-        PUB_CACHE[pubKey(r.class_key,r.term,r.subject_index)]=true;
-      });
-      if(cb)cb();
-    }).catch(function(){if(cb)cb();});
-  }
-
   if(isPub){
     setPublishedRemote(CLS,TERM,idx,false,function(){
       document.getElementById('sheet-pub-badge').style.display='none';
       var btn=document.getElementById('publish-btn');
       btn.textContent='Publish Subject';btn.className='btn btn-primary';
-      showToast('Unpublished - correct scores then re-publish');
-      renderScoreGrid();
-      reloadClassData(function(){});
+      showToast('Unpublished - fix scores then re-publish');
+      dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
+        .then(function(rows){
+          DB_SCORES={};
+          (rows||[]).forEach(function(s){
+            if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+            DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+          });
+          renderScoreGrid();
+        }).catch(function(){renderScoreGrid();});
     });
   }else{
     saveDraft();
@@ -1782,9 +1770,15 @@ function togglePublish(){
       var btn2=document.getElementById('publish-btn');
       btn2.textContent='Unpublish';btn2.className='btn btn-outline';
       showToast('Published - all sections updated');
-      reloadClassData(function(){
-        renderScoreGrid();
-      });
+      dbGet('scores?class_key=eq.'+encodeURIComponent(CLS)+'&term=eq.'+encodeURIComponent(TERM))
+        .then(function(rows){
+          DB_SCORES={};
+          (rows||[]).forEach(function(s){
+            if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
+            DB_SCORES[s.student_id][s.subject_index]={ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''};
+          });
+          renderScoreGrid();
+        }).catch(function(){renderScoreGrid();});
     });
   }
 }
