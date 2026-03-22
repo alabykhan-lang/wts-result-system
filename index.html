@@ -647,6 +647,7 @@ body.admin-mode .admin-only-bn{display:flex}
     <div id="scores-sheet-view" style="display:none">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
         <button class="btn btn-outline btn-sm" onclick="closeSheet()">&#8592; Back</button>
+        <button class="btn btn-gold btn-sm" onclick="openOCRScanner()">&#128247; Scan Record Book</button>
         <h3 id="sheet-title" style="font-family:'Playfair Display',serif;color:var(--g1);font-size:1.1rem;flex:1;margin:0"></h3>
         <span id="sheet-pub-badge" style="display:none;background:#10b981;color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px">Published</span>
       </div>
@@ -827,6 +828,14 @@ body.admin-mode .admin-only-bn{display:flex}
   <div class="page" id="page-settings">
     <div class="settings-grid">
       <div class="tbl-wrap" style="margin-bottom:0">
+        <div class="tbl-head"><h3>AI Score Scanner (OCR)</h3></div>
+        <div style="padding:16px">
+          <div class="fg"><label>Gemini API Key</label><input class="inp" type="password" id="gemini-key-input" placeholder="AIza..."/></div>
+          <div style="font-size:.75rem;color:var(--gray);margin-top:4px">Required for scanning record books. Get free key at aistudio.google.com</div>
+          <button class="btn btn-primary btn-sm" onclick="saveGeminiKey()" style="margin-top:10px">Save API Key</button>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0">
         <div class="tbl-head"><h3>School Information</h3></div>
         <div style="padding:16px">
           <div class="fg"><label>School Name</label><input class="inp" id="cfg-name"/></div>
@@ -937,6 +946,70 @@ body.admin-mode .admin-only-bn{display:flex}
         <button class="btn btn-outline" style="padding:14px;font-size:1rem;justify-content:center" onclick="confirmTerm('3rd Term')">
           3rd Term
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- OCR SCANNER MODAL -->
+<div class="overlay" id="modal-ocr" style="display:none">
+  <div class="modal" style="max-width:540px;max-height:90vh;overflow-y:auto">
+    <div class="modal-hdr">
+      <h3>&#128247; Scan Record Book</h3>
+      <button class="modal-x" onclick="closeModal('modal-ocr')">&#215;</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div id="ocr-step1">
+        <p style="font-size:.85rem;color:var(--gray);margin-bottom:14px">Snap a photo of the record book page for <strong id="ocr-subject-name"></strong>. Make sure names and scores are clearly visible.</p>
+        <div id="ocr-dropzone" onclick="document.getElementById('ocr-file').click()" style="border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;background:var(--bg)">
+          <div style="font-size:2rem;margin-bottom:8px">&#128247;</div>
+          <div style="font-weight:700;color:var(--g1);margin-bottom:4px">Tap to take photo or upload</div>
+          <div style="font-size:.78rem;color:var(--gray)">JPG or PNG</div>
+        </div>
+        <input type="file" id="ocr-file" accept="image/*" capture="environment" style="display:none" onchange="handleOCRImage(event)"/>
+        <div id="ocr-preview-wrap" style="display:none;margin-top:14px;text-align:center">
+          <img id="ocr-preview-img" style="max-width:100%;max-height:180px;border-radius:8px;box-shadow:var(--shadow)"/>
+          <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="runOCR()">&#9654; Extract Scores</button>
+            <button class="btn btn-outline btn-sm" onclick="resetOCR()">Change Photo</button>
+          </div>
+        </div>
+        <div id="ocr-loading" style="display:none;text-align:center;padding:24px">
+          <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--g3);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px"></div>
+          <div style="font-size:.85rem;color:var(--gray)">AI is reading the scores...</div>
+        </div>
+      </div>
+      <div id="ocr-step2" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;color:var(--g1)">Review Scores</div>
+          <button class="btn btn-outline btn-sm" onclick="resetOCR()">&#8592; Rescan</button>
+        </div>
+        <p style="font-size:.75rem;color:var(--gray);margin-bottom:10px">
+          <span style="color:#16a34a">&#9679;</span> Good match &nbsp;
+          <span style="color:#d97706">&#9679;</span> Review needed &nbsp;
+          <span style="color:#dc2626">&#9679;</span> Not matched (will be skipped)
+        </p>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:.78rem;min-width:420px">
+            <thead>
+              <tr style="background:var(--g1);color:#fff">
+                <th style="padding:8px 10px;text-align:left">Name in Book</th>
+                <th style="padding:8px 10px;text-align:left">System Match</th>
+                <th style="padding:8px;text-align:center">CA1</th>
+                <th style="padding:8px;text-align:center">CA2</th>
+                <th style="padding:8px;text-align:center">CA3</th>
+                <th style="padding:8px;text-align:center">Exam</th>
+              </tr>
+            </thead>
+            <tbody id="ocr-matches-tbody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="applyOCRScores()">&#10003; Apply Scores</button>
+          <button class="btn btn-outline" onclick="closeModal('modal-ocr')">Cancel</button>
+        </div>
+        <div style="font-size:.72rem;color:var(--gray);margin-top:8px">Only green and yellow matched students will receive scores.</div>
       </div>
     </div>
   </div>
@@ -2952,6 +3025,7 @@ function renderAnalytics(){
 // SETTINGS
 // ============================================================
 function renderSettings(){
+  var ki=document.getElementById('gemini-key-input');if(ki){var gk=getGeminiKey();if(gk)ki.value=gk;}
   var cfg=getCfg();var sch=cfg.school||DEFAULT_SCHOOL;var sig=cfg.signature||{};var secs=getSections();
   document.getElementById('cfg-name').value=sch.name||'';
   document.getElementById('cfg-addr').value=sch.addr||'';
@@ -3295,6 +3369,179 @@ function generateNewCode(){
       if(el)el.textContent=code;
       showToast('Code: '+code);
     });
+  });
+}
+
+var OCR_IDX=-1;
+var OCR_MATCHES=[];
+var OCR_IMG_B64='';
+var OCR_IMG_MIME='image/jpeg';
+
+function saveGeminiKey(){
+  var v=document.getElementById('gemini-key-input').value.trim();
+  if(!v){showToast('Enter a valid key','error');return;}
+  var cfg=getCfg();cfg.geminiKey=v;saveCfg(cfg);
+  showToast('Gemini API key saved');
+}
+function getGeminiKey(){return getCfg().geminiKey||'';}
+
+function openOCRScanner(){
+  var key=getGeminiKey();
+  if(!key){showToast('Add Gemini API key in Settings first','error');return;}
+  OCR_IDX=currentSheetIdx;
+  var subjs=subjects();
+  var el=document.getElementById('ocr-subject-name');
+  if(el)el.textContent=subjs[OCR_IDX]||'this subject';
+  resetOCR();
+  document.getElementById('modal-ocr').style.display='flex';
+}
+
+function resetOCR(){
+  document.getElementById('ocr-step1').style.display='block';
+  document.getElementById('ocr-step2').style.display='none';
+  document.getElementById('ocr-preview-wrap').style.display='none';
+  document.getElementById('ocr-loading').style.display='none';
+  document.getElementById('ocr-dropzone').style.display='block';
+  var fi=document.getElementById('ocr-file');if(fi)fi.value='';
+  OCR_IMG_B64='';OCR_MATCHES=[];
+}
+
+function handleOCRImage(evt){
+  var file=evt.target.files[0];
+  if(!file)return;
+  OCR_IMG_MIME=file.type||'image/jpeg';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dataUrl=e.target.result;
+    OCR_IMG_B64=dataUrl.split(',')[1];
+    var img=document.getElementById('ocr-preview-img');
+    if(img)img.src=dataUrl;
+    document.getElementById('ocr-dropzone').style.display='none';
+    document.getElementById('ocr-preview-wrap').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function runOCR(){
+  var key=getGeminiKey();
+  if(!key||!OCR_IMG_B64)return;
+  document.getElementById('ocr-preview-wrap').style.display='none';
+  document.getElementById('ocr-loading').style.display='block';
+  var students=DB_STUDENTS[CLS]||[];
+  var names=students.map(function(s){return s.name;}).join(', ');
+  var prompt='This is a school record book. Extract student names and scores (CA1 out of 10, CA2 out of 10, CA3 out of 10, Exam out of 70). '
+    +'Return ONLY a valid JSON array with objects: {name, ca1, ca2, ca3, exam}. '
+    +'Use null for empty or unreadable cells. No text outside the array. '
+    +'Registered students for reference: '+names;
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      contents:[{parts:[{text:prompt},{inline_data:{mime_type:OCR_IMG_MIME,data:OCR_IMG_B64}}]}],
+      generationConfig:{temperature:0.1,maxOutputTokens:2048}
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    document.getElementById('ocr-loading').style.display='none';
+    if(data.error){
+      showToast('Gemini: '+data.error.message,'error');
+      document.getElementById('ocr-preview-wrap').style.display='block';
+      return;
+    }
+    var txt='';
+    try{txt=data.candidates[0].content.parts[0].text;}catch(e){}
+    var m=txt.match(/\[[\s\S]*\]/);
+    if(!m){showToast('Could not read scores. Try clearer photo.','error');document.getElementById('ocr-preview-wrap').style.display='block';return;}
+    var rows;
+    try{rows=JSON.parse(m[0]);}catch(e){showToast('Parse error. Try clearer photo.','error');document.getElementById('ocr-preview-wrap').style.display='block';return;}
+    buildOCRPreview(rows,students);
+  })
+  .catch(function(){
+    document.getElementById('ocr-loading').style.display='none';
+    document.getElementById('ocr-preview-wrap').style.display='block';
+    showToast('Network error','error');
+  });
+}
+
+function normName(n){return (n||'').toLowerCase().replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();}
+
+function nameScore(a,b){
+  var wa=normName(a).split(' ');
+  var wb=normName(b).split(' ');
+  var hits=0;
+  wa.forEach(function(w){if(w.length>1&&wb.some(function(x){return x.indexOf(w)>-1||w.indexOf(x)>-1;}))hits++;});
+  return hits/Math.max(wa.length,1);
+}
+
+function buildOCRPreview(rows,students){
+  OCR_MATCHES=rows.map(function(row){
+    var best=null,top=0;
+    students.forEach(function(s){var sc=nameScore(row.name,s.name);if(sc>top){top=sc;best=s;}});
+    return {bookName:row.name,student:best,conf:top>=0.6?'green':top>=0.35?'yellow':'red',ca1:row.ca1,ca2:row.ca2,ca3:row.ca3,exam:row.exam};
+  });
+  var tbody=document.getElementById('ocr-matches-tbody');
+  if(!tbody)return;
+  var html='';
+  for(var i=0;i<OCR_MATCHES.length;i++){
+    var m=OCR_MATCHES[i];
+    var bg={green:'#f0fff4',yellow:'#fffbeb',red:'#fff5f5'}[m.conf];
+    var dot={green:'#16a34a',yellow:'#d97706',red:'#dc2626'}[m.conf];
+    var mn=m.student?m.student.name:'<em style="color:#dc2626">No match</em>';
+    function inp(val,field,max){
+      return '<input type="number" min="0" max="'+max+'" value="'+(val!=null?val:'')+'" '
+        +'data-idx="'+i+'" data-field="'+field+'" onchange="updateOCRMatch(this)" '
+        +'style="width:38px;padding:3px;border:1px solid #ddd;border-radius:4px;text-align:center;font-size:.75rem"/>';
+    }
+    html+='<tr style="background:'+bg+'">'
+      +'<td style="padding:7px 10px"><span style="width:8px;height:8px;background:'+dot+';border-radius:50%;display:inline-block;margin-right:5px"></span>'+m.bookName+'</td>'
+      +'<td style="padding:7px 10px;font-weight:600">'+mn+'</td>'
+      +'<td style="padding:5px;text-align:center">'+inp(m.ca1,'ca1',10)+'</td>'
+      +'<td style="padding:5px;text-align:center">'+inp(m.ca2,'ca2',10)+'</td>'
+      +'<td style="padding:5px;text-align:center">'+inp(m.ca3,'ca3',10)+'</td>'
+      +'<td style="padding:5px;text-align:center">'+inp(m.exam,'exam',70)+'</td>'
+      +'</tr>';
+  }
+  tbody.innerHTML=html;
+  document.getElementById('ocr-step1').style.display='none';
+  document.getElementById('ocr-step2').style.display='block';
+}
+
+function updateOCRMatch(el){
+  var i=parseInt(el.dataset.idx);
+  var field=el.dataset.field;
+  OCR_MATCHES[i][field]=el.value!==''?parseFloat(el.value):null;
+}
+
+function applyOCRScores(){
+  var applied=0;
+  OCR_MATCHES.forEach(function(m){
+    if(!m.student)return;
+    var sid=m.student.id;
+    var idx=OCR_IDX;
+    if(!DB_SCORES[sid])DB_SCORES[sid]={};
+    if(!DB_SCORES[sid][idx])DB_SCORES[sid][idx]={ca1:'',ca2:'',ca3:'',exam:''};
+    if(m.ca1!=null)DB_SCORES[sid][idx].ca1=Math.min(10,Math.max(0,parseFloat(m.ca1)||0));
+    if(m.ca2!=null)DB_SCORES[sid][idx].ca2=Math.min(10,Math.max(0,parseFloat(m.ca2)||0));
+    if(m.ca3!=null)DB_SCORES[sid][idx].ca3=Math.min(10,Math.max(0,parseFloat(m.ca3)||0));
+    if(m.exam!=null)DB_SCORES[sid][idx].exam=Math.min(70,Math.max(0,parseFloat(m.exam)||0));
+    applied++;
+  });
+  var students=DB_STUDENTS[CLS]||[];
+  var idx=OCR_IDX;
+  showLoad('Saving '+applied+' scores...');
+  Promise.all(students.map(function(s){
+    var sc=(DB_SCORES[s.id]||{})[idx]||{ca1:'',ca2:'',ca3:'',exam:''};
+    if(sc.ca1===''&&sc.ca2===''&&sc.ca3===''&&sc.exam==='')return Promise.resolve();
+    return dbUpsertScore(s.id,idx,sc.ca1,sc.ca2,sc.ca3,sc.exam);
+  })).then(function(){
+    hideLoad();closeModal('modal-ocr');
+    openSheet(idx);
+    showToast(applied+' students scored via OCR scan');
+  }).catch(function(){
+    hideLoad();closeModal('modal-ocr');
+    openSheet(idx);
+    showToast('Scores applied. Tap Save Draft to sync.','error');
   });
 }
 </script>
