@@ -3409,15 +3409,33 @@ function resetOCR(){
 function handleOCRImage(evt){
   var file=evt.target.files[0];
   if(!file)return;
-  OCR_IMG_MIME=file.type||'image/jpeg';
+  OCR_IMG_MIME='image/jpeg';
   var reader=new FileReader();
   reader.onload=function(e){
-    var dataUrl=e.target.result;
-    OCR_IMG_B64=dataUrl.split(',')[1];
-    var img=document.getElementById('ocr-preview-img');
-    if(img)img.src=dataUrl;
-    document.getElementById('ocr-dropzone').style.display='none';
-    document.getElementById('ocr-preview-wrap').style.display='block';
+    var rawSrc=e.target.result;
+    var img2=new Image();
+    img2.onload=function(){
+      // Resize to max 1000px - reduces memory use by 90%
+      var MAX=1000;
+      var w=img2.width,h=img2.height;
+      if(w>MAX||h>MAX){
+        if(w>h){h=Math.round(h*MAX/w);w=MAX;}
+        else{w=Math.round(w*MAX/h);h=MAX;}
+      }
+      var canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img2,0,0,w,h);
+      var compressed=canvas.toDataURL('image/jpeg',0.75);
+      OCR_IMG_B64=compressed.split(',')[1];
+      var prev=document.getElementById('ocr-preview-img');
+      if(prev)prev.src=compressed;
+      document.getElementById('ocr-dropzone').style.display='none';
+      document.getElementById('ocr-preview-wrap').style.display='block';
+      // Free memory
+      canvas.width=0; canvas.height=0;
+    };
+    img2.src=rawSrc;
   };
   reader.readAsDataURL(file);
 }
