@@ -962,12 +962,16 @@ body.admin-mode .admin-only-bn{display:flex}
     <div class="modal-body" style="padding:20px">
       <div id="ocr-step1">
         <p style="font-size:.85rem;color:var(--gray);margin-bottom:14px">Snap a photo of the record book page for <strong id="ocr-subject-name"></strong>. Make sure names and scores are clearly visible.</p>
-        <div id="ocr-dropzone" onclick="document.getElementById('ocr-file').click()" style="border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;background:var(--bg)">
-          <div style="font-size:2rem;margin-bottom:8px">&#128247;</div>
-          <div style="font-weight:700;color:var(--g1);margin-bottom:4px">Tap to take photo or upload</div>
-          <div style="font-size:.78rem;color:var(--gray)">JPG or PNG</div>
+        <div id="ocr-dropzone" style="border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;background:var(--bg)">
+          <div style="font-size:2rem;margin-bottom:10px">&#128247;</div>
+          <div style="font-weight:700;color:var(--g1);margin-bottom:12px">Choose image source</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('ocr-camera').click()">&#128247; Take Photo</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('ocr-file').click()">&#128444; From Gallery</button>
+          </div>
         </div>
-        <input type="file" id="ocr-file" accept="image/*" capture="environment" style="display:none" onchange="handleOCRImage(event)"/>
+        <input type="file" id="ocr-file" accept="image/*" style="display:none" onchange="handleOCRImage(event)"/>
+        <input type="file" id="ocr-camera" accept="image/*" capture="environment" style="display:none" onchange="handleOCRImage(event)"/>
         <div id="ocr-preview-wrap" style="display:none;margin-top:14px;text-align:center">
           <img id="ocr-preview-img" style="max-width:100%;max-height:180px;border-radius:8px;box-shadow:var(--shadow)"/>
           <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
@@ -3447,10 +3451,14 @@ function runOCR(){
   document.getElementById('ocr-loading').style.display='block';
   var students=DB_STUDENTS[CLS]||[];
   var names=students.map(function(s){return s.name;}).join(', ');
-  var prompt='This is a school record book. Extract student names and scores (CA1 out of 10, CA2 out of 10, CA3 out of 10, Exam out of 70). '
-    +'Return ONLY a valid JSON array with objects: {name, ca1, ca2, ca3, exam}. '
-    +'Use null for empty or unreadable cells. No text outside the array. '
-    +'Registered students for reference: '+names;
+  var prompt='This image shows a school score record book page. '
+    +'The columns are: S/N | Student Name | CA1 (max 10) | CA2 (max 10) | CA3 (max 10) | Exam (max 70). '
+    +'Extract every student row you can see. '
+    +'Return ONLY a raw JSON array (no markdown, no code blocks, no explanation). '
+    +'Format: [{"name":"FULL NAME","ca1":number,"ca2":number,"ca3":number,"exam":number}] '
+    +'Use null for any score that is blank, missing or unreadable. '
+    +'These registered students help you read unclear handwriting: '+names+'. '
+    +'Important: return ALL students visible in the image, not just the registered ones.';
   fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+key,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -3459,26 +3467,52 @@ function runOCR(){
       generationConfig:{temperature:0.1,maxOutputTokens:2048}
     })
   })
-  .then(function(r){return r.json();})
+  .then(function(r){
+    if(!r.ok){return r.json().then(function(e){throw new Error(e.error?e.error.message:'HTTP '+r.status);});}
+    return r.json();
+  })
   .then(function(data){
     document.getElementById('ocr-loading').style.display='none';
     if(data.error){
-      showToast('Gemini: '+data.error.message,'error');
+      showToast('Gemini error: '+data.error.message,'error');
       document.getElementById('ocr-preview-wrap').style.display='block';
       return;
     }
     var txt='';
-    try{txt=data.candidates[0].content.parts[0].text;}catch(e){}
-    var m=txt.match(/\[[\s\S]*\]/);
-    if(!m){showToast('Could not read scores. Try clearer photo.','error');document.getElementById('ocr-preview-wrap').style.display='block';return;}
+    try{txt=data.candidates[0].content.parts[0].text;}
+    catch(e){
+      showToast('No response from Gemini. Check API key.','error');
+      document.getElementById('ocr-preview-wrap').style.display='block';
+      return;
+    }
+    // Try to extract JSON array from response
+    var jsonStr=null;
+    var m1=txt.match(/```json([\s\S]*?)```/);
+    if(m1)jsonStr=m1[1].trim();
+    if(!jsonStr){var m2=txt.match(/\[[\s\S]*\]/);if(m2)jsonStr=m2[0];}
+    if(!jsonStr){
+      showToast('AI could not extract scores. Try a clearer photo.','error');
+      document.getElementById('ocr-preview-wrap').style.display='block';
+      return;
+    }
     var rows;
-    try{rows=JSON.parse(m[0]);}catch(e){showToast('Parse error. Try clearer photo.','error');document.getElementById('ocr-preview-wrap').style.display='block';return;}
+    try{rows=JSON.parse(jsonStr);}
+    catch(e){
+      showToast('Could not read the data. Try a clearer photo.','error');
+      document.getElementById('ocr-preview-wrap').style.display='block';
+      return;
+    }
+    if(!rows.length){
+      showToast('No scores found in image. Try a clearer photo.','error');
+      document.getElementById('ocr-preview-wrap').style.display='block';
+      return;
+    }
     buildOCRPreview(rows,students);
   })
-  .catch(function(){
+  .catch(function(err){
     document.getElementById('ocr-loading').style.display='none';
     document.getElementById('ocr-preview-wrap').style.display='block';
-    showToast('Network error','error');
+    showToast('Error: '+(err.message||'Network error. Check connection.'),'error');
   });
 }
 
