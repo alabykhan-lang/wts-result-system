@@ -74,7 +74,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 
 /* ── AUTH ── */
-#auth-screen{position:fixed;inset:0;background:var(--g1);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+#auth-screen{position:fixed;inset:0;background:var(--g1);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
 .auth-box{background:#fff;border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .auth-header{background:var(--g1);padding:28px 24px 20px;text-align:center;border-bottom:3px solid var(--g3)}
 .auth-header img{width:80px;height:80px;object-fit:contain;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto}
@@ -1029,27 +1029,44 @@ function authErr(id,msg){
 }
 function authErrClear(id){document.getElementById(id).className='auth-err';}
 
+function simpleHash(str){
+  var hash=0;
+  for(var i=0;i<str.length;i++){
+    var ch=str.charCodeAt(i);
+    hash=((hash<<5)-hash)+ch;
+    hash=hash&hash;
+  }
+  return 'h'+Math.abs(hash).toString(36);
+}
+
 function doLogin(){
   var email=document.getElementById('login-email').value.trim().toLowerCase();
   var pass=document.getElementById('login-pass').value;
   authErrClear('login-err');
   if(!email||!pass){authErr('login-err','Please fill in all fields');return;}
-  // Check against user_profiles + simple password hash in localStorage
+  var btn=document.querySelector('#form-login .auth-btn');
+  if(btn){btn.textContent='Checking...';btn.disabled=true;}
   dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
     .then(function(rows){
-      if(!rows||!rows.length){authErr('login-err','Account not found');return;}
+      if(btn){btn.textContent='Login';btn.disabled=false;}
+      if(!rows||!rows.length){authErr('login-err','Account not found. Please register.');return;}
       var user=rows[0];
-      // Check password from localStorage
-      var stored=localStorage.getItem('wts_pw_'+email);
-      if(!stored){
-        // First login for pre-created account - set password now
-        localStorage.setItem('wts_pw_'+email,btoa(pass));
-        loginSuccess(user);
+      var hash=simpleHash(pass);
+      if(!user.pw_hash){
+        // First login - save hash to Supabase (works on ALL devices)
+        sbFetch('user_profiles?email=eq.'+encodeURIComponent(email),{
+          method:'PATCH',
+          headers:{'Prefer':'return=representation'},
+          body:JSON.stringify({pw_hash:hash})
+        }).then(function(){loginSuccess(user);}).catch(function(){loginSuccess(user);});
         return;
       }
-      if(stored!==btoa(pass)){authErr('login-err','Incorrect password');return;}
+      if(user.pw_hash!==hash){authErr('login-err','Incorrect password');return;}
       loginSuccess(user);
-    }).catch(function(){authErr('login-err','Connection error. Check internet.');});
+    }).catch(function(){
+      if(btn){btn.textContent='Login';btn.disabled=false;}
+      authErr('login-err','Connection error. Check internet.');
+    });
 }
 
 function doRegister(){
@@ -1068,9 +1085,16 @@ function doRegister(){
       return dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
         .then(function(existing){
           if(existing&&existing.length){
-            // Pre-created admin account - set password and login
-            localStorage.setItem('wts_pw_'+email,btoa(pass));
-            loginSuccess(existing[0]);
+            // Pre-created account - set password hash in Supabase and login
+            var hash=simpleHash(pass);
+            sbFetch('user_profiles?email=eq.'+encodeURIComponent(email),{
+              method:'PATCH',
+              headers:{'Prefer':'return=representation'},
+              body:JSON.stringify({pw_hash:hash})
+            }).then(function(){
+              existing[0].pw_hash=hash;
+              loginSuccess(existing[0]);
+            }).catch(function(){loginSuccess(existing[0]);});
             return;
           }
           // Create profile
@@ -1115,32 +1139,40 @@ function loginSuccess(user){
 function doLogout(){
   CURRENT_USER=null;
   localStorage.removeItem('wts_session');
-  showAuthScreen();
-  document.getElementById('login-email').value='';
-  document.getElementById('login-pass').value='';
-  // Hide admin items again
+  // Clear form fields
+  var le=document.getElementById('login-email');
+  var lp=document.getElementById('login-pass');
+  if(le)le.value='';if(lp)lp.value='';
+  // Hide admin items
   document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
   document.querySelectorAll('.admin-only-bn').forEach(function(el){el.style.display='none';});
-  navTo('home',document.getElementById('ni-home'));
+  // Reset nav to home without triggering navTo
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','print-active');});
+  var ph=document.getElementById('page-home');
+  if(ph)ph.classList.add('active');
+  setMode(false);
+  // Show login screen
+  showAuthScreen();
 }
 
 function checkSession(){
   var saved=localStorage.getItem('wts_session');
-  if(saved){
-    try{
-      var user=JSON.parse(saved);
-      dbGet('user_profiles?email=eq.'+encodeURIComponent(user.email))
-        .then(function(rows){
-          if(rows&&rows.length){loginSuccess(rows[0]);}
-          else{showAuthScreen();}
-        }).catch(function(){
-          // Offline - use cached session
-          loginSuccess(user);
-        });
-    }catch(e){showAuthScreen();}
-  }else{
-    showAuthScreen();
-  }
+  if(!saved){return;} // Auth screen already visible
+  try{
+    var user=JSON.parse(saved);
+    dbGet('user_profiles?email=eq.'+encodeURIComponent(user.email))
+      .then(function(rows){
+        if(rows&&rows.length&&rows[0].pw_hash){
+          loginSuccess(rows[0]);
+        }else{
+          localStorage.removeItem('wts_session');
+          // Auth screen already visible - do nothing
+        }
+      }).catch(function(){
+        // Offline - trust cached session
+        loginSuccess(user);
+      });
+  }catch(e){localStorage.removeItem('wts_session');}
 }
 function showAuthScreen(){
   showAuthScreen();
