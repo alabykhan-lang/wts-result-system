@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+// Runs synchronously before body renders - prevents login flash
+if(!localStorage.getItem('wts_session')){
+  document.addEventListener('DOMContentLoaded',function(){
+    var a=document.getElementById('auth-screen');
+    if(a)a.style.display='flex';
+  });
+}
+</script>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>WTS Result Management System</title>
@@ -21,7 +30,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1f2937;min-hei
 /* ── SIDEBAR ── */
 #sidebar{position:fixed;top:0;left:0;width:248px;height:100vh;
   background:var(--g1);display:flex;flex-direction:column;z-index:100;
-  transition:transform .25s ease;border-right:3px solid var(--g3)}
+  transition:transform .25s ease;border-right:3px solid var(--g3);padding-bottom:110px;box-sizing:border-box}
 .sb-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
 .sb-logo h1{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold2);line-height:1.3}
 .sb-logo p{font-size:.68rem;color:rgba(255,255,255,.4);margin-top:2px}
@@ -74,7 +83,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 
 /* ── AUTH ── */
-#auth-screen{position:fixed;inset:0;background:var(--g1);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+#auth-screen{position:fixed;inset:0;background:var(--g1);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
 .auth-box{background:#fff;border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .auth-header{background:var(--g1);padding:28px 24px 20px;text-align:center;border-bottom:3px solid var(--g3)}
 .auth-header img{width:80px;height:80px;object-fit:contain;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto}
@@ -485,10 +494,10 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
     <span class="sb-session" id="sb-session-lbl">2025/2026 Session</span>
   </div>
   <!-- User info + Logout -->
-  <div style="margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.15)">
-    <div style="font-size:.75rem;color:var(--g3);font-weight:700;margin-bottom:2px" id="sb-user-name">--</div>
-    <div id="sb-role-badge" class="badge-teacher" style="font-size:.62rem;padding:2px 8px;border-radius:10px;font-weight:700;display:inline-block;margin-bottom:8px">Teacher</div>
-    <button onclick="doLogout()" style="display:block;width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);font-size:.75rem;padding:7px;border-radius:8px;cursor:pointer;font-weight:600;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">&#x2192; Sign Out</button>
+  <div id="sb-user-panel" style="position:absolute;bottom:0;left:0;right:0;background:var(--g1);padding:12px 16px;border-top:1px solid rgba(125,212,176,.3)">
+    <div style="font-size:.75rem;color:var(--g3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px" id="sb-user-name">--</div>
+    <div id="sb-role-badge" class="badge-teacher" style="font-size:.6rem;padding:2px 8px;border-radius:10px;font-weight:700;display:inline-block;margin-bottom:8px">Teacher</div>
+    <button onclick="doLogout()" style="display:block;width:100%;background:rgba(125,212,176,.18);border:1px solid rgba(125,212,176,.4);color:var(--g3);font-size:.78rem;padding:8px;border-radius:8px;cursor:pointer;font-weight:700">&#x2192; Sign Out</button>
   </div>
 </div>
 
@@ -1029,44 +1038,27 @@ function authErr(id,msg){
 }
 function authErrClear(id){document.getElementById(id).className='auth-err';}
 
-function simpleHash(str){
-  var hash=0;
-  for(var i=0;i<str.length;i++){
-    var ch=str.charCodeAt(i);
-    hash=((hash<<5)-hash)+ch;
-    hash=hash&hash;
-  }
-  return 'h'+Math.abs(hash).toString(36);
-}
-
 function doLogin(){
   var email=document.getElementById('login-email').value.trim().toLowerCase();
   var pass=document.getElementById('login-pass').value;
   authErrClear('login-err');
   if(!email||!pass){authErr('login-err','Please fill in all fields');return;}
-  var btn=document.querySelector('#form-login .auth-btn');
-  if(btn){btn.textContent='Checking...';btn.disabled=true;}
+  // Check against user_profiles + simple password hash in localStorage
   dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
     .then(function(rows){
-      if(btn){btn.textContent='Login';btn.disabled=false;}
-      if(!rows||!rows.length){authErr('login-err','Account not found. Please register.');return;}
+      if(!rows||!rows.length){authErr('login-err','Account not found');return;}
       var user=rows[0];
-      var hash=simpleHash(pass);
-      if(!user.pw_hash){
-        // First login - save hash to Supabase (works on ALL devices)
-        sbFetch('user_profiles?email=eq.'+encodeURIComponent(email),{
-          method:'PATCH',
-          headers:{'Prefer':'return=representation'},
-          body:JSON.stringify({pw_hash:hash})
-        }).then(function(){loginSuccess(user);}).catch(function(){loginSuccess(user);});
+      // Check password from localStorage
+      var stored=localStorage.getItem('wts_pw_'+email);
+      if(!stored){
+        // First login for pre-created account - set password now
+        localStorage.setItem('wts_pw_'+email,btoa(pass));
+        loginSuccess(user);
         return;
       }
-      if(user.pw_hash!==hash){authErr('login-err','Incorrect password');return;}
+      if(stored!==btoa(pass)){authErr('login-err','Incorrect password');return;}
       loginSuccess(user);
-    }).catch(function(){
-      if(btn){btn.textContent='Login';btn.disabled=false;}
-      authErr('login-err','Connection error. Check internet.');
-    });
+    }).catch(function(){authErr('login-err','Connection error. Check internet.');});
 }
 
 function doRegister(){
@@ -1085,16 +1077,9 @@ function doRegister(){
       return dbGet('user_profiles?email=eq.'+encodeURIComponent(email))
         .then(function(existing){
           if(existing&&existing.length){
-            // Pre-created account - set password hash in Supabase and login
-            var hash=simpleHash(pass);
-            sbFetch('user_profiles?email=eq.'+encodeURIComponent(email),{
-              method:'PATCH',
-              headers:{'Prefer':'return=representation'},
-              body:JSON.stringify({pw_hash:hash})
-            }).then(function(){
-              existing[0].pw_hash=hash;
-              loginSuccess(existing[0]);
-            }).catch(function(){loginSuccess(existing[0]);});
+            // Pre-created admin account - set password and login
+            localStorage.setItem('wts_pw_'+email,btoa(pass));
+            loginSuccess(existing[0]);
             return;
           }
           // Create profile
@@ -1131,48 +1116,50 @@ function loginSuccess(user){
   // Set logo on auth screen
   var lg=document.getElementById('wts-logo');
   if(lg)document.getElementById('auth-logo').src=lg.src;
-  // Init history
   NAV_HISTORY=['home'];
   try{history.replaceState({page:'home'},'',window.location.pathname);}catch(e){}
+  // Restore previous page on refresh
+  var _pg=null,_cls=null,_trm=null;
+  try{_pg=sessionStorage.getItem('wts_page');_cls=sessionStorage.getItem('wts_cls');_trm=sessionStorage.getItem('wts_term');}catch(e){}
+  if(_pg&&_pg!=='home'&&_cls&&_trm&&DEPTS[_cls]){
+    CLS=_cls;TERM=_trm;
+    setMode(true);
+    loadClass(_cls,function(){
+      var _ni=document.getElementById('ni-'+_pg)||document.getElementById('ni-dashboard');
+      navTo(_pg,_ni);
+    });
+  }
 }
 
 function doLogout(){
   CURRENT_USER=null;
   localStorage.removeItem('wts_session');
-  // Clear form fields
-  var le=document.getElementById('login-email');
-  var lp=document.getElementById('login-pass');
-  if(le)le.value='';if(lp)lp.value='';
-  // Hide admin items
+  showAuthScreen();
+  document.getElementById('login-email').value='';
+  document.getElementById('login-pass').value='';
+  // Hide admin items again
   document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none';});
   document.querySelectorAll('.admin-only-bn').forEach(function(el){el.style.display='none';});
-  // Reset nav to home without triggering navTo
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active','print-active');});
-  var ph=document.getElementById('page-home');
-  if(ph)ph.classList.add('active');
-  setMode(false);
-  // Show login screen
-  showAuthScreen();
+  navTo('home',document.getElementById('ni-home'));
 }
 
 function checkSession(){
   var saved=localStorage.getItem('wts_session');
-  if(!saved){return;} // Auth screen already visible
-  try{
-    var user=JSON.parse(saved);
-    dbGet('user_profiles?email=eq.'+encodeURIComponent(user.email))
-      .then(function(rows){
-        if(rows&&rows.length&&rows[0].pw_hash){
-          loginSuccess(rows[0]);
-        }else{
-          localStorage.removeItem('wts_session');
-          // Auth screen already visible - do nothing
-        }
-      }).catch(function(){
-        // Offline - trust cached session
-        loginSuccess(user);
-      });
-  }catch(e){localStorage.removeItem('wts_session');}
+  if(saved){
+    try{
+      var user=JSON.parse(saved);
+      dbGet('user_profiles?email=eq.'+encodeURIComponent(user.email))
+        .then(function(rows){
+          if(rows&&rows.length){loginSuccess(rows[0]);}
+          else{showAuthScreen();}
+        }).catch(function(){
+          // Offline - use cached session
+          loginSuccess(user);
+        });
+    }catch(e){showAuthScreen();}
+  }else{
+    showAuthScreen();
+  }
 }
 function showAuthScreen(){
   showAuthScreen();
@@ -1602,6 +1589,7 @@ function navTo(id,el){
   if(!pg)return;
   pg.classList.add('active');
   pushHistory(id);
+  try{sessionStorage.setItem('wts_page',id);}catch(e){}
   if(id==='card'||id==='broadsheet')pg.classList.add('print-active');
   if(el)el.classList.add('active');
   var titles={
@@ -1684,6 +1672,7 @@ function confirmTerm(term){
   var rctl=document.getElementById('rc-term-lbl');
   if(rctl)rctl.textContent=TERM;
   setMode(true);
+  try{sessionStorage.setItem('wts_cls',key);sessionStorage.setItem('wts_term',TERM);}catch(e){}
   loadClass(key,function(){
     navTo('dashboard',document.getElementById('ni-dashboard'));
   });
