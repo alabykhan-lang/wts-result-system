@@ -3459,7 +3459,7 @@ function runOCR(){
     +'Use null for any score that is blank, missing or unreadable. '
     +'These registered students help you read unclear handwriting: '+names+'. '
     +'Important: return ALL students visible in the image, not just the registered ones.';
-  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+key,{
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
