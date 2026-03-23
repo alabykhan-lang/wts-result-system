@@ -3419,8 +3419,8 @@ function handleOCRImage(evt){
     var rawSrc=e.target.result;
     var img2=new Image();
     img2.onload=function(){
-      // Resize to max 1000px - reduces memory use by 90%
-      var MAX=1000;
+      // Resize to max 1200px for better handwriting legibility
+      var MAX=1200;
       var w=img2.width,h=img2.height;
       if(w>MAX||h>MAX){
         if(w>h){h=Math.round(h*MAX/w);w=MAX;}
@@ -3430,7 +3430,7 @@ function handleOCRImage(evt){
       canvas.width=w; canvas.height=h;
       var ctx=canvas.getContext('2d');
       ctx.drawImage(img2,0,0,w,h);
-      var compressed=canvas.toDataURL('image/jpeg',0.75);
+      var compressed=canvas.toDataURL('image/jpeg',0.85);
       OCR_IMG_B64=compressed.split(',')[1];
       var prev=document.getElementById('ocr-preview-img');
       if(prev)prev.src=compressed;
@@ -3451,15 +3451,15 @@ function runOCR(){
   document.getElementById('ocr-loading').style.display='block';
   var students=DB_STUDENTS[CLS]||[];
   var names=students.map(function(s){return s.name;}).join(', ');
-  var prompt='This image shows a school score record book page. '
-    +'The columns are: S/N | Student Name | CA1 (max 10) | CA2 (max 10) | CA3 (max 10) | Exam (max 70). '
-    +'Extract every student row you can see. '
-    +'Return ONLY a raw JSON array (no markdown, no code blocks, no explanation). '
-    +'Format: [{"name":"FULL NAME","ca1":number,"ca2":number,"ca3":number,"exam":number}] '
-    +'Use null for any score that is blank, missing or unreadable. '
-    +'These registered students help you read unclear handwriting: '+names+'. '
-    +'Important: return ALL students visible in the image, not just the registered ones.';
-  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,{
+  var prompt='You are reading a handwritten Nigerian school record book. '
+    +'The page has columns: Serial Number, Student Name, CA1 (out of 10), CA2 (out of 10), CA3 (out of 10), Exam (out of 70). '
+    +'Read every row carefully including handwritten names and numbers. '
+    +'These are the registered student names to help you decode handwriting: '+names+'. '
+    +'Return a JSON array only - no other text, no markdown, no code fences. '
+    +'Each item must be: {"name":"STUDENT FULL NAME AS WRITTEN","ca1":number_or_null,"ca2":number_or_null,"ca3":number_or_null,"exam":number_or_null} '
+    +'If a score cell is empty, crossed out, or unreadable use null. '
+    +'Include every student row visible. Start your response with [ and end with ].';
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key='+key,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
@@ -3485,13 +3485,19 @@ function runOCR(){
       document.getElementById('ocr-preview-wrap').style.display='block';
       return;
     }
-    // Try to extract JSON array from response
+    // Try to extract JSON array from response - multiple strategies
     var jsonStr=null;
+    // Strategy 1: code fence with json
     var m1=txt.match(/```json([\s\S]*?)```/);
     if(m1)jsonStr=m1[1].trim();
-    if(!jsonStr){var m2=txt.match(/\[[\s\S]*\]/);if(m2)jsonStr=m2[0];}
+    // Strategy 2: any code fence
+    if(!jsonStr){var m2=txt.match(/```([\s\S]*?)```/);if(m2)jsonStr=m2[1].trim();}
+    // Strategy 3: raw JSON array
+    if(!jsonStr){var m3=txt.match(/\[[\s\S]*?\]/);if(m3)jsonStr=m3[0];}
+    // Strategy 4: entire response if it starts with [
+    if(!jsonStr&&txt.trim().startsWith('['))jsonStr=txt.trim();
     if(!jsonStr){
-      showToast('AI could not extract scores. Try a clearer photo.','error');
+      showToast('AI responded but could not find scores in image. Ensure photo shows names and score columns clearly.','error');
       document.getElementById('ocr-preview-wrap').style.display='block';
       return;
     }
