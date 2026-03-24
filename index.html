@@ -918,6 +918,7 @@ body.admin-mode .admin-only-bn{display:flex}
     </div>
     <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      <button class="btn btn-outline btn-sm" onclick="forceSyncSettings()" style="margin-left:8px">&#9729; Sync to All Devices</button>
       <button class="btn btn-outline" onclick="resetSettings()">Reset to Defaults</button>
     </div>
   </div>
@@ -1254,13 +1255,30 @@ function loginSuccess(user){
   if(lg)document.getElementById('auth-logo').src=lg.src;
   NAV_HISTORY=['home'];
   try{history.replaceState({page:'home'},'',window.location.pathname);}catch(e){}
-  // Load shared Gemini key from Supabase for all users
-  dbGet('settings?key=eq.gemini_key').then(function(rows){
-    if(rows&&rows.length&&rows[0].value){
-      window._geminiKey=rows[0].value;
-      // Also update local input if on settings page
+  // Load shared settings from Supabase for all users
+  Promise.all([
+    dbGet('settings?key=eq.gemini_key'),
+    dbGet('settings?key=eq.app_config')
+  ]).then(function(res){
+    // Load Gemini key
+    var keyRows=res[0]||[];
+    if(keyRows.length&&keyRows[0].value){
+      window._geminiKey=keyRows[0].value;
       var ki=document.getElementById('gemini-key-input');
-      if(ki)ki.value=rows[0].value;
+      if(ki)ki.value=keyRows[0].value;
+    }
+    // Load app config (subjects, school info, card sections etc)
+    var cfgRows=res[1]||[];
+    if(cfgRows.length&&cfgRows[0].value){
+      try{
+        var remoteCfg=JSON.parse(cfgRows[0].value);
+        window._remoteCfg=remoteCfg;
+        // Merge with localStorage (local takes precedence for user prefs)
+        localStorage.setItem('wts_cfg',JSON.stringify(remoteCfg));
+        // Update session label
+        var sb=document.getElementById('sb-session-lbl');
+        if(sb)sb.textContent=(remoteCfg.session||DEFAULT_SESSION)+' Session';
+      }catch(e){}
     }
   }).catch(function(){});
   // Restore previous page on refresh
@@ -1402,11 +1420,19 @@ var DEFAULT_SESSION='2025/2026';
 var DEFAULT_TERM='1st Term';
 
 function getCfg(){
+  // Use remote config if available (loaded from Supabase on login)
+  if(window._remoteCfg)return window._remoteCfg;
   var d=localStorage.getItem('wts_cfg');
   if(d){try{return JSON.parse(d);}catch(e){}}
   return{school:Object.assign({},DEFAULT_SCHOOL),remarks:DEFAULT_REMARKS.slice(),session:DEFAULT_SESSION,term:DEFAULT_TERM};
 }
-function saveCfg(cfg){localStorage.setItem('wts_cfg',JSON.stringify(cfg));}
+function saveCfg(cfg){
+  localStorage.setItem('wts_cfg',JSON.stringify(cfg));
+  // Sync to Supabase so all devices get updated config
+  if(CURRENT_USER&&CURRENT_USER.role==='admin'){
+    dbUpsert('settings',{key:'app_config',value:JSON.stringify(cfg)}).catch(function(){});
+  }
+}
 function getSchool(){return getCfg().school||DEFAULT_SCHOOL;}
 function getAutoRemark(avg){
   if(avg===''||avg===null)return '--';
@@ -3393,6 +3419,19 @@ var OCR_MATCHES=[];
 var OCR_IMG_B64='';
 var OCR_IMG_MIME='image/jpeg';
 
+
+function forceSyncSettings(){
+  var cfg=getCfg();
+  showLoad('Syncing to all devices...');
+  dbUpsert('settings',{key:'app_config',value:JSON.stringify(cfg)})
+    .then(function(){
+      hideLoad();
+      showToast('Settings synced to all devices');
+    }).catch(function(){
+      hideLoad();
+      showToast('Sync failed - check connection','error');
+    });
+}
 function saveGeminiKey(){
   var v=document.getElementById('gemini-key-input').value.trim();
   if(!v){showToast('Enter a valid key','error');return;}
