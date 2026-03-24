@@ -1254,6 +1254,15 @@ function loginSuccess(user){
   if(lg)document.getElementById('auth-logo').src=lg.src;
   NAV_HISTORY=['home'];
   try{history.replaceState({page:'home'},'',window.location.pathname);}catch(e){}
+  // Load shared Gemini key from Supabase for all users
+  dbGet('settings?key=eq.gemini_key').then(function(rows){
+    if(rows&&rows.length&&rows[0].value){
+      window._geminiKey=rows[0].value;
+      // Also update local input if on settings page
+      var ki=document.getElementById('gemini-key-input');
+      if(ki)ki.value=rows[0].value;
+    }
+  }).catch(function(){});
   // Restore previous page on refresh
   var _pg=null,_cls=null,_trm=null;
   try{_pg=sessionStorage.getItem('wts_page');_cls=sessionStorage.getItem('wts_cls');_trm=sessionStorage.getItem('wts_term');}catch(e){}
@@ -2162,16 +2171,19 @@ function closeSheet(){
 }
 
 function dbUpsertScore(studentId,subjectIdx,ca1,ca2,ca3,exam){
+  // Convert empty strings to null - Supabase numeric fields reject ''
+  function n(v){return (v===''||v===null||v===undefined)?null:Number(v);}
+  var d={ca1:n(ca1),ca2:n(ca2),ca3:n(ca3),exam:n(exam)};
   var patchPath='scores?student_id=eq.'+studentId+'&subject_index=eq.'+subjectIdx+'&term=eq.'+encodeURIComponent(TERM)+'&class_key=eq.'+encodeURIComponent(CLS);
   return sbFetch(patchPath,{
     method:'PATCH',
     headers:{'Prefer':'return=representation'},
-    body:JSON.stringify({ca1:ca1,ca2:ca2,ca3:ca3,exam:exam})
+    body:JSON.stringify(d)
   }).then(function(r){return r.json();}).then(function(res){
     if(Array.isArray(res)&&res.length>0){return res;}
-    return dbUpsert('scores',{student_id:studentId,class_key:CLS,subject_index:subjectIdx,term:TERM,ca1:ca1,ca2:ca2,ca3:ca3,exam:exam});
+    return dbUpsert('scores',Object.assign({student_id:studentId,class_key:CLS,subject_index:subjectIdx,term:TERM},d));
   }).catch(function(){
-    return dbUpsert('scores',{student_id:studentId,class_key:CLS,subject_index:subjectIdx,term:TERM,ca1:ca1,ca2:ca2,ca3:ca3,exam:exam});
+    return dbUpsert('scores',Object.assign({student_id:studentId,class_key:CLS,subject_index:subjectIdx,term:TERM},d));
   });
 }
 function saveDraft(){
@@ -3384,10 +3396,19 @@ var OCR_IMG_MIME='image/jpeg';
 function saveGeminiKey(){
   var v=document.getElementById('gemini-key-input').value.trim();
   if(!v){showToast('Enter a valid key','error');return;}
+  // Save locally
   var cfg=getCfg();cfg.geminiKey=v;saveCfg(cfg);
-  showToast('Gemini API key saved');
+  window._geminiKey=v;
+  // Save to Supabase so ALL teachers get it automatically
+  dbUpsert('settings',{key:'gemini_key',value:v})
+    .then(function(){showToast('Gemini key saved — active for all users');})
+    .catch(function(){showToast('Key saved locally only — check connection','error');});
 }
-function getGeminiKey(){return getCfg().geminiKey||'';}
+function getGeminiKey(){
+  // Check in-memory cache first (loaded from Supabase on login)
+  if(window._geminiKey)return window._geminiKey;
+  return getCfg().geminiKey||'';
+}
 
 function openOCRScanner(){
   var key=getGeminiKey();
