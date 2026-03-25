@@ -503,6 +503,7 @@ body.admin-mode .admin-only-bn{display:flex}
   <div id="sb-user-panel" style="position:absolute;bottom:0;left:0;right:0;background:var(--g1);padding:12px 16px;border-top:1px solid rgba(125,212,176,.3)">
     <div style="font-size:.75rem;color:var(--g3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px" id="sb-user-name">--</div>
     <div id="sb-role-badge" class="badge-teacher" style="font-size:.6rem;padding:2px 8px;border-radius:10px;font-weight:700;display:inline-block;margin-bottom:8px">Teacher</div>
+    <button onclick="if(window.loadRemoteSettings){window.loadRemoteSettings();showToast('Settings refreshed');}" style="display:block;width:100%;background:rgba(125,212,176,.08);border:1px solid rgba(125,212,176,.2);color:rgba(255,255,255,.6);font-size:.72rem;padding:6px;border-radius:8px;cursor:pointer;margin-bottom:6px">&#9729; Refresh Settings</button>
     <button onclick="doLogout()" style="display:block;width:100%;background:rgba(125,212,176,.18);border:1px solid rgba(125,212,176,.4);color:var(--g3);font-size:.78rem;padding:8px;border-radius:8px;cursor:pointer;font-weight:700">&#x2192; Sign Out</button>
   </div>
 </div>
@@ -1255,6 +1256,32 @@ function loginSuccess(user){
   if(lg)document.getElementById('auth-logo').src=lg.src;
   NAV_HISTORY=['home'];
   try{history.replaceState({page:'home'},'',window.location.pathname);}catch(e){}
+  window.loadRemoteSettings=function(){
+    Promise.all([
+      dbGet('settings?key=eq.gemini_key'),
+      dbGet('settings?key=eq.app_config')
+    ]).then(function(res){
+      var kr=res[0]||[];
+      if(kr.length&&kr[0].value){
+        window._geminiKey=kr[0].value;
+        var ki=document.getElementById('gemini-key-input');
+        if(ki)ki.value=kr[0].value;
+      }
+      var cr=res[1]||[];
+      if(cr.length&&cr[0].value){
+        try{
+          var rc=JSON.parse(cr[0].value);
+          window._remoteCfg=rc;
+          localStorage.setItem('wts_cfg',JSON.stringify(rc));
+          var sb=document.getElementById('sb-session-lbl');
+          if(sb)sb.textContent=(rc.session||DEFAULT_SESSION)+' Session';
+          var hs=document.getElementById('home-session');
+          if(hs)hs.textContent=(rc.session||DEFAULT_SESSION)+' Session';
+        }catch(e){}
+      }
+    }).catch(function(){});
+  };
+  window.loadRemoteSettings();
   // Load shared settings from Supabase for all users
   Promise.all([
     dbGet('settings?key=eq.gemini_key'),
@@ -1428,7 +1455,7 @@ function getCfg(){
 }
 function saveCfg(cfg){
   localStorage.setItem('wts_cfg',JSON.stringify(cfg));
-  // Sync to Supabase so all devices get updated config
+  window._remoteCfg=cfg;
   if(CURRENT_USER&&CURRENT_USER.role==='admin'){
     dbUpsert('settings',{key:'app_config',value:JSON.stringify(cfg)}).catch(function(){});
   }
@@ -2431,65 +2458,96 @@ function refreshCard(){
 function renderBroadsheet(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
-  var clsLbl=document.getElementById('bs-class-label');
-  var termLbl=document.getElementById('bs-term-label');
-  if(clsLbl)clsLbl.textContent=DEPTS[CLS]?DEPTS[CLS].label:CLS;
-  if(termLbl)termLbl.textContent=TERM;
-  var bsWrap=document.querySelector('.bs-wrap');
-  if(!bsWrap)return;
+  var school=getSchool();
+  var cfg=getCfg();
+  var session=cfg.session||DEFAULT_SESSION;
+
+  // Update labels
+  var bsCls=document.getElementById('bs-class-label');
+  var bsTrm=document.getElementById('bs-term-label');
+  if(bsCls)bsCls.textContent=DEPTS[CLS]?DEPTS[CLS].label:CLS;
+  if(bsTrm)bsTrm.textContent=TERM;
+
   if(!students.length){
-    bsWrap.innerHTML='<div class="empty"><h3>No Students</h3></div>';
+    document.getElementById('bs-wrap').innerHTML='<div class="empty"><h3>No Students</h3><p>Add students to this class first</p></div>';
     return;
   }
-  var CHUNK=3;
-  var html='';
-  for(var g=0;g<subjs.length;g+=CHUNK){
-    var group=subjs.slice(g,g+CHUNK);
-    var groupIdx=[];
-    for(var x=g;x<Math.min(g+CHUNK,subjs.length);x++)groupIdx.push(x);
-    if(g>0)html+='<div style="margin-top:28px"></div>'; // natural flow, no forced page break
-    html+='<div style="background:var(--g1);color:#fff;padding:6px 12px;font-size:.78rem;font-weight:700;border-radius:6px 6px 0 0">'
-      +(DEPTS[CLS]?DEPTS[CLS].label:CLS)+' | '+TERM
-      +' | Subjects '+(g+1)+'-'+(Math.min(g+CHUNK,subjs.length))+' of '+subjs.length
+
+  var BORDER='#b8edd8'; var NAVY='#1a2a4a'; var MINT='#edf8f4'; var WHITE='#fff';
+  var P='font-family:Arial,sans-serif;';
+
+  // Header
+  var html='<div style="'+P+'max-width:100%;overflow-x:auto">';
+
+  // School header — one per page top
+  html+='<div style="text-align:center;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid '+BORDER+'">'
+    +'<div style="font-size:13pt;font-weight:700;color:'+NAVY+'">'+school.name+'</div>'
+    +'<div style="font-size:9pt;color:#555;margin-top:2px">'+school.addr+'</div>'
+    +'<div style="font-size:10pt;font-weight:600;color:'+NAVY+';margin-top:6px">'
+    +(DEPTS[CLS]?DEPTS[CLS].label:CLS)+' — '+TERM+' — '+session+' Academic Session'
+    +'</div>'
+    +'</div>';
+
+  // One section per published subject
+  subjs.forEach(function(subj,si){
+    if(!isPublished(CLS,si))return;
+
+    html+='<div style="margin-bottom:28px;page-break-inside:avoid">';
+
+    // Subject title bar
+    html+='<div style="background:'+NAVY+';color:#fff;padding:7px 14px;font-weight:700;font-size:10pt;border-radius:6px 6px 0 0">'
+      +(si+1)+'. '+subj
       +'</div>';
-    html+='<table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:16px">';
-    html+='<thead><tr style="background:var(--g1);color:#fff">'
-      +'<th style="padding:6px 8px;border:1px solid rgba(255,255,255,.2);width:28px">#</th>'
-      +'<th style="padding:6px 8px;text-align:left;border:1px solid rgba(255,255,255,.2)">STUDENT NAME</th>'
-      +'<th style="padding:6px 4px;text-align:center;border:1px solid rgba(255,255,255,.2);width:22px">G</th>';
-    group.forEach(function(subj){
-      html+='<th colspan="5" style="padding:5px 4px;text-align:center;border:1px solid rgba(255,255,255,.2)">'+subj+'</th>';
+
+    // Table
+    html+='<table style="width:100%;border-collapse:collapse;font-size:8.5pt">';
+    html+='<thead><tr style="background:'+MINT+'">'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:left;color:'+NAVY+';width:40px">#</th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:left;color:'+NAVY+'">Student Name</th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:42px">CA1<br><span style="font-size:7pt;font-weight:400">/10</span></th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:42px">CA2<br><span style="font-size:7pt;font-weight:400">/10</span></th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:42px">CA3<br><span style="font-size:7pt;font-weight:400">/10</span></th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:48px">Exam<br><span style="font-size:7pt;font-weight:400">/70</span></th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:48px">Total<br><span style="font-size:7pt;font-weight:400">/100</span></th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:38px">Grade</th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:38px">Pos</th>'
+      +'</tr></thead>';
+    html+='<tbody>';
+
+    // Compute positions for this subject
+    var scores=students.map(function(s,idx){
+      var sc=(DB_SCORES[s.id]||{})[si]||{};
+      var t=computeTotal(sc);
+      return{s:s,sc:sc,t:t};
     });
-    html+='</tr><tr style="background:#1a4a38;color:rgba(255,255,255,.75);font-size:.63rem">'
-      +'<th style="border:1px solid rgba(255,255,255,.1)"></th>'
-      +'<th style="border:1px solid rgba(255,255,255,.1)"></th>'
-      +'<th style="border:1px solid rgba(255,255,255,.1)"></th>';
-    group.forEach(function(){
-      ['CA1','CA2','CA3','EXM','TOT'].forEach(function(h,hi){
-        html+='<th style="padding:2px 3px;text-align:center;border:1px solid rgba(255,255,255,.1)'+(hi===4?';background:#0a3d2e':'')+'">'+h+'</th>';
-      });
-    });
-    html+='</tr></thead><tbody>';
-    students.forEach(function(s,idx){
-      var sc=DB_SCORES[s.id]||{};
-      var bg=idx%2===0?'#fff':'#f0fdf9';
+    var vals=scores.map(function(x){return x.t;}).filter(function(t){return t!=='';});
+    vals.sort(function(a,b){return b-a;});
+    var posMap={};
+    vals.forEach(function(v,i){if(posMap[v]===undefined)posMap[v]=i+1;});
+
+    scores.forEach(function(row,ri){
+      var s=row.s; var sc=row.sc; var t=row.t;
+      var gd=getGrade(t);
+      var bg=ri%2===0?WHITE:MINT;
+      var pos=t!==''?posMap[t]:'';
       html+='<tr style="background:'+bg+'">'
-        +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb;color:#9ca3af;font-size:.7rem">'+(idx+1)+'</td>'
-        +'<td style="padding:4px 8px;border:1px solid #e5e7eb;font-weight:600;color:var(--g1)">'+s.name+'</td>'
-        +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb;font-size:.7rem">'+(s.gender==='Male'?'M':'F')+'</td>';
-      groupIdx.forEach(function(i){
-        var r=sc[i]||{};var t=computeTotal(r);var gd=getGrade(t);
-        html+='<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.ca1!==undefined&&r.ca1!==''?r.ca1:'')+'</td>'
-          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.ca2!==undefined&&r.ca2!==''?r.ca2:'')+'</td>'
-          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.ca3!==undefined&&r.ca3!==''?r.ca3:'')+'</td>'
-          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb">'+(r.exam!==undefined&&r.exam!==''?r.exam:'')+'</td>'
-          +'<td style="text-align:center;padding:4px 3px;border:1px solid #e5e7eb;font-weight:700;color:'+(t!==''?gd.c:'#ccc')+'">'+(t!==''?t:'')+'</td>';
-      });
-      html+='</tr>';
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';color:#888">'+(ri+1)+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+s.name+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca1!==undefined&&sc.ca1!==''?sc.ca1:'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca2!==undefined&&sc.ca2!==''?sc.ca2:'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca3!==undefined&&sc.ca3!==''?sc.ca3:'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.exam!==undefined&&sc.exam!==''?sc.exam:'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center;font-weight:700;color:'+(t!==''?gd.c:'#aaa')+'">'+(t!==''?t:'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center;font-weight:700;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center;color:#555">'+(pos||'')+'</td>'
+        +'</tr>';
     });
-    html+='</tbody></table>';
-  }
-  bsWrap.innerHTML=html;
+
+    html+='</tbody></table></div>';
+  });
+
+  html+='</div>';
+  document.getElementById('bs-wrap').innerHTML=html;
 }
 function exportBroadsheet(){
   var students=DB_STUDENTS[CLS]||[];
@@ -3159,6 +3217,7 @@ function removeSubject(dept,idx){
   var cfg=getCfg();if(!cfg.depts)cfg.depts={};
   if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[]};
   cfg.depts[dept].subjects.splice(idx,1);saveCfg(cfg);renderSubjCfg();
+  showToast('Subject removed — synced to all devices');
 }
 function addSubject(){
   var val=document.getElementById('new-subj-inp').value.trim();if(!val)return;
@@ -3167,6 +3226,7 @@ function addSubject(){
   if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[]};
   cfg.depts[dept].subjects.push(val);saveCfg(cfg);
   document.getElementById('new-subj-inp').value='';renderSubjCfg();
+  showToast('Subject added — synced to all devices');
 }
 function saveSettings(){
   var cfg=getCfg();
