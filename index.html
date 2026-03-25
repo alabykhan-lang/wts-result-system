@@ -1275,7 +1275,7 @@ function loginSuccess(user){
           if(hs)hs.textContent=(rc.session||DEFAULT_SESSION)+' Session';
         }catch(e){}
       }
-    }).catch(function(){});
+    }).catch(function(e){console.error('Remote settings load failed:',e);});
   };
   window.loadRemoteSettings();
   // Load shared settings from Supabase for all users
@@ -1449,11 +1449,22 @@ function getCfg(){
   if(d){try{return JSON.parse(d);}catch(e){}}
   return{school:Object.assign({},DEFAULT_SCHOOL),remarks:DEFAULT_REMARKS.slice(),session:DEFAULT_SESSION,term:DEFAULT_TERM};
 }
+function dbUpsertSettings(key,value){
+  // settings table uses key as PRIMARY KEY - must specify conflict column
+  return sbFetch('settings?on_conflict=key',{
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify({key:key,value:value})
+  }).then(function(r){return r.json();});
+}
+
 function saveCfg(cfg){
   localStorage.setItem('wts_cfg',JSON.stringify(cfg));
   window._remoteCfg=cfg;
   if(CURRENT_USER&&CURRENT_USER.role==='admin'){
-    dbUpsert('settings',{key:'app_config',value:JSON.stringify(cfg)}).catch(function(){});
+    dbUpsertSettings('app_config',JSON.stringify(cfg))
+      .then(function(){showSaved();})
+      .catch(function(e){console.error('Config sync failed:',e);});
   }
 }
 function getSchool(){return getCfg().school||DEFAULT_SCHOOL;}
@@ -3479,7 +3490,7 @@ var OCR_IMG_MIME='image/jpeg';
 function forceSyncSettings(){
   var cfg=getCfg();
   showLoad('Syncing to all devices...');
-  dbUpsert('settings',{key:'app_config',value:JSON.stringify(cfg)})
+  dbUpsertSettings('app_config',JSON.stringify(cfg))
     .then(function(){
       hideLoad();
       showToast('Settings synced to all devices');
@@ -3495,7 +3506,7 @@ function saveGeminiKey(){
   var cfg=getCfg();cfg.geminiKey=v;saveCfg(cfg);
   window._geminiKey=v;
   // Save to Supabase so ALL teachers get it automatically
-  dbUpsert('settings',{key:'gemini_key',value:v})
+  dbUpsertSettings('gemini_key',v)
     .then(function(){showToast('Gemini key saved — active for all users');})
     .catch(function(){showToast('Key saved locally only — check connection','error');});
 }
