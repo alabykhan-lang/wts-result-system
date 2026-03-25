@@ -687,11 +687,7 @@ body.admin-mode .admin-only-bn{display:flex}
       <button class="btn btn-primary btn-sm" onclick="window.print()">Print Broadsheet</button>
       <button class="btn btn-outline btn-sm" onclick="exportBroadsheet()">Export CSV</button>
     </div>
-    <div class="bs-wrap">
-      <table class="bs-table" id="bs-table">
-        <thead id="bs-thead"></thead>
-        <tbody id="bs-tbody"></tbody>
-      </table>
+    <div class="bs-wrap" id="bs-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
     </div>
   </div>
 
@@ -1804,7 +1800,7 @@ function navTo(id,el){
   if(id==='dashboard')renderDash();
   if(id==='students')renderStudents();
   if(id==='scores')renderScoreGrid();
-  if(id==='broadsheet')renderBroadsheet();
+  if(id==='broadsheet'){refreshBroadsheet();}
   if(id==='card'){
     var rct=document.getElementById('rc-term');if(rct)rct.value=TERM;
     var rctl=document.getElementById('rc-term-lbl');if(rctl)rctl.textContent=TERM;
