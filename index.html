@@ -1522,7 +1522,7 @@ function setPublishedRemote(classKey,term,idx,val,cb){
   saveCfg(cfg);
   // Also try Supabase (gracefully fails if table missing)
   if(val){
-    dbUpsertConflict('published_subjects','class_key,term,subject_index',{class_key:classKey,term:term,subject_index:idx})
+    dbUpsert('published_subjects',{class_key:classKey,term:term,subject_index:idx})
       .catch(function(){});
   }else{
     dbDelete('published_subjects?class_key=eq.'+encodeURIComponent(classKey)+'&term=eq.'+encodeURIComponent(term)+'&subject_index=eq.'+idx)
@@ -2306,11 +2306,9 @@ function openProfile(sid){
   var s=students.find(function(x){return x.id===sid;});
   if(!s)return;
   currentProfileSid=sid;
-  // Load student data if not cached
-  if(!DB_SCORES[sid]){
-    showLoad('Loading profile...');
-    loadStudentData(sid,function(){hideLoad();renderProfile(s);});
-  }else{renderProfile(s);}
+  // Always reload fresh from DB to get latest traits/fees/remarks from other devices
+  showLoad('Loading profile...');
+  loadStudentData(sid,function(){hideLoad();renderProfile(s);});
 }
 
 function renderProfile(s){
@@ -2414,6 +2412,17 @@ function saveProfile(){
   var op=Number(document.getElementById('pf-att-open').value||0);
   var pr=Number(document.getElementById('pf-att-present').value||0);
   showLoad('Saving...');
+  // Build traits upsert calls from DB_TRAITS
+  var traits=DB_TRAITS[sid]||{affective:{},psychomotor:{}};
+  var traitCalls=[];
+  Object.keys(traits.affective||{}).forEach(function(tr){
+    traitCalls.push(dbUpsertConflict('traits','student_id,trait_type,trait_name,term',
+      {student_id:sid,class_key:CLS,term:TERM,trait_type:'affective',trait_name:tr,rating:traits.affective[tr]}));
+  });
+  Object.keys(traits.psychomotor||{}).forEach(function(tr){
+    traitCalls.push(dbUpsertConflict('traits','student_id,trait_type,trait_name,term',
+      {student_id:sid,class_key:CLS,term:TERM,trait_type:'psychomotor',trait_name:tr,rating:traits.psychomotor[tr]}));
+  });
   Promise.all([
     dbUpsertConflict('fees','student_id,term',{student_id:sid,class_key:CLS,term:TERM,
       total:Number(document.getElementById('pf-fee-total').value||0),
@@ -2423,7 +2432,7 @@ function saveProfile(){
       next_term:Number(document.getElementById('pf-fee-next').value||0)}),
     dbUpsertConflict('remarks','student_id,term',{student_id:sid,class_key:CLS,term:TERM,
       academic:'',form_master:'',principal:'',days_opened:op,days_present:pr})
-  ]).then(function(){
+  ].concat(traitCalls)).then(function(){
     DB_FEES[sid]={total:Number(document.getElementById('pf-fee-total').value||0),paid:Number(document.getElementById('pf-fee-paid').value||0),debt:Number(document.getElementById('pf-fee-debt').value||0),resume_date:document.getElementById('pf-fee-resume').value,next_term:Number(document.getElementById('pf-fee-next').value||0)};
     DB_REMARKS[sid]=DB_REMARKS[sid]||{};
     DB_REMARKS[sid].days_opened=op;DB_REMARKS[sid].days_present=pr;
