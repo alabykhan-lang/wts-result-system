@@ -1426,6 +1426,13 @@ function dbPost(path,body){return sbFetch(path,{method:'POST',body:JSON.stringif
 function dbPatch(path,body){return sbFetch(path,{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
 function dbDelete(path){return sbFetch(path,{method:'DELETE'});}
 function dbUpsert(path,body){return sbFetch(path,{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
+function dbUpsertConflict(path,conflictCols,body){
+  return sbFetch(path+'?on_conflict='+conflictCols,{
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify(body)
+  }).then(function(r){return r.json();});
+}
 
 // ============================================================
 // CONFIG
@@ -1515,7 +1522,7 @@ function setPublishedRemote(classKey,term,idx,val,cb){
   saveCfg(cfg);
   // Also try Supabase (gracefully fails if table missing)
   if(val){
-    dbUpsert('published_subjects',{class_key:classKey,term:term,subject_index:idx})
+    dbUpsertConflict('published_subjects','class_key,term,subject_index',{class_key:classKey,term:term,subject_index:idx})
       .catch(function(){});
   }else{
     dbDelete('published_subjects?class_key=eq.'+encodeURIComponent(classKey)+'&term=eq.'+encodeURIComponent(term)+'&subject_index=eq.'+idx)
@@ -2364,15 +2371,12 @@ function renderProfile(s){
       // Update stars in same container
       var container=sp.parentNode;
       container.querySelectorAll('.star').forEach(function(s,i){s.classList.toggle('on',i<n);});
-      dbUpsert('traits',{student_id:fsid,class_key:CLS,term:TERM,trait_type:key,trait_name:tr,rating:n})
-        .then(function(res){
-          if(res&&res.code){
-            // Try without term as fallback
-            dbUpsert('traits',{student_id:fsid,class_key:CLS,trait_type:key,trait_name:tr,rating:n})
-              .catch(function(){showToast('Rating failed','error');});
-          }
-        })
-        .catch(function(){showToast('Rating failed','error');});
+      // Use on_conflict for proper upsert on traits_upsert_key
+      sbFetch('traits?on_conflict=student_id,trait_type,trait_name,term',{
+        method:'POST',
+        headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+        body:JSON.stringify({student_id:fsid,class_key:CLS,term:TERM,trait_type:key,trait_name:tr,rating:n})
+      }).catch(function(){showToast('Rating save failed','error');});
     };
   });
 
@@ -2414,13 +2418,13 @@ function saveProfile(){
   var pr=Number(document.getElementById('pf-att-present').value||0);
   showLoad('Saving...');
   Promise.all([
-    dbUpsert('fees',{student_id:sid,class_key:CLS,term:TERM,
+    dbUpsertConflict('fees','student_id,term',{student_id:sid,class_key:CLS,term:TERM,
       total:Number(document.getElementById('pf-fee-total').value||0),
       paid:Number(document.getElementById('pf-fee-paid').value||0),
       debt:Number(document.getElementById('pf-fee-debt').value||0),
       resume_date:document.getElementById('pf-fee-resume').value||null,
       next_term:Number(document.getElementById('pf-fee-next').value||0)}),
-    dbUpsert('remarks',{student_id:sid,class_key:CLS,term:TERM,
+    dbUpsertConflict('remarks','student_id,term',{student_id:sid,class_key:CLS,term:TERM,
       academic:'',form_master:'',principal:'',days_opened:op,days_present:pr})
   ]).then(function(){
     DB_FEES[sid]={total:Number(document.getElementById('pf-fee-total').value||0),paid:Number(document.getElementById('pf-fee-paid').value||0),debt:Number(document.getElementById('pf-fee-debt').value||0),resume_date:document.getElementById('pf-fee-resume').value,next_term:Number(document.getElementById('pf-fee-next').value||0)};
