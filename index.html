@@ -1426,8 +1426,8 @@ function dbPost(path,body){return sbFetch(path,{method:'POST',body:JSON.stringif
 function dbPatch(path,body){return sbFetch(path,{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
 function dbDelete(path){return sbFetch(path,{method:'DELETE'});}
 function dbUpsert(path,body){return sbFetch(path,{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
-function dbUpsertConflict(path,conflictCols,body){
-  return sbFetch(path+'?on_conflict='+conflictCols,{
+function dbUpsertConflict(tbl,cols,body){
+  return sbFetch(tbl+'?on_conflict='+cols,{
     method:'POST',
     headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
     body:JSON.stringify(body)
@@ -2371,12 +2371,9 @@ function renderProfile(s){
       // Update stars in same container
       var container=sp.parentNode;
       container.querySelectorAll('.star').forEach(function(s,i){s.classList.toggle('on',i<n);});
-      // Use on_conflict for proper upsert on traits_upsert_key
-      sbFetch('traits?on_conflict=student_id,trait_type,trait_name,term',{
-        method:'POST',
-        headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
-        body:JSON.stringify({student_id:fsid,class_key:CLS,term:TERM,trait_type:key,trait_name:tr,rating:n})
-      }).catch(function(){showToast('Rating save failed','error');});
+      dbUpsertConflict('traits','student_id,trait_type,trait_name,term',
+        {student_id:fsid,class_key:CLS,term:TERM,trait_type:key,trait_name:tr,rating:n})
+        .catch(function(){showToast('Rating save failed','error');});
     };
   });
 
