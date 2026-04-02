@@ -720,6 +720,7 @@ body.admin-mode .admin-only-bn{display:flex}
     <!-- Term info bar -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap" class="no-print">
       <div style="background:var(--g1);color:var(--gold2);padding:7px 16px;border-radius:8px;font-weight:700;font-size:.88rem" id="an-class-term-bar">--</div>
+      <button class="btn btn-outline btn-sm" onclick="printAnalytics()">&#128424; Print Report</button>
     </div>
     <!-- Summary stats -->
     <div class="stats-row" style="margin-bottom:20px">
@@ -841,6 +842,21 @@ body.admin-mode .admin-only-bn{display:flex}
           <div class="fg"><label>Email</label><input class="inp" id="cfg-email"/></div>
           <div class="fg-row">
             <div class="fg"><label>Session</label><input class="inp" id="cfg-session"/></div>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <div class="tbl-head"><h3>Session Configuration</h3></div>
+        <div style="padding:16px">
+          <div class="fg"><label>Next Term Resumption Date</label><input class="inp" type="date" id="cfg-resumption"/></div>
+          <div style="font-weight:700;font-size:.82rem;color:var(--g1);margin:12px 0 8px">Next Term School Fees (₦)</div>
+          <div class="fg-row">
+            <div class="fg"><label>Early Childhood</label><input class="inp" type="number" id="cfg-fee-ec" placeholder="0"/></div>
+            <div class="fg"><label>Primary</label><input class="inp" type="number" id="cfg-fee-pri" placeholder="0"/></div>
+          </div>
+          <div class="fg-row">
+            <div class="fg"><label>Junior Secondary</label><input class="inp" type="number" id="cfg-fee-jss" placeholder="0"/></div>
+            <div class="fg"><label>Senior Secondary</label><input class="inp" type="number" id="cfg-fee-ss" placeholder="0"/></div>
           </div>
         </div>
       </div>
@@ -1094,8 +1110,8 @@ body.admin-mode .admin-only-bn{display:flex}
         <div class="fee-field"><label>Term Fees (N)</label><input class="inp" type="number" id="pf-fee-total" oninput="pfBalance()"/></div>
         <div class="fee-field"><label>Amount Paid (N)</label><input class="inp" type="number" id="pf-fee-paid" oninput="pfBalance()"/></div>
         <div class="fee-field"><label>Previous Debt (N)</label><input class="inp" type="number" id="pf-fee-debt" oninput="pfBalance()"/></div>
-        <div class="fee-field"><label>Next Term Fees (N)</label><input class="inp" type="number" id="pf-fee-next"/></div>
-        <div class="fee-field"><label>Next Term Resumption</label><input class="inp" type="date" id="pf-fee-resume"/></div>
+        <div class="fee-field" id="pf-next-fee-wrap"><label>Next Term Fees</label><div id="pf-fee-next-display" style="font-weight:700;font-size:.95rem;color:var(--g1);padding:8px 0">--</div></div>
+        <div class="fee-field" id="pf-resume-wrap"><label>Next Term Begins</label><div id="pf-fee-resume-display" style="font-weight:700;font-size:.95rem;color:var(--g1);padding:8px 0">--</div></div>
         <div class="fee-balance" id="pf-fee-bal"><div class="val" id="pf-bal-val">N0</div><div class="lbl">Outstanding Balance</div></div>
       </div>
       <p class="sec-title">Attendance</p>
@@ -1114,6 +1130,31 @@ body.admin-mode .admin-only-bn{display:flex}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>
+// Fee category mapping
+var FEE_CATS={
+  creche:'early_childhood', kg1:'early_childhood', kg2:'early_childhood',
+  nursery1:'early_childhood', nursery2:'early_childhood',
+  primary1:'primary', primary2:'primary', primary3:'primary',
+  primary4:'primary', primary5:'primary',
+  jss1:'junior_secondary', jss2:'junior_secondary', jss3:'junior_secondary',
+  'ss1-general':'senior_secondary',
+  'ss2-science':'senior_secondary','ss2-arts':'senior_secondary','ss2-business':'senior_secondary',
+  'ss3-science':'senior_secondary','ss3-arts':'senior_secondary'
+};
+var FEE_CAT_LABELS={early_childhood:'Early Childhood',primary:'Primary',junior_secondary:'Junior Secondary',senior_secondary:'Senior Secondary'};
+
+function getSessionCfg(){
+  var cfg=getCfg();
+  return cfg.sessionCfg||{resumption:'',fees:{early_childhood:'',primary:'',junior_secondary:'',senior_secondary:''}};
+}
+function getNextTermFee(classKey){
+  var cat=FEE_CATS[classKey]||'primary';
+  return getSessionCfg().fees[cat]||'';
+}
+function getResumptionDate(){
+  return getSessionCfg().resumption||'';
+}
+
 // ============================================================
 // MOBILE BACK BUTTON
 // ============================================================
@@ -2380,9 +2421,14 @@ function renderProfile(s){
   document.getElementById('pf-fee-total').value=fees.total||'';
   document.getElementById('pf-fee-paid').value=fees.paid||'';
   document.getElementById('pf-fee-debt').value=fees.debt||'';
-  document.getElementById('pf-fee-next').value=fees.next_term||fees.next||'';
-  document.getElementById('pf-fee-resume').value=fees.resume_date||fees.resume||'';
   pfBalance();
+  // Show global next term fee and resumption from Settings
+  var nextFee=getNextTermFee(CLS);
+  var resumeDate=getResumptionDate();
+  var nfd=document.getElementById('pf-fee-next-display');
+  if(nfd)nfd.textContent=nextFee?'₦'+Number(nextFee).toLocaleString():'Not set in Settings';
+  var rfd=document.getElementById('pf-fee-resume-display');
+  if(rfd)rfd.textContent=resumeDate?new Date(resumeDate).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'Not set in Settings';
 
   // Attendance
   var rem=DB_REMARKS[sid]||{};
@@ -2427,13 +2473,11 @@ function saveProfile(){
     dbUpsertConflict('fees','student_id,term',{student_id:sid,class_key:CLS,term:TERM,
       total:Number(document.getElementById('pf-fee-total').value||0),
       paid:Number(document.getElementById('pf-fee-paid').value||0),
-      debt:Number(document.getElementById('pf-fee-debt').value||0),
-      resume_date:document.getElementById('pf-fee-resume').value||null,
-      next_term:Number(document.getElementById('pf-fee-next').value||0)}),
+      debt:Number(document.getElementById('pf-fee-debt').value||0)}),
     dbUpsertConflict('remarks','student_id,term',{student_id:sid,class_key:CLS,term:TERM,
       academic:'',form_master:'',principal:'',days_opened:op,days_present:pr})
   ].concat(traitCalls)).then(function(){
-    DB_FEES[sid]={total:Number(document.getElementById('pf-fee-total').value||0),paid:Number(document.getElementById('pf-fee-paid').value||0),debt:Number(document.getElementById('pf-fee-debt').value||0),resume_date:document.getElementById('pf-fee-resume').value,next_term:Number(document.getElementById('pf-fee-next').value||0)};
+    DB_FEES[sid]={total:Number(document.getElementById('pf-fee-total').value||0),paid:Number(document.getElementById('pf-fee-paid').value||0),debt:Number(document.getElementById('pf-fee-debt').value||0)};
     DB_REMARKS[sid]=DB_REMARKS[sid]||{};
     DB_REMARKS[sid].days_opened=op;DB_REMARKS[sid].days_present=pr;
     hideLoad();showToast('Profile saved');closeModal('modal-profile');
@@ -2776,7 +2820,7 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
     return{hi:hi,ca:ca,pos:pos};
   });
 
-  var resumeDate=fees.resume_date?new Date(fees.resume_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):fees.resume?new Date(fees.resume).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
+  var resumeDate=getResumptionDate()?new Date(getResumptionDate()).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
   var feeBal=Number(fees.total||0)+Number(fees.debt||0)-Number(fees.paid||0);
   var dept=DEPTS[CLS]?DEPTS[CLS].label:CLS;
   var overallPerf=avg!==''?getGrade(avg).r:'--';
@@ -2928,7 +2972,7 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
       +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Next Term Fees</th>'
       +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Next Term Begins</th>'
       +'</tr><tr>'
-      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+(fees.next_term?'N'+Number(fees.next_term).toLocaleString():'--')+'</td>'
+      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+(getNextTermFee(CLS)?'₦'+Number(getNextTermFee(CLS)).toLocaleString():'--')+'</td>'
       +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+TEAL+'">'+resumeDate+'</td>'
       +'</tr></table>';
   }
@@ -3033,6 +3077,57 @@ function changeAnalyticsTerm(newTerm){
   }).catch(function(){hideLoad();renderAnalytics();});
 }
 
+
+function printAnalytics(){
+  var students=DB_STUDENTS[CLS]||[];
+  var subjs=subjects();
+  var clsLabel=DEPTS[CLS]?DEPTS[CLS].label:CLS;
+  var school=getSchool();
+  var summaries=students.map(function(s){return Object.assign({},s,studentSummary(s.id));});
+  var ranked=summaries.filter(function(s){return s.avg!=='';}).sort(function(a,b){return b.avg-a.avg;});
+  var unscored=summaries.filter(function(s){return s.avg==='';});
+  var allRanked=ranked.concat(unscored);
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"/>'
+    +'<title>'+clsLabel+' Analytics Report</title>'
+    +'<style>'
+    +'body{font-family:Arial,sans-serif;font-size:10pt;margin:20px;color:#1a2a4a}'
+    +'h1{font-size:14pt;margin:0}h2{font-size:11pt;margin:4px 0}'
+    +'table{width:100%;border-collapse:collapse;margin-top:12px}'
+    +'th{background:#1a2a4a;color:#fff;padding:7px 10px;text-align:left;font-size:9pt}'
+    +'td{padding:6px 10px;border-bottom:1px solid #b8edd8;font-size:9pt}'
+    +'tr:nth-child(even){background:#edf8f4}'
+    +'.header{text-align:center;border-bottom:2px solid #7dd4b0;padding-bottom:10px;margin-bottom:16px}'
+    +'</style></head><body>'
+    +'<div class="header">'
+    +'<h1>'+school.name+'</h1>'
+    +'<h2>'+clsLabel+' — '+TERM+' Analytics Report</h2>'
+    +'<div style="font-size:9pt;color:#555">'+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+'</div>'
+    +'</div>'
+    +'<table>'
+    +'<thead><tr><th>#</th><th>Student Name</th><th>Grand Total</th><th>Average</th><th>Grade</th><th>Pass/Total</th><th>Remark</th></tr></thead>'
+    +'<tbody>'
+    +allRanked.map(function(s,i){
+      var hasData=s.avg!==''&&s.avg!==null&&s.cnt>0;
+      var gd=hasData?getGrade(s.avg):{g:'--',r:'--'};
+      return '<tr>'
+        +'<td>'+(hasData?i+1:'--')+'</td>'
+        +'<td><strong>'+s.name+'</strong></td>'
+        +'<td>'+(s.grand!==''?s.grand:'--')+'</td>'
+        +'<td>'+(hasData?s.avg:'--')+'</td>'
+        +'<td>'+gd.g+'</td>'
+        +'<td>'+(hasData?s.pass+' / '+s.cnt:'--')+'</td>'
+        +'<td>'+gd.r+'</td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table>'
+    +'<div style="margin-top:20px;font-size:9pt">'
+    +'<strong>Class Average:</strong> '+(ranked.length?Math.round(ranked.reduce(function(a,s){return a+s.avg;},0)/ranked.length*10)/10:'--')
+    +'&nbsp;&nbsp;&nbsp;<strong>Students Scored:</strong> '+ranked.length+' / '+students.length
+    +'</div>'
+    +'</body></html>';
+  var w=window.open('','_blank','width=900,height=700');
+  w.document.write(html);w.document.close();w.print();
+}
 function renderAnalytics(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
@@ -3143,6 +3238,13 @@ function renderAnalytics(){
 // ============================================================
 function renderSettings(){
   var ki=document.getElementById('gemini-key-input');if(ki){var gk=getGeminiKey();if(gk)ki.value=gk;}
+  // Load session config
+  var sc=getSessionCfg();
+  var res=document.getElementById('cfg-resumption');if(res)res.value=sc.resumption||'';
+  var fec=document.getElementById('cfg-fee-ec');if(fec)fec.value=sc.fees.early_childhood||'';
+  var fpr=document.getElementById('cfg-fee-pri');if(fpr)fpr.value=sc.fees.primary||'';
+  var fjs=document.getElementById('cfg-fee-jss');if(fjs)fjs.value=sc.fees.junior_secondary||'';
+  var fss=document.getElementById('cfg-fee-ss');if(fss)fss.value=sc.fees.senior_secondary||'';
   var cfg=getCfg();var sch=cfg.school||DEFAULT_SCHOOL;var sig=cfg.signature||{};var secs=getSections();
   document.getElementById('cfg-name').value=sch.name||'';
   document.getElementById('cfg-addr').value=sch.addr||'';
