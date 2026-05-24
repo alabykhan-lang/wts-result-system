@@ -282,6 +282,14 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 .sig-preview-wrap img,.sig-name-preview{max-height:60px;font-family:'Dancing Script',cursive;
   font-size:1.8rem;color:var(--g1)}
 .grade-cfg-tbody td{padding:4px 6px}
+.promotion-table td{vertical-align:middle}
+.promotion-table .inp,.promotion-table .sel{padding:6px 8px;font-size:.78rem}
+.promotion-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.promotion-note{font-size:.75rem;color:var(--gray);line-height:1.5;margin-bottom:12px}
+.promotion-preview{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;display:none}
+.promotion-preview.show{display:block}
+.promotion-preview-head{background:#f0fdf4;color:var(--g1);font-size:.8rem;font-weight:700;padding:10px 12px;border-bottom:1px solid var(--border)}
+.promotion-preview-body{max-height:260px;overflow:auto}
 
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
@@ -886,6 +894,33 @@ body.admin-mode .admin-only-bn{display:flex}
           <div class="fg-row">
             <div class="fg"><label>Junior Secondary</label><input class="inp" type="number" id="cfg-fee-jss" placeholder="0"/></div>
             <div class="fg"><label>Senior Secondary</label><input class="inp" type="number" id="cfg-fee-ss" placeholder="0"/></div>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Secondary Session Carry Forward</h3></div>
+        <div style="padding:16px">
+          <div class="promotion-note">
+            Configure each secondary class for automatic session carry forward. Students below an active repeat percentage remain in the same class; students below an active probation percentage but above repeat are carried forward and listed for follow-up.
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table promotion-table" style="font-size:.78rem;min-width:820px">
+              <thead>
+                <tr>
+                  <th>Class</th><th>Carry To</th><th>Repeat</th><th>Repeat %</th><th>Probation</th><th>Probation %</th>
+                </tr>
+              </thead>
+              <tbody id="promotion-cfg-tbody"></tbody>
+            </table>
+          </div>
+          <div class="promotion-actions">
+            <button class="btn btn-outline btn-sm" onclick="previewCarryForward()">Preview Carry Forward</button>
+            <button class="btn btn-primary btn-sm" onclick="applyCarryForward()">Apply Carry Forward</button>
+            <span style="font-size:.72rem;color:var(--gray)">Uses 3rd Term averages for the current session.</span>
+          </div>
+          <div class="promotion-preview" id="promotion-preview">
+            <div class="promotion-preview-head" id="promotion-preview-head">Carry Forward Preview</div>
+            <div class="promotion-preview-body" id="promotion-preview-body"></div>
           </div>
         </div>
       </div>
@@ -1633,6 +1668,150 @@ var DEPTS={
   'ss3-science': {label:'SS3 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
   'ss3-arts':    {label:'SS3 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])}
 };
+var SECONDARY_CLASSES=['jss1','jss2','jss3','ss1-general','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts'];
+var DEFAULT_PROMOTION_TARGETS={
+  jss1:'jss2',jss2:'jss3',jss3:'ss1-general',
+  'ss1-general':'ss2-science',
+  'ss2-science':'ss3-science','ss2-arts':'ss3-arts','ss2-business':'ss3-arts',
+  'ss3-science':'','ss3-arts':''
+};
+function escapeHtml(v){
+  return String(v==null?'':v).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function defaultPromotionRule(classKey){
+  return {target:DEFAULT_PROMOTION_TARGETS[classKey]||'',repeatOn:false,repeatPct:40,probationOn:false,probationPct:50};
+}
+function getPromotionCfg(){
+  var cfg=getCfg();
+  var pc=cfg.promotionCfg||{};
+  var out={};
+  SECONDARY_CLASSES.forEach(function(key){
+    out[key]=Object.assign(defaultPromotionRule(key),pc[key]||{});
+    out[key].repeatPct=Number(out[key].repeatPct||0);
+    out[key].probationPct=Number(out[key].probationPct||0);
+  });
+  return out;
+}
+function getPromotionRule(classKey){
+  return getPromotionCfg()[classKey]||defaultPromotionRule(classKey);
+}
+function promotionTargetOptions(selected){
+  var opts=[''].concat(SECONDARY_CLASSES);
+  return opts.map(function(key){
+    var label=key?(DEPTS[key]?DEPTS[key].label:key):'No carry forward';
+    return '<option value="'+key+'" '+(key===selected?'selected':'')+'>'+label+'</option>';
+  }).join('');
+}
+function calcPromotionAverage(studentId,classKey,scores,published){
+  var subjs=DEPTS[classKey]?DEPTS[classKey].subjects:[];
+  var publishedMap={};
+  (published||[]).forEach(function(r){publishedMap[r.subject_index]=true;});
+  var hasPublished=Object.keys(publishedMap).length>0;
+  var total=0,count=0;
+  subjs.forEach(function(_,idx){
+    if(hasPublished&&!publishedMap[idx])return;
+    var row=scores.find(function(s){return String(s.student_id)===String(studentId)&&Number(s.subject_index)===idx;});
+    var mark=computeTotal(row||null);
+    if(mark!==''){total+=mark;count++;}
+  });
+  if(!count)return'';
+  return Math.round((total/count)*10)/10;
+}
+function classifyPromotion(avg,rule){
+  if(avg==='')return{action:'hold',label:'No result data'};
+  if(rule.repeatOn&&avg<Number(rule.repeatPct||0))return{action:'repeat',label:'Repeat'};
+  if(rule.probationOn&&avg<Number(rule.probationPct||0))return{action:'probation',label:'Carry forward on probation'};
+  return{action:'promote',label:'Carry forward'};
+}
+function loadPromotionClassPlan(classKey){
+  var rule=getPromotionRule(classKey);
+  return Promise.all([
+    dbGet('students?class_key=eq.'+encodeURIComponent(classKey)+'&order=created_at.asc'),
+    dbGet('scores?class_key=eq.'+encodeURIComponent(classKey)+'&term=eq.3rd%20Term'),
+    dbGet('published_subjects?class_key=eq.'+encodeURIComponent(classKey)+'&term=eq.3rd%20Term')
+  ]).then(function(res){
+    var students=res[0]||[],scores=res[1]||[],published=res[2]||[];
+    return {
+      classKey:classKey,
+      rule:rule,
+      students:students.map(function(st){
+        var avg=calcPromotionAverage(st.id,classKey,scores,published);
+        var status=classifyPromotion(avg,rule);
+        return {student:st,avg:avg,status:status,target:rule.target};
+      })
+    };
+  });
+}
+function buildCarryForwardPlan(){
+  return Promise.all(SECONDARY_CLASSES.map(loadPromotionClassPlan));
+}
+function renderPromotionPlan(plans){
+  var rows=[];
+  var promote=0,repeat=0,probation=0,held=0;
+  plans.forEach(function(plan){
+    plan.students.forEach(function(item){
+      var canMove=(item.status.action==='promote'||item.status.action==='probation')&&item.target;
+      if(item.status.action==='repeat')repeat++;
+      else if(item.status.action==='probation')probation++;
+      else if(item.status.action==='promote'&&item.target)promote++;
+      else held++;
+      rows.push('<tr>'
+        +'<td><strong>'+escapeHtml(item.student.name)+'</strong><div style="font-size:.68rem;color:var(--gray)">'+escapeHtml(item.student.admno||'')+'</div></td>'
+        +'<td>'+escapeHtml(DEPTS[plan.classKey]?DEPTS[plan.classKey].label:plan.classKey)+'</td>'
+        +'<td>'+(item.target&&canMove?escapeHtml(DEPTS[item.target]?DEPTS[item.target].label:item.target):'--')+'</td>'
+        +'<td style="font-weight:700">'+(item.avg!==''?item.avg+'%':'--')+'</td>'
+        +'<td><span class="badge '+(item.status.action==='repeat'||item.status.action==='hold'?'badge-red':item.status.action==='probation'?'badge-gold':'badge-green')+'">'+item.status.label+'</span></td>'
+        +'</tr>');
+    });
+  });
+  var head=document.getElementById('promotion-preview-head');
+  var body=document.getElementById('promotion-preview-body');
+  var wrap=document.getElementById('promotion-preview');
+  if(head)head.textContent='Carry Forward Preview: '+promote+' move, '+probation+' probation, '+repeat+' repeat, '+held+' held';
+  if(body)body.innerHTML=rows.length?'<table class="data-table" style="font-size:.76rem"><thead><tr><th>Student</th><th>Current</th><th>Target</th><th>Average</th><th>Status</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>':'<div class="empty"><h3>No Secondary Students</h3><p>No students found in secondary classes.</p></div>';
+  if(wrap)wrap.classList.add('show');
+}
+function previewCarryForward(){
+  var form=document.getElementById('promotion-cfg-tbody');
+  if(form){var cfg=getCfg();cfg.promotionCfg=readPromotionCfgFromForm();localStorage.setItem('wts_cfg',JSON.stringify(cfg));window._remoteCfg=cfg;}
+  showLoad('Preparing carry forward preview...');
+  buildCarryForwardPlan().then(function(plans){
+    hideLoad();renderPromotionPlan(plans);
+  }).catch(function(e){
+    console.error(e);hideLoad();showToast('Carry forward preview failed','error');
+  });
+}
+function applyCarryForward(skipConfirm){
+  if(!skipConfirm&&!confirm('Apply carry forward for eligible secondary students using 3rd Term averages?'))return;
+  var form=document.getElementById('promotion-cfg-tbody');
+  if(form){var cfg=getCfg();cfg.promotionCfg=readPromotionCfgFromForm();saveCfg(cfg);}
+  showLoad('Applying carry forward...');
+  buildCarryForwardPlan().then(function(plans){
+    renderPromotionPlan(plans);
+    var moves=[];
+    plans.forEach(function(plan){
+      plan.students.forEach(function(item){
+        if((item.status.action==='promote'||item.status.action==='probation')&&item.target){
+          moves.push({id:item.student.id,from:plan.classKey,to:item.target,student:item.student});
+        }
+      });
+    });
+    return Promise.all(moves.map(function(m){
+      return dbPatch('students?id=eq.'+m.id,{class_key:m.to}).then(function(){
+        DB_STUDENTS[m.from]=(DB_STUDENTS[m.from]||[]).filter(function(s){return s.id!==m.id;});
+        if(!DB_STUDENTS[m.to])DB_STUDENTS[m.to]=[];
+        DB_STUDENTS[m.to].push(Object.assign({},m.student,{class_key:m.to}));
+      });
+    })).then(function(){return moves.length;});
+  }).then(function(count){
+    hideLoad();showToast(count+' student'+(count===1?'':'s')+' carried forward');
+    renderHome();renderSettings();
+  }).catch(function(e){
+    console.error(e);hideLoad();showToast('Carry forward failed','error');
+  });
+}
 var AFF6=['Punctuality','Respect','Attentiveness','Reliability','Neatness','Spirit of Teamwork'];
 var PSY6=['Handwriting','Reading','Verbal Fluency/Diction','Musical Skills','Creative Arts','Physical Education'];
 var GRADE_SCALE=[
@@ -3357,7 +3536,7 @@ function renderSettings(){
       +'<td><input class="inp" type="number" value="'+g.max+'" onchange="GRADE_SCALE['+i+'].max=Number(this.value)" style="width:70px;padding:5px 8px"/></td>'
       +'<td><input class="inp" value="'+g.r+'" onchange="GRADE_SCALE['+i+'].r=this.value" style="padding:5px 8px"/></td></tr>';
   }).join('');
-  renderThemePicker();renderSubjCfg();
+  renderThemePicker();renderSubjCfg();renderPromotionCfg();
 }
 function saveSectionToggle(key,val){var cfg=getCfg();if(!cfg.sections)cfg.sections={};cfg.sections[key]=val;saveCfg(cfg);}
 function previewSig(){
@@ -3415,6 +3594,40 @@ function renderSubjCfg(){
     btn.onclick=function(){removeSubject(btn.getAttribute('data-dept'),Number(btn.getAttribute('data-idx')));};
   });
 }
+function renderPromotionCfg(){
+  var tbody=document.getElementById('promotion-cfg-tbody');
+  if(!tbody)return;
+  var pc=getPromotionCfg();
+  tbody.innerHTML=SECONDARY_CLASSES.map(function(key){
+    var rule=pc[key];
+    return'<tr>'
+      +'<td><strong>'+DEPTS[key].label+'</strong></td>'
+      +'<td><select class="sel" id="promo-target-'+key+'">'+promotionTargetOptions(rule.target)+'</select></td>'
+      +'<td><label class="toggle"><input type="checkbox" id="promo-repeat-on-'+key+'" '+(rule.repeatOn?'checked':'')+'/><span class="toggle-slider"></span></label></td>'
+      +'<td><input class="inp" type="number" min="0" max="100" id="promo-repeat-pct-'+key+'" value="'+rule.repeatPct+'" style="width:82px"/></td>'
+      +'<td><label class="toggle"><input type="checkbox" id="promo-probation-on-'+key+'" '+(rule.probationOn?'checked':'')+'/><span class="toggle-slider"></span></label></td>'
+      +'<td><input class="inp" type="number" min="0" max="100" id="promo-probation-pct-'+key+'" value="'+rule.probationPct+'" style="width:82px"/></td>'
+      +'</tr>';
+  }).join('');
+}
+function readPromotionCfgFromForm(){
+  var pc={};
+  SECONDARY_CLASSES.forEach(function(key){
+    var target=document.getElementById('promo-target-'+key);
+    var repeatOn=document.getElementById('promo-repeat-on-'+key);
+    var repeatPct=document.getElementById('promo-repeat-pct-'+key);
+    var probationOn=document.getElementById('promo-probation-on-'+key);
+    var probationPct=document.getElementById('promo-probation-pct-'+key);
+    pc[key]={
+      target:target?target.value:'',
+      repeatOn:repeatOn?repeatOn.checked:false,
+      repeatPct:repeatPct?Math.max(0,Math.min(100,Number(repeatPct.value||0))):40,
+      probationOn:probationOn?probationOn.checked:false,
+      probationPct:probationPct?Math.max(0,Math.min(100,Number(probationPct.value||0))):50
+    };
+  });
+  return pc;
+}
 function removeSubject(dept,idx){
   if(!confirm('Remove this subject?'))return;
   var cfg=getCfg();if(!cfg.depts)cfg.depts={};
@@ -3433,6 +3646,7 @@ function addSubject(){
 }
 function saveSettings(){
   var cfg=getCfg();
+  var previousSession=cfg.session||DEFAULT_SESSION;
   cfg.school={
     name:document.getElementById('cfg-name').value.trim()||DEFAULT_SCHOOL.name,
     addr:document.getElementById('cfg-addr').value.trim()||DEFAULT_SCHOOL.addr,
@@ -3456,10 +3670,18 @@ function saveSettings(){
       senior_secondary:el2('cfg-fee-ss')?el2('cfg-fee-ss').value:''
     }
   };
+  cfg.promotionCfg=readPromotionCfgFromForm();
   saveCfg(cfg);
   var sb=document.getElementById('sb-session-lbl');if(sb)sb.textContent=cfg.session+' Session';
   var hs=document.getElementById('home-session');if(hs)hs.textContent=cfg.session+' Session';
   var rcs=document.getElementById('rc-session');if(rcs)rcs.value=cfg.session;
+  if(previousSession!==cfg.session){
+    setTimeout(function(){
+      if(confirm('Session changed from '+previousSession+' to '+cfg.session+'. Run automatic secondary carry forward now?')){
+        applyCarryForward(true);
+      }
+    },200);
+  }
   // Sync to Supabase
   dbUpsertSettings('app_config',JSON.stringify(cfg))
     .then(function(){showToast('Settings synced to cloud ✓');showSaved();})
