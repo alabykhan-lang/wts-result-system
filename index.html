@@ -602,6 +602,7 @@ body.admin-mode .admin-only-bn{display:flex}
     </div>
     <div class="tb-right">
             <span class="saved-msg" id="saved-msg">Saved</span>
+      <button class="btn btn-outline btn-sm no-print" onclick="downloadAndroidApp()">Download App</button>
       <button class="btn btn-outline btn-sm no-print" onclick="exportData()">Export</button>
       <button class="btn btn-gold btn-sm no-print" onclick="importData()">Import</button>
     </div>
@@ -3933,6 +3934,9 @@ function resetSettings(){if(!confirm('Reset all settings?'))return;localStorage.
 // ============================================================
 // EXPORT / IMPORT
 // ============================================================
+function downloadAndroidApp(){
+  window.location.href='https://github.com/alabykhan-lang/wts-result-system/releases/download/android-v1.0.0/WTS-Result-Management.apk';
+}
 function exportData(){
   var data={students:DB_STUDENTS,scores:DB_SCORES,traits:DB_TRAITS,fees:DB_FEES,remarks:DB_REMARKS};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
