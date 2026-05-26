@@ -34,6 +34,24 @@ A complete school result management system for recording, computing and generati
 
 ## Deployment
 
+## Android App
+
+The `android-app` folder contains a native Android WebView app for the result portal.
+
+Build from the repository root with:
+
+```bash
+gradle :android-app:assembleDebug
+```
+
+The installable APK is created at:
+
+```text
+android-app/build/outputs/apk/debug/android-app-debug.apk
+```
+
+GitHub Actions can also build the APK from the **Build Android APK** workflow and publish it as a downloadable artifact.
+
 Deployed on [Vercel](https://vercel.com) — automatic deployment on every push to main.
 
 ---
