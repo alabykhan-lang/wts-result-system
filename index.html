@@ -416,7 +416,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .page.print-active{display:block!important}
   body{background:#fff!important}
   .tbl-wrap{box-shadow:none!important;border-radius:0!important}
-  .progress-sheet{overflow:visible!important;page-break-inside:avoid;break-inside:avoid;margin-bottom:10mm}
+  .progress-sheet{overflow:visible!important;margin-bottom:10mm}
   .progress-sheet:not(:last-child){page-break-after:always;break-after:page}
   .progress-table{min-width:0!important;width:100%!important;font-size:7.2pt}
   .progress-table th,.progress-table td{padding:3px 4px}
@@ -3043,9 +3043,11 @@ function renderProgress(){
   for(var start=0;start<subjs.length;start+=chunkSize){
     var chunk=subjs.slice(start,start+chunkSize);
     var first=start+1,last=start+chunk.length;
+    var isLastChunk=last>=subjs.length;
     var head1='<tr><th rowspan="2">#</th><th rowspan="2">Student</th>';
     chunk.forEach(function(subj){head1+='<th class="progress-subject" colspan="'+stages.length+'">'+escapeHtml(subj)+'</th>';});
-    head1+='<th rowspan="2">General<br>Total</th></tr>';
+    if(isLastChunk)head1+='<th rowspan="2">General<br>Total</th>';
+    head1+='</tr>';
     var head2='<tr>';
     chunk.forEach(function(){
       stages.forEach(function(s){head2+='<th class="progress-stage">'+progressStageShort(s)+'</th>';});
@@ -3061,7 +3063,8 @@ function renderProgress(){
           html+='<td>'+(sc[s]!==undefined&&sc[s]!==null?escapeHtml(sc[s]):'')+'</td>';
         });
       });
-      html+='<td class="progress-total">'+(row.count?row.total:'')+'</td></tr>';
+      if(isLastChunk)html+='<td class="progress-total">'+(row.count?row.total:'')+'</td>';
+      html+='</tr>';
       return html;
     }).join('');
     var caption=subjs.length>chunk.length
