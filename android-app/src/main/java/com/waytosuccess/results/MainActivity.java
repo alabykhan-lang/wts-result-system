@@ -1,17 +1,18 @@
 package com.waytosuccess.results;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
+import android.webkit.JavascriptInterface;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -37,16 +38,18 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(false);
+        settings.setUseWideViewPort(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setTextZoom(100);
 
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+        webView.addJavascriptInterface(new PrintBridge(), "AndroidPrint");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -57,6 +60,15 @@ public class MainActivity extends Activity {
                 }
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.evaluateJavascript(
+                    "(function(){if(!window.__wtsAndroidPrint){window.__wtsAndroidPrint=true;window.print=function(){AndroidPrint.printPage();};}})();",
+                    null
+                );
             }
         });
 
@@ -121,6 +133,30 @@ public class MainActivity extends Activity {
             webView.goBack();
         } else {
             super.onBackPressed();
+        }
+    }
+
+    private void printCurrentPage() {
+        if (webView == null) return;
+        PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+        String jobName = getString(R.string.app_name) + " Print";
+        PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter(jobName);
+        PrintAttributes attributes = new PrintAttributes.Builder()
+            .setMediaSize(PrintAttributes.MediaSize.ISO_A4.asLandscape())
+            .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
+            .build();
+        printManager.print(jobName, adapter, attributes);
+    }
+
+    private class PrintBridge {
+        @JavascriptInterface
+        public void printPage() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    printCurrentPage();
+                }
+            });
         }
     }
 }
