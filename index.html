@@ -306,25 +306,46 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 .promotion-preview-body{max-height:260px;overflow:auto}
 
 /* COMMAND CENTER */
-.command-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:16px}
-.command-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px}
-.command-panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
-.command-panel-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.command-panel-head h3{font-family:'Playfair Display',serif;color:var(--g1);font-size:.95rem}
-.command-panel-body{padding:16px}
-.command-textarea{min-height:112px;resize:vertical;line-height:1.45}
-.command-preview{border:1px solid var(--border);border-radius:8px;background:#f8fffb;min-height:180px;max-height:360px;overflow:auto;padding:12px;font-size:.82rem}
-.command-preview-row{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid rgba(200,230,216,.65)}
-.command-preview-row:last-child{border-bottom:none}
-.command-preview-row strong{color:var(--g1)}
-.command-warning{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;margin-top:8px}
-.command-danger-note{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;margin-top:8px}
+.command-room{max-width:1040px;margin:0 auto;min-height:calc(100vh - 120px);display:flex;flex-direction:column;gap:12px}
+.command-room-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.command-room-head h2{font-family:'Playfair Display',serif;color:var(--g1);margin-bottom:3px;font-size:1.15rem}
+.command-room-head p{font-size:.82rem;color:var(--gray);line-height:1.4}
+.command-chat{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:12px;min-height:54vh;max-height:calc(100vh - 280px);overflow-y:auto;scroll-behavior:smooth}
+.cc-msg{display:flex;width:100%}
+.cc-msg-admin{justify-content:flex-end}
+.cc-msg-assistant{justify-content:flex-start}
+.cc-bubble{max-width:min(78%,720px);border-radius:14px;padding:10px 12px;font-size:.86rem;line-height:1.5;box-shadow:0 1px 5px rgba(26,42,74,.07)}
+.cc-msg-admin .cc-bubble{background:var(--g1);color:#fff;border-bottom-right-radius:4px}
+.cc-msg-assistant .cc-bubble{background:#f8fffb;color:#1f2937;border:1px solid var(--border);border-bottom-left-radius:4px}
+.cc-bubble strong{color:var(--g1)}
+.cc-msg-admin .cc-bubble strong{color:#fff}
+.cc-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:8px}
+.cc-card-row{display:grid;grid-template-columns:120px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid #edf7f2}
+.cc-card-row:last-child{border-bottom:none}
+.cc-card-row strong{color:var(--g1)}
+.cc-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cc-warning{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.8rem}
+.cc-danger-note{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.8rem}
 .command-pill{display:inline-flex;align-items:center;gap:4px;background:#eef8f3;color:var(--g1);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:.72rem;font-weight:700;margin:2px}
-.command-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.command-composer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(240,247,244,0),var(--bg) 18%);padding-top:10px;z-index:40}
+.command-composer-inner{background:#fff;border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow2);padding:8px;display:grid;grid-template-columns:36px 1fr auto auto;gap:8px;align-items:end}
+.command-composer textarea{border:none;outline:none;resize:none;min-height:42px;max-height:150px;font-family:'DM Sans',sans-serif;font-size:.9rem;line-height:1.45;padding:9px 4px;background:transparent}
+.cc-icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:#f8fffb;color:var(--g1);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900}
+.cc-icon-btn:hover{border-color:var(--g3);background:#f0fdf4}
+.command-drawers{display:grid;grid-template-columns:1fr;gap:8px}
+.command-drawer{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.command-drawer summary{cursor:pointer;padding:12px 14px;font-weight:800;color:var(--g1);font-size:.86rem;list-style:none}
+.command-drawer summary::-webkit-details-marker{display:none}
+.command-drawer summary:after{content:'+';float:right;color:var(--gray)}
+.command-drawer[open] summary:after{content:'-'}
+.command-drawer-body{padding:0 14px 14px;border-top:1px solid var(--border)}
+.command-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin-top:14px}
 .command-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.command-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .audit-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto}
 .audit-item{border:1px solid var(--border);border-radius:8px;padding:9px 10px;background:#fbfffd;font-size:.78rem}
 .audit-item strong{color:var(--g1)}
+.cc-hidden-preview{display:none}
 
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
@@ -406,7 +427,6 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .stats-row{grid-template-columns:1fr 1fr}
   .settings-grid{grid-template-columns:1fr}
   .traits-grid{grid-template-columns:1fr}
-  .command-layout{grid-template-columns:1fr}
   .command-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fees-grid{grid-template-columns:1fr 1fr}
   .fg-row{grid-template-columns:1fr}
@@ -427,7 +447,12 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .home-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
   .subj-grid{grid-template-columns:1fr 1fr}
   .command-grid,.command-mini-grid{grid-template-columns:1fr}
-  .command-preview-row{grid-template-columns:1fr}
+  .command-room{min-height:calc(100vh - 150px);gap:10px}
+  .command-chat{border-radius:8px;min-height:50vh;max-height:calc(100vh - 285px);padding:10px}
+  .cc-bubble{max-width:88%;font-size:.84rem}
+  .cc-card-row{grid-template-columns:1fr;gap:2px}
+  .command-composer-inner{grid-template-columns:36px 1fr 36px 54px;gap:6px}
+  .command-composer-inner .btn{padding:8px 9px;font-size:.74rem}
 }
 
 /* ── PRINT ── */
@@ -877,76 +902,55 @@ body.admin-mode .admin-only-bn{display:flex}
 
   <!-- COMMAND CENTER -->
   <div class="page" id="page-command">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap">
-      <div>
-        <h2 style="font-family:'Playfair Display',serif;color:var(--g1);margin-bottom:4px">Command Center</h2>
-        <p style="font-size:.82rem;color:var(--gray)">Run admin-reviewed score, student, trait, fee, remark, and teacher submission commands.</p>
+    <div class="command-room">
+      <div class="command-room-head">
+        <div>
+          <h2>Command Center</h2>
+          <p>Type a command, paste scores, or upload a score sheet. Nothing is recorded until you approve the preview.</p>
+        </div>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="resetCommandCenter()">Reset</button>
-    </div>
-    <div class="command-layout">
-      <div>
-        <div class="command-panel">
-          <div class="command-panel-head">
-            <h3>Quick Command</h3>
-            <div class="command-actions">
-              <button class="btn btn-outline btn-sm" onclick="aiInterpretCommand()">AI Interpret</button>
-              <button class="btn btn-primary btn-sm" onclick="previewCommand()">Preview Command</button>
-              <button class="btn btn-danger btn-sm" id="cc-run-btn" onclick="approveAndRunCommand()" disabled>Approve and Run</button>
-            </div>
-          </div>
-          <div class="command-panel-body">
-            <textarea class="inp command-textarea" id="cc-command" placeholder="Record JSS 1 Mathematics 1st Term ca1 all 8"></textarea>
-            <div class="command-grid" style="margin-top:12px">
+
+      <div class="command-chat" id="cc-chat"></div>
+
+      <div class="command-composer">
+        <div class="command-composer-inner">
+          <label class="cc-icon-btn" title="Upload or scan score sheet">
+            <input type="file" id="cc-upload" accept="image/*" onchange="handleCommandUpload(event)" style="display:none"/>
+            <span>&#128247;</span>
+          </label>
+          <textarea id="cc-chat-input" placeholder="Type a command, paste scores, or upload a score sheet..." onkeydown="handleCommandComposerKey(event)"></textarea>
+          <button class="btn btn-outline btn-sm" onclick="resetCommandCenter()">Clear</button>
+          <button class="btn btn-primary btn-sm" onclick="sendCommandMessage()">Send</button>
+        </div>
+      </div>
+
+      <div class="command-drawers">
+        <details class="command-drawer">
+          <summary>Advanced Tools</summary>
+          <div class="command-drawer-body">
+            <textarea class="cc-hidden-preview" id="cc-command"></textarea>
+            <textarea class="cc-hidden-preview" id="cc-raw-scores"></textarea>
+            <div class="command-grid">
               <div class="fg"><label>Class</label><select class="sel" id="cc-class" onchange="populateCommandSubjects();populateCommandStudents()"></select></div>
               <div class="fg"><label>Subject</label><select class="sel" id="cc-subject"></select></div>
               <div class="fg"><label>Term</label><select class="sel" id="cc-term"><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div>
               <div class="fg"><label>Assessment</label><select class="sel" id="cc-assessment"><option value="ca1">CA1</option><option value="ca2">CA2</option><option value="ca3">CA3</option><option value="exam">Exam</option></select></div>
             </div>
-            <div style="font-size:.75rem;color:var(--gray);line-height:1.5">
-              Supported first patterns: Record [class] [subject] [term] [assessment] all [score], Check missing [class] [subject] [term] [assessment], Clear [class] [subject] [term] [assessment], Add student [name] [gender] to [class], Archive student [name] from [class], Transfer student [name] from [class] to [class], Record trait [class] [trait name] all [rating].
+            <div style="font-size:.75rem;color:var(--gray);line-height:1.5;margin-bottom:12px">
+              Supported fixed patterns: Record [class] [subject] [term] [assessment] all [score], Check missing [class] [subject] [term] [assessment], Clear [class] [subject] [term] [assessment], Add student [name] [gender] to [class], Archive student [name] from [class], Transfer student [name] from [class] to [class], Record trait [class] [trait name] all [rating].
             </div>
-          </div>
-        </div>
-
-        <div class="command-panel">
-          <div class="command-panel-head"><h3>Raw Score Paste</h3><button class="btn btn-outline btn-sm" onclick="previewRawScores()">Preview Raw Scores</button></div>
-          <div class="command-panel-body">
-            <textarea class="inp" id="cc-raw-scores" style="min-height:140px;resize:vertical" placeholder="Paste rows like: Student Name, 8, 7, 9, 55"></textarea>
-            <div style="font-size:.75rem;color:var(--gray);margin-top:8px">Uses the helper class, subject, and term above. Approval creates a teacher score submission and then approves it through the configured RPC flow.</div>
-          </div>
-        </div>
-
-        <div class="command-panel">
-          <div class="command-panel-head">
-            <h3>Missing Score Checker</h3>
-            <button class="btn btn-outline btn-sm" onclick="buildMissingCommand()">Fill Command</button>
-          </div>
-          <div class="command-panel-body">
-            <div id="cc-missing-summary" style="font-size:.82rem;color:var(--gray)">Preview a missing-score command to see students without scores.</div>
-          </div>
-        </div>
-
-        <div class="command-panel">
-          <div class="command-panel-head"><h3>Student Manager</h3></div>
-          <div class="command-panel-body">
             <div class="command-mini-grid">
               <div class="fg"><label>Student Name</label><input class="inp" id="cc-stu-name" placeholder="Full name"/></div>
               <div class="fg"><label>Gender</label><select class="sel" id="cc-stu-gender"><option value="Male">Male</option><option value="Female">Female</option></select></div>
               <div class="fg"><label>From Class</label><select class="sel" id="cc-stu-from"></select></div>
               <div class="fg"><label>To Class</label><select class="sel" id="cc-stu-to"></select></div>
             </div>
-            <div class="command-actions">
-              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('add')">Add</button>
-              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('archive')">Archive</button>
-              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('transfer')">Transfer</button>
+            <div class="command-actions" style="margin-bottom:14px">
+              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('add')">Add Student Command</button>
+              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('archive')">Archive Command</button>
+              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('transfer')">Transfer Command</button>
+              <button class="btn btn-outline btn-sm" onclick="buildMissingCommand()">Missing Score Command</button>
             </div>
-          </div>
-        </div>
-
-        <div class="command-panel">
-          <div class="command-panel-head"><h3>Traits, Fees, and Remarks</h3></div>
-          <div class="command-panel-body">
             <div class="command-mini-grid">
               <div class="fg"><label>Trait Name</label><input class="inp" id="cc-trait-name" placeholder="Punctuality"/></div>
               <div class="fg"><label>Rating</label><input class="inp" type="number" min="1" max="5" id="cc-trait-rating" placeholder="1-5"/></div>
@@ -960,37 +964,26 @@ body.admin-mode .admin-only-bn{display:flex}
               <button class="btn btn-outline btn-sm" onclick="recordFeeCommand()">Record Fee</button>
               <button class="btn btn-outline btn-sm" onclick="recordRemarksCommand()">Record Remark</button>
             </div>
+            <div id="cc-missing-summary" style="font-size:.82rem;color:var(--gray);margin-top:12px"></div>
+            <div class="cc-hidden-preview"><span id="cc-preview-state"></span><div id="cc-preview"></div><button id="cc-run-btn" onclick="approveAndRunCommand()" disabled></button></div>
           </div>
-        </div>
-      </div>
+        </details>
 
-      <div>
-        <div class="command-panel">
-          <div class="command-panel-head"><h3>Preview</h3><span class="badge badge-gold" id="cc-preview-state">No preview</span></div>
-          <div class="command-panel-body">
-            <div class="command-preview" id="cc-preview">Enter a command, then preview it before approval.</div>
-          </div>
-        </div>
-
-        <div class="command-panel">
-          <div class="command-panel-head">
-            <h3>Teacher Submissions</h3>
-            <button class="btn btn-outline btn-sm" onclick="loadTeacherSubmissions()">Load</button>
-          </div>
-          <div class="command-panel-body">
+        <details class="command-drawer">
+          <summary>Submissions</summary>
+          <div class="command-drawer-body">
+            <div class="command-actions" style="margin:14px 0"><button class="btn btn-outline btn-sm" onclick="loadTeacherSubmissions()">Load Submissions</button></div>
             <div id="cc-submissions" style="font-size:.82rem;color:var(--gray)">No submissions loaded.</div>
           </div>
-        </div>
+        </details>
 
-        <div class="command-panel">
-          <div class="command-panel-head">
-            <h3>Audit Log Preview</h3>
-            <button class="btn btn-outline btn-xs" onclick="clearCommandAudit()">Clear</button>
-          </div>
-          <div class="command-panel-body">
+        <details class="command-drawer">
+          <summary>Recent Activity</summary>
+          <div class="command-drawer-body">
+            <div class="command-actions" style="margin:14px 0"><button class="btn btn-outline btn-xs" onclick="clearCommandAudit()">Clear Activity</button></div>
             <div class="audit-list" id="cc-audit-log"></div>
           </div>
-        </div>
+        </details>
       </div>
     </div>
   </div>
@@ -2328,6 +2321,59 @@ function ccRpc(fn,payload){
     });
   });
 }
+function ccChatEl(){return document.getElementById('cc-chat');}
+function ccScrollChat(){var el=ccChatEl();if(el)el.scrollTop=el.scrollHeight;}
+function ccAddMessage(role,html){
+  var el=ccChatEl();if(!el)return;
+  var msg=document.createElement('div');
+  msg.className='cc-msg '+(role==='admin'?'cc-msg-admin':'cc-msg-assistant');
+  msg.innerHTML='<div class="cc-bubble">'+html+'</div>';
+  el.appendChild(msg);ccScrollChat();
+}
+function ccSetComposer(text){
+  var el=document.getElementById('cc-chat-input');if(el){el.value=text||'';el.focus();}
+}
+function ccWelcome(){
+  var el=ccChatEl();if(!el)return;
+  if(el.getAttribute('data-ready')==='1')return;
+  el.setAttribute('data-ready','1');
+  el.innerHTML='';
+  ccAddMessage('assistant','Tell me what to do in plain English, paste score rows, or upload a score-sheet image. I will prepare a preview first; Supabase is updated only after you approve.');
+}
+function ccPreviewHtml(data){
+  var cmd=data.command;
+  var warnings=(cmd.warnings||[]).concat(data.warnings||[]);
+  var html='<div>I found:</div><div class="cc-card">';
+  function row(k,v){html+='<div class="cc-card-row"><strong>'+escapeHtml(k)+'</strong><div>'+v+'</div></div>';}
+  row('Action',escapeHtml(cmd.label||cmd.type));
+  if(cmd.classKey)row('Class',escapeHtml(ccClassLabel(cmd.classKey)));
+  if(cmd.toClassKey)row('To Class',escapeHtml(ccClassLabel(cmd.toClassKey)));
+  if(cmd.subjectName)row('Subject',escapeHtml(cmd.subjectName));
+  if(cmd.term)row('Term',escapeHtml(cmd.term));
+  if(cmd.assessment)row('Assessment',escapeHtml(String(cmd.assessment).toUpperCase()));
+  if(cmd.score!==undefined)row('Score',escapeHtml(cmd.score));
+  if(cmd.name)row('Student',escapeHtml(cmd.name));
+  if(cmd.traitName)row('Trait',escapeHtml(cmd.traitName)+' rating '+escapeHtml(cmd.rating));
+  row('Affected students',(data.students||[]).length?data.students.slice(0,18).map(function(s){return'<span class="command-pill">'+escapeHtml(s.name)+'</span>';}).join('')+((data.students||[]).length>18?'<span class="command-pill">+'+((data.students||[]).length-18)+' more</span>':''):'None');
+  if(data.missing)row('Missing students',escapeHtml(data.missing.length));
+  if(data.rawRows)row('Clear scores',escapeHtml((data.students||[]).length));
+  if(data.rawRows)row('Unclear names',escapeHtml(Math.max(0,data.rawRows.length-(data.students||[]).length)));
+  warnings.forEach(function(w){html+='<div class="cc-warning">'+escapeHtml(w)+'</div>';});
+  if(cmd.destructive)html+='<div class="cc-danger-note">This is destructive and will ask for one more confirmation.</div>';
+  html+='<div class="cc-card-actions">';
+  if(!warnings.some(function(w){return /could not|required|valid|not recognized/.test(String(w).toLowerCase());})){
+    var label=cmd.type==='raw_submission'?'Approve Visible Scores':(cmd.type==='check_missing'?'Run Missing Check':'Approve and Record');
+    html+='<button class="btn btn-primary btn-sm" onclick="approveAndRunCommand()">'+label+'</button>';
+  }
+  if(data.rawRows&&data.rawRows.length!==(data.students||[]).length)html+='<button class="btn btn-outline btn-sm" onclick="openAdvancedTools()">Review Unclear Names</button>';
+  html+='<button class="btn btn-outline btn-sm" onclick="cancelCommandPreview()">Cancel</button>';
+  html+='</div></div>';
+  return html;
+}
+function ccPreviewInvalid(cmd){
+  CC_LAST_PREVIEW={command:cmd,students:[],warnings:cmd.warnings||[]};
+  ccAddMessage('assistant','I could not build a safe preview yet.<div class="cc-card">'+(cmd.warnings||[]).map(function(w){return'<div class="cc-warning">'+escapeHtml(w)+'</div>';}).join('')+'</div>');
+}
 function ccRenderPreview(data){
   var cmd=data.command;
   var warnings=(cmd.warnings||[]).concat(data.warnings||[]);
@@ -2351,13 +2397,13 @@ function ccRenderPreview(data){
   document.getElementById('cc-preview-state').textContent=warnings.length?'Warnings':'Ready';
   document.getElementById('cc-preview-state').className='badge '+(warnings.length?'badge-gold':'badge-green');
   document.getElementById('cc-run-btn').disabled=warnings.some(function(w){return /could not|required|valid|not recognized/.test(String(w).toLowerCase());});
+  ccAddMessage('assistant',ccPreviewHtml(data));
 }
 function previewCommand(){
   if(!requireAdminCommand())return;
   var cmd=ccValidateCommand(parseCommand(document.getElementById('cc-command').value));
   if(cmd.type==='unknown'){
-    CC_LAST_PREVIEW={command:cmd,students:[],warnings:cmd.warnings};
-    ccRenderPreview(CC_LAST_PREVIEW);
+    ccPreviewInvalid(cmd);
     document.getElementById('cc-run-btn').disabled=true;
     return;
   }
@@ -2406,9 +2452,10 @@ function approveAndRunCommand(){
   }
   runner.then(function(){
     hideLoad();addCommandAudit('Ran '+(cmd.label||cmd.type),fn,'success');showToast('Command approved and run');
+    ccAddMessage('assistant','Done. I recorded the approved command successfully.');
     if(cmd.classKey&&CLS===cmd.classKey)loadClass(CLS,function(){});
     CC_LAST_PREVIEW=null;document.getElementById('cc-run-btn').disabled=true;
-  }).catch(function(e){hideLoad();addCommandAudit('Failed '+(cmd.label||cmd.type),fn,e.message);showToast('Command failed: '+e.message,'error');});
+  }).catch(function(e){hideLoad();addCommandAudit('Failed '+(cmd.label||cmd.type),fn,e.message);showToast('Command failed: '+e.message,'error');ccAddMessage('assistant','I could not record that command.<div class="cc-warning">'+escapeHtml(e.message)+'</div>');});
 }
 function parseRawScoreRows(raw){
   return String(raw||'').split(/\r?\n/).map(function(line){
@@ -2421,9 +2468,12 @@ function parseRawScoreRows(raw){
 }
 function previewRawScores(){
   if(!requireAdminCommand())return;
-  var ctx=ccContext();
   var rows=parseRawScoreRows(document.getElementById('cc-raw-scores').value);
   if(!rows.length){showToast('Paste score rows first','error');return;}
+  previewRawScoresFromRows(rows,document.getElementById('cc-raw-scores').value);
+}
+function previewRawScoresFromRows(rows,rawText){
+  var ctx=ccContext();
   showLoad('Matching pasted scores...');
   ccLoadClassStudents(ctx.classKey).then(function(students){
     var matched=[];
@@ -2437,6 +2487,148 @@ function previewRawScores(){
     CC_LAST_PREVIEW={command:cmd,students:matched,warnings:matched.length!==rows.length?['Some pasted rows were not confidently matched. Review before approval.']:[],rawRows:rows,payload:ccBuildPayload(cmd,matched,{raw_rows:rows,matched_scores:matched,status:'pending'})};
     hideLoad();ccRenderPreview(CC_LAST_PREVIEW);addCommandAudit('Previewed raw score paste','raw_submission','ready');
   }).catch(function(e){hideLoad();showToast('Raw preview failed: '+e.message,'error');});
+}
+function sendCommandMessage(){
+  if(!requireAdminCommand())return;
+  var input=document.getElementById('cc-chat-input');
+  var text=input?input.value.trim():'';
+  if(!text)return;
+  if(input)input.value='';
+  ccAddMessage('admin',escapeHtml(text).replace(/\n/g,'<br>'));
+  ccProcessCommandText(text);
+}
+function handleCommandComposerKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCommandMessage();}
+}
+function ccProcessCommandText(text){
+  ccAddMessage('assistant','Interpreting your request...');
+  var key=getGeminiKey();
+  if(key){
+    ccInterpretTextWithGemini(text).then(function(ai){
+      if(ai&&ai.command){
+        document.getElementById('cc-command').value=ai.command;
+        previewCommand();
+        return;
+      }
+      if(ai&&ai.rows&&ai.rows.length){
+        document.getElementById('cc-raw-scores').value=text;
+        previewRawScoresFromRows(ai.rows,text);
+        return;
+      }
+      ccFallbackPreviewText(text);
+    }).catch(function(){
+      ccFallbackPreviewText(text);
+    });
+  }else{
+    ccFallbackPreviewText(text);
+  }
+}
+function ccFallbackPreviewText(text){
+  var cmd=ccValidateCommand(parseCommand(text));
+  if(cmd.type!=='unknown'){
+    document.getElementById('cc-command').value=text;
+    previewCommand();
+    return;
+  }
+  var rows=parseRawScoreRows(text);
+  if(rows.length){
+    document.getElementById('cc-raw-scores').value=text;
+    previewRawScoresFromRows(rows,text);
+    return;
+  }
+  ccPreviewInvalid(cmd);
+}
+function ccInterpretTextWithGemini(text){
+  var key=getGeminiKey();
+  var prompt='You are a school result command interpreter. Return JSON only. Do not write to any database. '
+    +'If the text is an admin command, return {"command":"one fixed command string"}. '
+    +'If the text is pasted score rows, return {"rows":[{"name":"Student Name","ca1":number_or_null,"ca2":number_or_null,"ca3":number_or_null,"exam":number_or_null}]}. '
+    +'Use these fixed command formats only when creating command: Record [class] [subject] [term] [assessment] all [score]; Check missing [class] [subject] [term] [assessment]; Clear [class] [subject] [term] [assessment]; Add student [name] [gender] to [class]; Archive student [name] from [class]; Transfer student [name] from [class] to [class]; Record trait [class] [trait name] all [rating]. '
+    +'Text: '+text;
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key='+key,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:2048}})
+  }).then(function(r){return r.json();}).then(function(data){
+    var txt=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:'';
+    txt=String(txt||'').replace(/```json|```/g,'').trim();
+    return JSON.parse(txt);
+  });
+}
+function handleCommandUpload(evt){
+  if(!requireAdminCommand())return;
+  var file=evt.target.files&&evt.target.files[0];
+  if(!file)return;
+  var key=getGeminiKey();
+  if(!key){showToast('Add Gemini API key in Settings first','error');evt.target.value='';return;}
+  ccAddMessage('admin','Uploaded score sheet: '+escapeHtml(file.name));
+  showLoad('Reading score sheet...');
+  ccImageToBase64(file).then(function(img){
+    return ccInterpretImageWithGemini(img.data,img.mime);
+  }).then(function(ai){
+    hideLoad();
+    if(ai&&ai.command){
+      document.getElementById('cc-command').value=ai.command;
+      previewCommand();
+    }else if(ai&&ai.rows&&ai.rows.length){
+      previewRawScoresFromRows(ai.rows,'Uploaded image: '+file.name);
+    }else{
+      ccAddMessage('assistant','I could not find clear scores in that image. Try a sharper photo or paste the scores as text.');
+    }
+    evt.target.value='';
+  }).catch(function(e){
+    hideLoad();evt.target.value='';
+    ccAddMessage('assistant','I could not read that image.<div class="cc-warning">'+escapeHtml(e.message)+'</div>');
+  });
+}
+function ccImageToBase64(file){
+  return new Promise(function(resolve,reject){
+    var reader=new FileReader();
+    reader.onerror=function(){reject(new Error('Unable to read image.'));};
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var max=1200,w=img.width,h=img.height;
+        if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}
+        var canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        var dataUrl=canvas.toDataURL('image/jpeg',0.85);
+        resolve({mime:'image/jpeg',data:dataUrl.split(',')[1]});
+      };
+      img.onerror=function(){reject(new Error('Invalid image file.'));};
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function ccInterpretImageWithGemini(b64,mime){
+  var key=getGeminiKey();
+  var ctx=ccContext();
+  var names=(DB_STUDENTS[ctx.classKey]||[]).map(function(s){return s.name;}).join(', ');
+  var prompt='Read this school score sheet image. Return JSON only. Do not write to any database. '
+    +'If it has score rows, return {"rows":[{"name":"Student Name","ca1":number_or_null,"ca2":number_or_null,"ca3":number_or_null,"exam":number_or_null}]}. '
+    +'If it clearly states a command, return {"command":"fixed command string"}. '
+    +'Current helper context: class '+ccClassLabel(ctx.classKey)+', subject '+ctx.subjectName+', term '+ctx.term+'. Registered names: '+names+'.';
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key='+key,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0.1,maxOutputTokens:4096}})
+  }).then(function(r){return r.json();}).then(function(data){
+    var txt=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:'';
+    txt=String(txt||'').replace(/```json|```/g,'').trim();
+    return JSON.parse(txt);
+  });
+}
+function cancelCommandPreview(){
+  CC_LAST_PREVIEW=null;
+  var btn=document.getElementById('cc-run-btn');if(btn)btn.disabled=true;
+  ccAddMessage('assistant','Cancelled. Nothing was recorded.');
+}
+function openAdvancedTools(){
+  var d=document.querySelector('#page-command .command-drawer');
+  if(d)d.open=true;
+  ccAddMessage('assistant','Open Advanced Tools to adjust helper selectors or review unmatched rows before approving.');
 }
 function buildMissingCommand(){var ctx=ccContext();document.getElementById('cc-command').value='Check missing '+ccClassLabel(ctx.classKey)+' '+ctx.subjectName+' '+ctx.term+' '+ctx.assessment;previewCommand();}
 function buildStudentCommand(kind){
@@ -2532,15 +2724,15 @@ function initCommandCenter(){
   var cls=ccInputVal('cc-class')||CLS||ALL_CLASSES[0];
   ['cc-class','cc-stu-from','cc-stu-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=ccClassOptions(cls);});
   var termEl=document.getElementById('cc-term');if(termEl)termEl.value=TERM||DEFAULT_TERM;
-  populateCommandSubjects();populateCommandStudents();loadCommandAudit();renderCommandAudit();
+  populateCommandSubjects();populateCommandStudents();loadCommandAudit();renderCommandAudit();ccWelcome();
 }
 function resetCommandCenter(){
-  ['cc-command','cc-raw-scores','cc-stu-name','cc-trait-name','cc-trait-rating','cc-fee-paid','cc-remark-text'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['cc-command','cc-raw-scores','cc-stu-name','cc-trait-name','cc-trait-rating','cc-fee-paid','cc-remark-text','cc-chat-input'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   CC_LAST_PREVIEW=null;
-  document.getElementById('cc-preview').textContent='Enter a command, then preview it before approval.';
-  document.getElementById('cc-preview-state').textContent='No preview';
-  document.getElementById('cc-preview-state').className='badge badge-gold';
-  document.getElementById('cc-run-btn').disabled=true;
+  var p=document.getElementById('cc-preview');if(p)p.textContent='';
+  var st=document.getElementById('cc-preview-state');if(st)st.textContent='No preview';
+  var btn=document.getElementById('cc-run-btn');if(btn)btn.disabled=true;
+  var chat=ccChatEl();if(chat){chat.removeAttribute('data-ready');ccWelcome();}
 }
 function loadCommandAudit(){try{CC_AUDIT=JSON.parse(localStorage.getItem('wts_command_audit_preview')||'[]')||[];}catch(e){CC_AUDIT=[];}}
 function saveCommandAudit(){localStorage.setItem('wts_command_audit_preview',JSON.stringify(CC_AUDIT.slice(0,30)));}
