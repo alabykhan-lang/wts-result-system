@@ -7,7 +7,7 @@
   <title>WTS Attendance Control Room</title>
   <link rel="stylesheet" href="./styles.css">
   <style>
-    body{background:linear-gradient(145deg,#eef6f2,#f6f8fb 55%,#e8eef6);min-height:100vh}.hub{max-width:1280px;margin:auto;padding:40px 24px 64px}.hub-header{padding:30px;border-radius:24px;background:linear-gradient(145deg,#0b1f3a,#193b69);color:#fff;box-shadow:0 20px 55px rgba(11,31,58,.2)}.hub-header .eyebrow{color:#a8e6cc}.hub-header h1{margin:7px 0 9px;font-family:Georgia,serif;font-size:36px}.hub-header p:last-child{max-width:800px;margin:0;color:#c9d6e6;line-height:1.6}.hub-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:24px}.hub-card{display:flex;flex-direction:column;min-height:320px;padding:26px;border:1px solid #dfe5ec;border-radius:22px;background:#fff;box-shadow:0 12px 35px rgba(11,31,58,.08);text-decoration:none;color:#1f2933;transition:transform .18s ease,box-shadow .18s ease}.hub-card:hover{transform:translateY(-4px);box-shadow:0 18px 46px rgba(11,31,58,.14)}.hub-icon{width:58px;height:58px;border-radius:17px;display:grid;place-items:center;background:#e7f6f0;color:#0f7c5c;font-size:27px}.hub-card.staff .hub-icon{background:#eaf2ff;color:#175cd3}.hub-card.portal .hub-icon{background:#fef0c7;color:#b54708}.hub-card.departures .hub-icon{background:#fff3e8;color:#c2410c}.hub-card.security .hub-icon{background:#fee4e2;color:#b42318}.hub-card h2{margin:19px 0 8px;color:#0b1f3a;font-family:Georgia,serif}.hub-card p{margin:0;color:#667085;line-height:1.55;font-size:13px}.hub-features{display:grid;gap:7px;margin:19px 0 25px;padding:0;list-style:none}.hub-features li{font-size:12px;color:#475467}.hub-features li::before{content:'✓';margin-right:8px;color:#0f7c5c;font-weight:900}.hub-link{margin-top:auto;color:#0f7c5c;font-weight:850}.hub-footer{margin-top:20px;padding:17px 20px;border-radius:15px;background:rgba(255,255,255,.8);color:#667085;font-size:12px;text-align:center}@media(max-width:980px){.hub-grid{grid-template-columns:1fr 1fr}}@media(max-width:680px){.hub{padding:20px 14px 40px}.hub-grid{grid-template-columns:1fr}.hub-header h1{font-size:28px}.hub-card{min-height:280px}}
+    body{background:linear-gradient(145deg,#eef6f2,#f6f8fb 55%,#e8eef6);min-height:100vh}.hub{max-width:1280px;margin:auto;padding:40px 24px 64px}.hub-header{padding:30px;border-radius:24px;background:linear-gradient(145deg,#0b1f3a,#193b69);color:#fff;box-shadow:0 20px 55px rgba(11,31,58,.2)}.hub-header .eyebrow{color:#a8e6cc}.hub-header h1{margin:7px 0 9px;font-family:Georgia,serif;font-size:36px}.hub-header p:last-child{max-width:800px;margin:0;color:#c9d6e6;line-height:1.6}.hub-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:24px}.hub-card{display:flex;flex-direction:column;min-height:320px;padding:26px;border:1px solid #dfe5ec;border-radius:22px;background:#fff;box-shadow:0 12px 35px rgba(11,31,58,.08);text-decoration:none;color:#1f2933;transition:transform .18s ease,box-shadow .18s ease}.hub-card:hover{transform:translateY(-4px);box-shadow:0 18px 46px rgba(11,31,58,.14)}.hub-icon{width:58px;height:58px;border-radius:17px;display:grid;place-items:center;background:#e7f6f0;color:#0f7c5c;font-size:27px}.hub-card.staff .hub-icon{background:#eaf2ff;color:#175cd3}.hub-card.portal .hub-icon{background:#fef0c7;color:#b54708}.hub-card.departures .hub-icon{background:#fff3e8;color:#c2410c}.hub-card.security .hub-icon{background:#fee4e2;color:#b42318}.hub-card.operations .hub-icon{background:#eee8ff;color:#6938ef}.hub-card h2{margin:19px 0 8px;color:#0b1f3a;font-family:Georgia,serif}.hub-card p{margin:0;color:#667085;line-height:1.55;font-size:13px}.hub-features{display:grid;gap:7px;margin:19px 0 25px;padding:0;list-style:none}.hub-features li{font-size:12px;color:#475467}.hub-features li::before{content:'✓';margin-right:8px;color:#0f7c5c;font-weight:900}.hub-link{margin-top:auto;color:#0f7c5c;font-weight:850}.hub-footer{margin-top:20px;padding:17px 20px;border-radius:15px;background:rgba(255,255,255,.8);color:#667085;font-size:12px;text-align:center}@media(max-width:980px){.hub-grid{grid-template-columns:1fr 1fr}}@media(max-width:680px){.hub{padding:20px 14px 40px}.hub-grid{grid-template-columns:1fr}.hub-header h1{font-size:28px}.hub-card{min-height:280px}}
   </style>
 </head>
 <body>
@@ -15,13 +15,20 @@
     <header class="hub-header">
       <p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p>
       <h1>Digital Attendance Control Room</h1>
-      <p>One secure platform for student gate attendance, staff time-book management, independent staff registration, departure analysis and authorized gate hardware.</p>
+      <p>One secure platform for student gate attendance, staff time-book management, session preparation, departure analysis and authorized gate hardware.</p>
     </header>
 
     <section class="hub-grid">
+      <a class="hub-card operations" href="./operations.html">
+        <div class="hub-icon">⚙</div><h2>Operations & Session Preparation</h2>
+        <p>Prepare the next-session roster and activate attendance safely after promotion, retention and new admissions are complete.</p>
+        <ul class="hub-features"><li>2026/2027 roster review</li><li>School calendar and closures</li><li>Student authorised absences</li><li>Guarded session activation</li></ul>
+        <span class="hub-link">Open operations workspace →</span>
+      </a>
+
       <a class="hub-card" href="./index.html">
         <div class="hub-icon">🎓</div><h2>Student Attendance</h2>
-        <p>Manage the 2026/2027 student roster after promotion, retention, graduation and new admissions.</p>
+        <p>Manage student arrival, lateness, checkout, credentials and attendance reports.</p>
         <ul class="hub-features"><li>Arrival, lateness and checkout</li><li>QR/NFC/RFID credentials</li><li>Class and individual reports</li><li>Automatic absence processing</li></ul>
         <span class="hub-link">Open student dashboard →</span>
       </a>
