@@ -1,0 +1,29 @@
+name: Validate Attendance Dashboard
+
+on:
+  pull_request:
+    paths:
+      - "attendance-dashboard/**"
+      - ".github/workflows/validate-attendance-dashboard.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate JavaScript syntax
+        run: node --check attendance-dashboard/app.js
+
+      - name: Confirm dashboard files
+        run: |
+          test -s attendance-dashboard/index.html
+          test -s attendance-dashboard/styles.css
+          test -s attendance-dashboard/app.js
