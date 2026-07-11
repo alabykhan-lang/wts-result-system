@@ -23,6 +23,7 @@ jobs:
         run: |
           node --check attendance-dashboard/app.js
           node --check attendance-dashboard/qr-print.js
+          node --check attendance-dashboard/qr-print-autoload.js
 
       - name: Confirm dashboard files
         run: |
@@ -32,3 +33,4 @@ jobs:
           test -s attendance-dashboard/qr-print.html
           test -s attendance-dashboard/qr-print.css
           test -s attendance-dashboard/qr-print.js
+          test -s attendance-dashboard/qr-print-autoload.js
