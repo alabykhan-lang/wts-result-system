@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>WTS Student Departure Report</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    body{background:#f4f7fb}.page{max-width:1280px;margin:auto;padding:24px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:24px;border-radius:20px;background:linear-gradient(140deg,#0b1f3a,#17436f);color:#fff}.hero h1{margin:5px 0;font-family:Georgia,serif}.hero p{margin:0;color:#cbd8e8}.actions{display:flex;gap:9px;flex-wrap:wrap}.filters{margin-top:18px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}.metric{padding:18px;border:1px solid #dfe5ec;border-radius:15px;background:#fff}.metric span,.metric strong{display:block}.metric span{color:#667085;font-size:11px}.metric strong{margin-top:7px;color:#0b1f3a;font-size:28px}.table-wrap{overflow:auto}.report-table{width:100%;min-width:1020px;border-collapse:collapse}.report-table th,.report-table td{padding:11px 10px;border-bottom:1px solid #e5e9ef;text-align:left;font-size:11px}.report-table th{background:#f8fafc;color:#475467;text-transform:uppercase}.excess{font-weight:800;color:#b54708}.zero{color:#667085}.hidden{display:none!important}@media(max-width:800px){.page{padding:14px}.hero{align-items:flex-start;flex-direction:column}.summary{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div><p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1>Student Departure Report</h1><p>Official closing is 3:30 p.m.; later departures remain valid and their excess time is calculated.</p></div>
+      <div class="actions"><a class="secondary-button" href="./control-room.html">Control Room</a><button class="primary-button" id="connectButton">Connect</button></div>
+    </header>
+
+    <section class="panel filter-panel filters">
+      <div class="field"><label>From</label><input type="date" id="fromDate"></div>
+      <div class="field"><label>To</label><input type="date" id="toDate"></div>
+      <div class="field grow"><label>Class</label><select id="classFilter"><option value="">All secondary classes</option><option value="jss1">JSS 1</option><option value="jss2">JSS 2</option><option value="jss3">JSS 3</option><option value="ss1-general">SS 1</option><option value="ss2-arts">SS 2 Arts</option><option value="ss2-business">SS 2 Business</option><option value="ss2-science">SS 2 Science</option><option value="ss3-arts">SS 3 Arts</option><option value="ss3-science">SS 3 Science</option></select></div>
+      <button class="primary-button" id="loadButton">Load report</button>
+      <button class="secondary-button" id="exportButton">Export CSV</button>
+    </section>
+
+    <section class="summary">
+      <article class="metric"><span>CHECKED OUT</span><strong id="checkedOut">0</strong></article>
+      <article class="metric"><span>STAYED AFTER 3:30</span><strong id="afterClosing">0</strong></article>
+      <article class="metric"><span>TOTAL EXCESS MINUTES</span><strong id="totalExcess">0</strong></article>
+      <article class="metric"><span>AVERAGE EXCESS</span><strong id="averageExcess">0 min</strong></article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header"><div><p class="eyebrow">DEPARTURE REGISTER</p><h3 id="reportTitle">No report loaded</h3></div></div>
+      <div class="empty-state" id="emptyState"><div class="empty-icon">⇥</div><h4>No departure data loaded</h4><p>Connect and choose a date range to view student checkout and excess-time records.</p></div>
+      <div class="table-wrap hidden" id="tableWrap"><table class="report-table"><thead><tr><th>Date</th><th>Student</th><th>Class</th><th>Arrival</th><th>Departure</th><th>Status</th><th>Total duration</th><th>Excess after 3:30</th></tr></thead><tbody id="reportBody"></tbody></table></div>
+    </section>
+  </main>
+
+  <dialog id="connectionDialog"><form method="dialog" class="dialog-card" id="connectionForm"><div class="dialog-header"><div><p class="eyebrow">PRIVATE ADMIN ACCESS</p><h2>Connect departure report</h2></div><button value="cancel" class="icon-button">×</button></div><div class="field"><label>Administrator code</label><input id="adminCode" required></div><div class="field"><label>Administrator secret</label><input id="adminSecret" type="password" required></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Connect</button></div></form></dialog>
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="./student-departures.js"></script>
+</body>
+</html>
