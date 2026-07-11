@@ -1,0 +1,14 @@
+{
+  "name": "wts-attendance-terminal-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone QR/NFC/RFID terminal bridge for WTS attendance",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "check": "node --check src/server.mjs && node --check src/queue.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
