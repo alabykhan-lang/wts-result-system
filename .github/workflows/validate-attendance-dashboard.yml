@@ -33,6 +33,15 @@ jobs:
           node --check attendance-dashboard/operations-core.js
           node --check attendance-dashboard/operations-roster.js
           node --check attendance-dashboard/operations-calendar.js
+          node --check attendance-dashboard/lifecycle.js
+          node --check attendance-dashboard/lifecycle-core.js
+          node --check attendance-dashboard/lifecycle-admissions.js
+          node --check attendance-dashboard/lifecycle-movements.js
+          node --check attendance-dashboard/analytics.js
+          node --check attendance-dashboard/analytics-core.js
+          node --check attendance-dashboard/analytics-overview.js
+          node --check attendance-dashboard/analytics-reports.js
+          node --check attendance-dashboard/analytics-automation.js
 
       - name: Confirm dashboard files
         run: |
@@ -60,3 +69,14 @@ jobs:
           test -s attendance-dashboard/operations-core.js
           test -s attendance-dashboard/operations-roster.js
           test -s attendance-dashboard/operations-calendar.js
+          test -s attendance-dashboard/lifecycle.html
+          test -s attendance-dashboard/lifecycle.js
+          test -s attendance-dashboard/lifecycle-core.js
+          test -s attendance-dashboard/lifecycle-admissions.js
+          test -s attendance-dashboard/lifecycle-movements.js
+          test -s attendance-dashboard/analytics.html
+          test -s attendance-dashboard/analytics.js
+          test -s attendance-dashboard/analytics-core.js
+          test -s attendance-dashboard/analytics-overview.js
+          test -s attendance-dashboard/analytics-reports.js
+          test -s attendance-dashboard/analytics-automation.js
