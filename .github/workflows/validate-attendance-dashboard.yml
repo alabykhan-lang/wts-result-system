@@ -42,6 +42,13 @@ jobs:
           node --check attendance-dashboard/analytics-overview.js
           node --check attendance-dashboard/analytics-reports.js
           node --check attendance-dashboard/analytics-automation.js
+          node --check attendance-dashboard/dashboard-config-loader.js
+          node --check attendance-dashboard/controls.js
+          node --check attendance-dashboard/controls-core.js
+          node --check attendance-dashboard/controls-attendance.js
+          node --check attendance-dashboard/controls-communication.js
+          node --check attendance-dashboard/controls-admin.js
+          node --check attendance-dashboard/management-report.js
 
       - name: Confirm dashboard files
         run: |
@@ -80,3 +87,12 @@ jobs:
           test -s attendance-dashboard/analytics-overview.js
           test -s attendance-dashboard/analytics-reports.js
           test -s attendance-dashboard/analytics-automation.js
+          test -s attendance-dashboard/dashboard-config-loader.js
+          test -s attendance-dashboard/controls.html
+          test -s attendance-dashboard/controls.js
+          test -s attendance-dashboard/controls-core.js
+          test -s attendance-dashboard/controls-attendance.js
+          test -s attendance-dashboard/controls-communication.js
+          test -s attendance-dashboard/controls-admin.js
+          test -s attendance-dashboard/management-report.html
+          test -s attendance-dashboard/management-report.js
