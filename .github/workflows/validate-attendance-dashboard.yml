@@ -27,6 +27,8 @@ jobs:
           node --check attendance-dashboard/staff.js
           node --check attendance-dashboard/staff-qr-print.js
           node --check attendance-dashboard/staff-portal.js
+          node --check attendance-dashboard/student-departures.js
+          node --check attendance-dashboard/device-security.js
 
       - name: Confirm dashboard files
         run: |
@@ -45,3 +47,7 @@ jobs:
           test -s attendance-dashboard/staff-qr-print.js
           test -s attendance-dashboard/staff-portal.html
           test -s attendance-dashboard/staff-portal.js
+          test -s attendance-dashboard/student-departures.html
+          test -s attendance-dashboard/student-departures.js
+          test -s attendance-dashboard/device-security.html
+          test -s attendance-dashboard/device-security.js
