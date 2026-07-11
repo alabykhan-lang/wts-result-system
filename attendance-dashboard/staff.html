@@ -14,10 +14,11 @@
       <div>
         <p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p>
         <h1>Staff Attendance</h1>
-        <span>Digital replacement for the manual staff time book</span>
+        <span>Independent digital replacement for the manual staff time book</span>
       </div>
       <div class="topbar-actions">
         <span class="session-pill" id="staffSessionPill">2026/2027 • 1st Term</span>
+        <a class="secondary-button" href="./staff-portal.html">Staff self-service</a>
         <a class="secondary-button" href="./index.html">Student dashboard</a>
         <button class="primary-button" id="staffConnectButton">Connect</button>
       </div>
@@ -25,24 +26,25 @@
 
     <main class="staff-main">
       <div class="development-banner" id="staffRuleBanner">
-        <strong>Working hours not configured:</strong> Staff credentials can be prepared, but lateness and early departure will remain inactive until an approved rule is saved.
+        <strong>Prepared for next session:</strong> Arrival opens at 6:40 a.m., lateness starts after 7:45 a.m. and absence processing begins after 10:00 a.m. The rule remains inactive until the 2026/2027 operational dates are entered.
       </div>
 
       <section class="staff-metrics">
-        <article class="metric-card navy"><span>Expected staff</span><strong id="staffExpected">24</strong><small>Attendance-required profiles</small></article>
+        <article class="metric-card navy"><span>Expected staff</span><strong id="staffExpected">24</strong><small>Active attendance roster</small></article>
         <article class="metric-card green"><span>Present</span><strong id="staffPresent">0</strong><small id="staffPresentPercent">0% recorded</small></article>
-        <article class="metric-card amber"><span>Late</span><strong id="staffLate">0</strong><small>After approved deadline</small></article>
+        <article class="metric-card amber"><span>Late</span><strong id="staffLate">0</strong><small>After 7:45 a.m.</small></article>
         <article class="metric-card blue"><span>On site</span><strong id="staffOnSite">0</strong><small>Checked in, not out</small></article>
-        <article class="metric-card slate"><span>Checked out</span><strong id="staffCheckedOut">0</strong><small>Departure recorded</small></article>
-        <article class="metric-card red"><span>Absent</span><strong id="staffAbsent">0</strong><small>After staff cutoff</small></article>
+        <article class="metric-card slate"><span>Checked out</span><strong id="staffCheckedOut">0</strong><small>Exact departure recorded</small></article>
+        <article class="metric-card red"><span>Absent</span><strong id="staffAbsent">0</strong><small>After 10:00 a.m.</small></article>
       </section>
 
       <div class="staff-tabs" role="tablist">
         <button class="active" data-tab="overview">Overview</button>
+        <button data-tab="applications">Applications & Enrollment</button>
         <button data-tab="directory">Staff directory</button>
         <button data-tab="credentials">Credentials</button>
         <button data-tab="history">Attendance history</button>
-        <button data-tab="rules">Working hours</button>
+        <button data-tab="rules">Arrival rules</button>
       </div>
 
       <section class="staff-tab active" id="staff-tab-overview">
@@ -55,11 +57,10 @@
             <div class="empty-state" id="staffEventsEmpty">
               <div class="empty-icon">⇄</div>
               <h4>No staff attendance events yet</h4>
-              <p>Teacher and staff arrivals or departures will appear here from the same QR, NFC, RFID or gate-terminal scanners.</p>
+              <p>Arrivals and departures will appear here from the same QR, NFC, RFID or standalone gate readers.</p>
             </div>
             <div class="arrival-list" id="staffEventsList"></div>
           </article>
-
           <article class="panel">
             <div class="panel-header"><div><p class="eyebrow">CATEGORY SUMMARY</p><h3>Attendance by staff group</h3></div></div>
             <div class="class-progress-list" id="staffCategorySummary"></div>
@@ -67,55 +68,76 @@
         </div>
       </section>
 
+      <section class="staff-tab" id="staff-tab-applications">
+        <div class="device-summary-grid">
+          <article class="mini-metric"><span>Pending applications</span><strong id="pendingApplications">0</strong></article>
+          <article class="mini-metric"><span>Active portal accounts</span><strong id="activePortalAccounts">0</strong></article>
+          <article class="mini-metric"><span>Active staff directory</span><strong id="activeStaffDirectory">24</strong></article>
+          <article class="mini-metric"><span>Archived staff</span><strong id="archivedStaffDirectory">0</strong></article>
+        </div>
+        <div class="content-grid two-column">
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">SELF-REGISTRATION</p><h3>Pending staff applications</h3></div><button class="secondary-button" id="refreshApplications">Refresh</button></div>
+            <div id="applicationList" class="arrival-list"></div>
+            <div class="empty-state" id="applicationsEmpty"><div class="empty-icon">✓</div><h4>No pending applications</h4><p>New staff registrations will wait here until management approves or rejects them.</p></div>
+          </article>
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">DIRECT ENROLLMENT</p><h3>Add a staff member</h3></div></div>
+            <form id="enrollStaffForm" class="form-grid">
+              <div class="field full-field"><label>Full name</label><input id="enrollFullName" required></div>
+              <div class="field"><label>Email</label><input id="enrollEmail" type="email"></div>
+              <div class="field"><label>Phone</label><input id="enrollPhone"></div>
+              <div class="field full-field"><label>Address</label><input id="enrollAddress"></div>
+              <div class="field"><label>Category</label><select id="enrollCategory"><option value="teaching">Teaching</option><option value="non_teaching">Non-teaching</option><option value="management">Management</option><option value="contract">Contract</option><option value="casual">Casual</option></select></div>
+              <div class="field"><label>Department</label><input id="enrollDepartment"></div>
+              <div class="field"><label>Designation</label><input id="enrollDesignation"></div>
+              <div class="dialog-actions full-field"><button class="primary-button">Enroll staff</button></div>
+            </form>
+          </article>
+        </div>
+      </section>
+
       <section class="staff-tab" id="staff-tab-directory">
         <div class="panel filter-panel">
-          <div class="field grow"><label for="staffSearch">Search staff</label><input id="staffSearch" type="search" placeholder="Name, email or staff number"></div>
+          <div class="field grow"><label for="staffSearch">Search staff</label><input id="staffSearch" type="search" placeholder="Name, email or attendance staff ID"></div>
           <div class="field"><label for="staffCategoryFilter">Category</label><select id="staffCategoryFilter"><option value="">All categories</option><option value="teaching">Teaching</option><option value="management">Management</option><option value="non_teaching">Non-teaching</option><option value="contract">Contract</option><option value="casual">Casual</option></select></div>
           <button class="secondary-button" id="staffSearchButton">Search</button>
         </div>
         <div class="credential-layout">
           <article class="panel student-list-panel">
-            <div class="panel-header"><div><p class="eyebrow">STAFF</p><h3 id="staffCountLabel">0 records loaded</h3></div></div>
+            <div class="panel-header"><div><p class="eyebrow">INDEPENDENT STAFF DIRECTORY</p><h3 id="staffCountLabel">0 records loaded</h3></div></div>
             <div class="student-list" id="staffList"></div>
           </article>
           <article class="panel credential-detail-panel">
-            <div class="empty-state" id="staffProfileEmpty"><div class="empty-icon">◎</div><h4>Select a staff member</h4><p>Review staff details and complete attendance information without modifying the result-portal account.</p></div>
+            <div class="empty-state" id="staffProfileEmpty"><div class="empty-icon">◎</div><h4>Select a staff member</h4><p>Review and manage the independent attendance profile.</p></div>
             <form class="student-detail hidden" id="staffProfileForm">
               <div class="student-profile">
                 <div class="avatar large" id="staffAvatar">ST</div>
                 <div><p class="eyebrow" id="staffCategoryLabel">STAFF</p><h3 id="staffName">Staff name</h3><span id="staffEmail">Email</span></div>
               </div>
               <div class="form-grid staff-profile-fields">
-                <div class="field"><label>Staff number</label><input id="staffNumberInput"></div>
+                <div class="field"><label>Attendance Staff ID</label><input id="staffNumberInput"></div>
                 <div class="field"><label>Category</label><select id="staffCategoryInput"><option value="teaching">Teaching</option><option value="management">Management</option><option value="non_teaching">Non-teaching</option><option value="contract">Contract</option><option value="casual">Casual</option></select></div>
                 <div class="field"><label>Department</label><input id="staffDepartmentInput"></div>
                 <div class="field"><label>Designation</label><input id="staffDesignationInput"></div>
                 <div class="field"><label>Employment status</label><select id="staffStatusInput"><option value="active">Active</option><option value="leave">Leave</option><option value="suspended">Suspended</option><option value="exited">Exited</option></select></div>
-                <label class="modality-card attendance-required"><input type="checkbox" id="staffAttendanceRequired"><span><strong>Attendance required</strong><small>Include in daily expected count</small></span></label>
+                <label class="modality-card attendance-required"><input type="checkbox" id="staffAttendanceRequired"><span><strong>Attendance required</strong><small>Include in expected count</small></span></label>
               </div>
-              <div class="dialog-actions"><button type="submit" class="primary-button">Save staff profile</button></div>
+              <div class="dialog-actions"><button type="button" class="secondary-button" id="archiveStaffButton">Archive staff</button><button type="button" class="secondary-button hidden" id="restoreStaffButton">Restore staff</button><button type="submit" class="primary-button">Save profile</button></div>
             </form>
           </article>
         </div>
       </section>
 
       <section class="staff-tab" id="staff-tab-credentials">
-        <div class="panel filter-panel">
-          <div class="field grow"><label for="credentialStaffSearch">Find staff member</label><input id="credentialStaffSearch" type="search" placeholder="Search by name or staff number"></div>
-          <button class="secondary-button" id="credentialStaffSearchButton">Search</button>
-        </div>
+        <div class="panel filter-panel"><div class="field grow"><label for="credentialStaffSearch">Find staff member</label><input id="credentialStaffSearch" type="search" placeholder="Search by name or attendance staff ID"></div><button class="secondary-button" id="credentialStaffSearchButton">Search</button></div>
         <div class="credential-layout">
           <article class="panel student-list-panel"><div class="panel-header"><div><p class="eyebrow">SELECT STAFF</p><h3>Credential holder</h3></div></div><div class="student-list" id="credentialStaffList"></div></article>
           <article class="panel credential-detail-panel">
-            <div class="empty-state" id="staffCredentialEmpty"><div class="empty-icon">▣</div><h4>Select a staff member</h4><p>Issue QR, NFC, RFID or hybrid credentials for the selected employee.</p></div>
+            <div class="empty-state" id="staffCredentialEmpty"><div class="empty-icon">▣</div><h4>Select a staff member</h4><p>Issue QR, NFC, RFID or hybrid credentials.</p></div>
             <div class="student-detail hidden" id="staffCredentialDetail">
-              <div class="student-profile"><div class="avatar large" id="credentialStaffAvatar">ST</div><div><p class="eyebrow" id="credentialStaffCategory">STAFF</p><h3 id="credentialStaffName">Staff name</h3><span id="credentialStaffNumber">Staff number</span></div></div>
-              <div class="credential-actions">
-                <button class="primary-button" data-staff-credential="qr">Issue QR</button>
-                <button class="secondary-button" data-staff-credential="nfc">Issue NFC</button>
-                <button class="secondary-button" data-staff-credential="rfid">Issue RFID</button>
-                <button class="secondary-button" data-staff-credential="hybrid">Issue Hybrid</button>
-              </div>
+              <div class="student-profile"><div class="avatar large" id="credentialStaffAvatar">ST</div><div><p class="eyebrow" id="credentialStaffCategory">STAFF</p><h3 id="credentialStaffName">Staff name</h3><span id="credentialStaffNumber">Attendance Staff ID</span></div></div>
+              <div class="credential-actions"><button class="primary-button" data-staff-credential="qr">Issue QR</button><button class="secondary-button" data-staff-credential="nfc">Issue NFC</button><button class="secondary-button" data-staff-credential="rfid">Issue RFID</button><button class="secondary-button" data-staff-credential="hybrid">Issue Hybrid</button></div>
               <div class="credential-list" id="staffCredentialList"></div>
             </div>
           </article>
@@ -123,48 +145,39 @@
       </section>
 
       <section class="staff-tab" id="staff-tab-history">
-        <div class="panel filter-panel">
-          <div class="field grow"><label for="historyStaffSearch">Staff member</label><input id="historyStaffSearch" type="search" placeholder="Search and select a staff member"></div>
-          <div class="field"><label>From</label><input type="date" id="staffHistoryFrom"></div>
-          <div class="field"><label>To</label><input type="date" id="staffHistoryTo"></div>
-          <button class="secondary-button" id="staffHistoryButton">Load history</button>
-        </div>
+        <div class="panel filter-panel"><div class="field grow"><label for="historyStaffSearch">Staff member</label><input id="historyStaffSearch" type="search" placeholder="Search and select a staff member"></div><div class="field"><label>From</label><input type="date" id="staffHistoryFrom"></div><div class="field"><label>To</label><input type="date" id="staffHistoryTo"></div><button class="secondary-button" id="staffHistoryButton">Load history</button></div>
         <article class="panel staff-history-panel">
-          <div class="panel-header"><div><p class="eyebrow">TIME BOOK</p><h3 id="historyTitle">Digital attendance history</h3></div><button class="primary-button" id="exportStaffHistoryButton">Export CSV</button></div>
-          <div class="empty-state" id="staffHistoryEmpty"><div class="empty-icon">▤</div><h4>No staff history selected</h4><p>Select a staff member from the directory or search here to view digital time-book entries.</p></div>
-          <div class="table-wrap hidden" id="staffHistoryTableWrap"><table class="staff-table"><thead><tr><th>Date</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Late</th><th>Early departure</th><th>Worked</th><th>Overtime</th></tr></thead><tbody id="staffHistoryBody"></tbody></table></div>
+          <div class="panel-header"><div><p class="eyebrow">DIGITAL TIME BOOK</p><h3 id="historyTitle">Attendance history</h3></div><button class="primary-button" id="exportStaffHistoryButton">Export CSV</button></div>
+          <div class="empty-state" id="staffHistoryEmpty"><div class="empty-icon">▤</div><h4>No staff history selected</h4><p>Select a staff member to view arrival, departure and duration records.</p></div>
+          <div class="table-wrap hidden" id="staffHistoryTableWrap"><table class="staff-table"><thead><tr><th>Date</th><th>Arrival</th><th>Departure</th><th>Status</th><th>Late</th><th>Duration on premises</th></tr></thead><tbody id="staffHistoryBody"></tbody></table></div>
         </article>
       </section>
 
       <section class="staff-tab" id="staff-tab-rules">
         <div class="settings-grid">
           <article class="panel">
-            <div class="panel-header"><div><p class="eyebrow">WORK SCHEDULE</p><h3>Staff attendance rule</h3></div><span class="status-chip inactive" id="staffRuleStatus">Not configured</span></div>
+            <div class="panel-header"><div><p class="eyebrow">ARRIVAL SCHEDULE</p><h3>Staff attendance rule</h3></div><span class="status-chip inactive" id="staffRuleStatus">Prepared</span></div>
             <form id="staffRuleForm">
               <input type="hidden" id="staffRuleId">
               <div class="form-grid">
-                <div class="field full-field"><label>Rule name</label><input id="staffRuleName" value="Staff Standard Workday"></div>
-                <div class="field"><label>Check-in opens</label><input type="time" id="staffCheckInOpens"></div>
-                <div class="field"><label>On time until</label><input type="time" id="staffOnTimeUntil"></div>
-                <div class="field"><label>Absence cutoff</label><input type="time" id="staffAbsenceCutoff"></div>
-                <div class="field"><label>Earliest authorised checkout</label><input type="time" id="staffEarliestCheckout"></div>
-                <div class="field"><label>Expected closing time</label><input type="time" id="staffExpectedEnd"></div>
-                <label class="modality-card attendance-required"><input type="checkbox" id="staffRuleActive"><span><strong>Activate rule</strong><small>Only after management approves the times</small></span></label>
+                <div class="field full-field"><label>Rule name</label><input id="staffRuleName" value="Staff Standard Attendance Day"></div>
+                <div class="field"><label>Check-in opens</label><input type="time" id="staffCheckInOpens" value="06:40"></div>
+                <div class="field"><label>Late after</label><input type="time" id="staffOnTimeUntil" value="07:45"></div>
+                <div class="field"><label>Absent after</label><input type="time" id="staffAbsenceCutoff" value="10:00"></div>
+                <label class="modality-card attendance-required"><input type="checkbox" id="staffRuleActive"><span><strong>Activate rule</strong><small>Activate only after session dates are configured</small></span></label>
               </div>
-              <div class="weekday-grid" id="staffWeekdays">
-                <label><input type="checkbox" value="1" checked> Monday</label><label><input type="checkbox" value="2" checked> Tuesday</label><label><input type="checkbox" value="3" checked> Wednesday</label><label><input type="checkbox" value="4" checked> Thursday</label><label><input type="checkbox" value="5" checked> Friday</label><label><input type="checkbox" value="6"> Saturday</label>
-              </div>
-              <div class="dialog-actions"><button type="submit" class="primary-button">Save working-hour rule</button></div>
+              <div class="weekday-grid" id="staffWeekdays"><label><input type="checkbox" value="1" checked> Monday</label><label><input type="checkbox" value="2" checked> Tuesday</label><label><input type="checkbox" value="3" checked> Wednesday</label><label><input type="checkbox" value="4" checked> Thursday</label><label><input type="checkbox" value="5" checked> Friday</label><label><input type="checkbox" value="6"> Saturday</label></div>
+              <div class="dialog-actions"><button type="submit" class="primary-button">Save arrival rule</button></div>
             </form>
           </article>
           <article class="panel">
-            <div class="panel-header"><div><p class="eyebrow">POLICY</p><h3>How staff time-book records work</h3></div></div>
+            <div class="panel-header"><div><p class="eyebrow">POLICY</p><h3>How the digital time book works</h3></div></div>
             <div class="policy-list">
-              <div><strong>Arrival</strong><span>First valid tap or scan records check-in and calculates late minutes.</span></div>
-              <div><strong>Departure</strong><span>Checkout calculates worked time, early departure and overtime.</span></div>
-              <div><strong>Exceptions</strong><span>Leave, official assignment and authorised absence remain auditable adjustments.</span></div>
-              <div><strong>Shared hardware</strong><span>The same gate reader identifies whether the credential belongs to a student or staff member.</span></div>
-              <div><strong>No proxy signing</strong><span>The scanner displays the staff photograph and identity for visual confirmation.</span></div>
+              <div><strong>Arrival</strong><span>First valid tap or scan records arrival and calculates lateness after 7:45 a.m.</span></div>
+              <div><strong>Departure</strong><span>There is no fixed staff closing time. Checkout stores the exact departure time and total duration on the premises.</span></div>
+              <div><strong>Exceptions</strong><span>Leave, official assignment, training and authorised absence remain auditable.</span></div>
+              <div><strong>Independent accounts</strong><span>Staff registration and login are separate from the result portal.</span></div>
+              <div><strong>Shared hardware</strong><span>The same gate reader identifies student and staff credentials automatically.</span></div>
             </div>
           </article>
         </div>
@@ -172,16 +185,7 @@
     </main>
   </div>
 
-  <dialog id="staffConnectionDialog">
-    <form method="dialog" class="dialog-card" id="staffConnectionForm">
-      <div class="dialog-header"><div><p class="eyebrow">PRIVATE ADMINISTRATOR ACCESS</p><h2>Connect staff attendance</h2></div><button value="cancel" class="icon-button">×</button></div>
-      <p class="dialog-note">Use the same private attendance administrator credentials as the student dashboard.</p>
-      <div class="field"><label>Administrator code</label><input id="staffAdminCode" required autocomplete="off"></div>
-      <div class="field"><label>Administrator secret</label><input id="staffAdminSecret" type="password" required autocomplete="off"></div>
-      <div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Connect</button></div>
-    </form>
-  </dialog>
-
+  <dialog id="staffConnectionDialog"><form method="dialog" class="dialog-card" id="staffConnectionForm"><div class="dialog-header"><div><p class="eyebrow">PRIVATE ADMINISTRATOR ACCESS</p><h2>Connect staff attendance</h2></div><button value="cancel" class="icon-button">×</button></div><p class="dialog-note">Use the private attendance administrator credentials.</p><div class="field"><label>Administrator code</label><input id="staffAdminCode" required autocomplete="off"></div><div class="field"><label>Administrator secret</label><input id="staffAdminSecret" type="password" required autocomplete="off"></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Connect</button></div></form></dialog>
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
   <script src="./staff.js"></script>
 </body>
