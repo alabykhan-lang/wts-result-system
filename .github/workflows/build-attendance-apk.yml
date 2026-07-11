@@ -29,9 +29,22 @@ jobs:
           gradle-version: "8.9"
 
       - name: Build attendance scanner APK
-        run: gradle :attendance-app:assembleDebug --stacktrace
+        id: build
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle :attendance-app:assembleDebug --stacktrace 2>&1 | tee attendance-build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: attendance-build-log
+          path: attendance-build.log
+          if-no-files-found: warn
 
       - name: Upload attendance scanner APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: wts-attendance-scanner-debug
