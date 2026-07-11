@@ -20,10 +20,15 @@ jobs:
           node-version: "22"
 
       - name: Validate JavaScript syntax
-        run: node --check attendance-dashboard/app.js
+        run: |
+          node --check attendance-dashboard/app.js
+          node --check attendance-dashboard/qr-print.js
 
       - name: Confirm dashboard files
         run: |
           test -s attendance-dashboard/index.html
           test -s attendance-dashboard/styles.css
           test -s attendance-dashboard/app.js
+          test -s attendance-dashboard/qr-print.html
+          test -s attendance-dashboard/qr-print.css
+          test -s attendance-dashboard/qr-print.js
