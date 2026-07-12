@@ -20,3 +20,12 @@ window.WTSNotificationConfigReady=(async()=>{
     environment:config.environment||"development"
   });
 })();
+
+document.addEventListener("DOMContentLoaded",function(){
+  const requested=new URLSearchParams(window.location.search).get("view");
+  const allowed=["contacts","templates","messages","providers","settings","attempts"];
+  if(!allowed.includes(requested))return;
+  for(const button of document.querySelectorAll(".nav-item")){
+    if(button.dataset.view===requested){button.click();break;}
+  }
+});
