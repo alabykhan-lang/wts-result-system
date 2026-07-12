@@ -1,0 +1,41 @@
+name: Package Standalone Notification Service
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "notification-service/**"
+      - ".github/workflows/package-notification-service.yml"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript
+        run: |
+          node --check notification-service/notification-config-loader.js
+          node --check notification-service/app.js
+
+      - name: Verify sensitive keys are absent
+        run: |
+          if grep -RIn -E 'SUPABASE_SERVICE_ROLE_KEY|x-wts-device-secret|secret_hash' notification-service; then
+            echo "Sensitive server-side reference found."
+            exit 1
+          fi
+
+      - name: Build package
+        run: |
+          mkdir -p dist/wts-notification-service
+          cp -R notification-service/. dist/wts-notification-service/
+          cd dist
+          zip -qr WTS_Notification_Service.zip wts-notification-service
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: WTS-Notification-Service
+          path: dist/WTS_Notification_Service.zip
+          retention-days: 30
