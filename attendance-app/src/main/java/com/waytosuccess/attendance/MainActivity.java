@@ -106,7 +106,7 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
     private View buildInterface() {
         ScrollView scrollView = new ScrollView(this);
         scrollView.setFillViewport(true);
-        scrollView.setBackgroundColor(Color.rgb(240, 247, 244));
+        scrollView.setBackgroundColor(Color.rgb(243, 247, 251));
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -116,64 +116,64 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
             ScrollView.LayoutParams.WRAP_CONTENT
         ));
 
-        TextView schoolName = label("WAY TO SUCCESS STANDARD SCHOOLS", 21, Color.WHITE, true);
-        schoolName.setGravity(Gravity.CENTER);
-        schoolName.setPadding(dp(14), dp(18), dp(14), dp(6));
-
-        TextView screenName = label("Digital Attendance Scanner", 14, Color.rgb(168, 230, 204), true);
-        screenName.setGravity(Gravity.CENTER);
-        screenName.setPadding(dp(14), 0, dp(14), dp(18));
-
         LinearLayout header = new LinearLayout(this);
         header.setOrientation(LinearLayout.VERTICAL);
-        header.setBackground(rounded(Color.rgb(26, 42, 74), 14));
+        header.setPadding(dp(14), dp(18), dp(14), dp(18));
+        header.setBackground(rounded(Color.rgb(11, 31, 58), 16));
+
+        TextView schoolName = label("WAY TO SUCCESS STANDARD SCHOOLS", 20, Color.WHITE, true);
+        schoolName.setGravity(Gravity.CENTER);
+        TextView screenName = label("Student & Staff Attendance Scanner", 14, Color.rgb(168, 230, 204), true);
+        screenName.setGravity(Gravity.CENTER);
+        screenName.setPadding(0, dp(5), 0, 0);
+        TextView systemNote = label("QR • NFC • Secure Gate Device", 10, Color.rgb(214, 168, 79), true);
+        systemNote.setGravity(Gravity.CENTER);
+        systemNote.setPadding(0, dp(8), 0, 0);
         header.addView(schoolName);
         header.addView(screenName);
+        header.addView(systemNote);
         root.addView(header, fullWidth(0, 0, 0, 14));
 
         LinearLayout deviceCard = cardContainer();
-        TextView deviceHeading = label("SCANNER DEVICE", 12, Color.rgb(74, 85, 104), true);
-        deviceStatus = label("Not configured", 14, Color.rgb(26, 42, 74), true);
-        Button configureButton = actionButton("Configure Device", Color.rgb(26, 42, 74), Color.WHITE);
+        deviceCard.addView(label("AUTHORIZED SCANNER", 11, Color.rgb(102, 112, 133), true));
+        deviceStatus = label("Not configured", 14, Color.rgb(11, 31, 58), true);
+        Button configureButton = actionButton("Configure School Device", Color.rgb(11, 31, 58), Color.WHITE);
         configureButton.setOnClickListener(view -> showDeviceSetupDialog());
-        deviceCard.addView(deviceHeading);
         deviceCard.addView(deviceStatus, fullWidth(0, 7, 0, 10));
         deviceCard.addView(configureButton, fullWidth(0, 0, 0, 0));
         root.addView(deviceCard, fullWidth(0, 0, 0, 14));
 
         LinearLayout modeCard = cardContainer();
-        modeCard.addView(label("ATTENDANCE MODE", 12, Color.rgb(74, 85, 104), true));
-
+        modeCard.addView(label("ATTENDANCE ACTION", 11, Color.rgb(102, 112, 133), true));
         LinearLayout modeRow = new LinearLayout(this);
         modeRow.setOrientation(LinearLayout.HORIZONTAL);
-        checkInButton = actionButton("Morning Check-in", Color.rgb(26, 42, 74), Color.WHITE);
-        checkOutButton = actionButton("Student Checkout", Color.WHITE, Color.rgb(26, 42, 74));
+        checkInButton = actionButton("Check in", Color.rgb(11, 31, 58), Color.WHITE);
+        checkOutButton = actionButton("Check out", Color.WHITE, Color.rgb(11, 31, 58));
         checkInButton.setOnClickListener(view -> setMode("check_in"));
         checkOutButton.setOnClickListener(view -> setMode("check_out"));
-        modeRow.addView(checkInButton, weighted(1, 5, 8, 0, 0));
-        modeRow.addView(checkOutButton, weighted(1, 5, 0, 8, 0));
-        modeCard.addView(modeRow, fullWidth(0, 10, 0, 0));
+        modeRow.addView(checkInButton, weighted(1, 0, 8, 5, 0));
+        modeRow.addView(checkOutButton, weighted(1, 5, 8, 0, 0));
+        modeCard.addView(modeRow);
         root.addView(modeCard, fullWidth(0, 0, 0, 14));
 
         LinearLayout scanCard = cardContainer();
-        scanCard.addView(label("PRESENT CREDENTIAL", 12, Color.rgb(74, 85, 104), true));
-
-        qrButton = actionButton("Scan Student QR Code", Color.rgb(125, 212, 176), Color.rgb(26, 42, 74));
+        scanCard.addView(label("PRESENT ATTENDANCE CREDENTIAL", 11, Color.rgb(102, 112, 133), true));
+        qrButton = actionButton("Scan QR Credential", Color.rgb(125, 212, 176), Color.rgb(11, 31, 58));
         qrButton.setTextSize(17);
         qrButton.setPadding(dp(12), dp(16), dp(12), dp(16));
         qrButton.setOnClickListener(view -> startQrScan());
         scanCard.addView(qrButton, fullWidth(0, 10, 0, 10));
 
-        nfcStatus = label("Checking NFC…", 14, Color.rgb(74, 85, 104), true);
+        nfcStatus = label("Checking NFC…", 14, Color.rgb(71, 84, 103), true);
         nfcStatus.setGravity(Gravity.CENTER);
         nfcStatus.setPadding(dp(10), dp(15), dp(10), dp(15));
         nfcStatus.setBackground(rounded(Color.rgb(240, 247, 244), 10));
         scanCard.addView(nfcStatus, fullWidth(0, 0, 0, 10));
 
         TextView instruction = label(
-            "For NFC: keep this screen open and place the student card against the back of the phone.",
+            "For NFC: keep this screen open and place the enrolled student or staff card against the back of the phone.",
             12,
-            Color.rgb(74, 85, 104),
+            Color.rgb(71, 84, 103),
             false
         );
         instruction.setGravity(Gravity.CENTER);
@@ -181,13 +181,13 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         root.addView(scanCard, fullWidth(0, 0, 0, 14));
 
         resultCard = cardContainer();
-        resultTitle = label("READY", 17, Color.rgb(26, 42, 74), true);
+        resultTitle = label("READY", 16, Color.rgb(11, 31, 58), true);
         resultTitle.setGravity(Gravity.CENTER);
-        resultName = label("Waiting for a QR code or NFC card", 20, Color.rgb(26, 42, 74), true);
+        resultName = label("Waiting for a student or staff credential", 20, Color.rgb(11, 31, 58), true);
         resultName.setGravity(Gravity.CENTER);
-        resultMeta = label("", 14, Color.rgb(74, 85, 104), true);
+        resultMeta = label("", 14, Color.rgb(71, 84, 103), true);
         resultMeta.setGravity(Gravity.CENTER);
-        resultTime = label("", 12, Color.rgb(74, 85, 104), false);
+        resultTime = label("", 12, Color.rgb(71, 84, 103), false);
         resultTime.setGravity(Gravity.CENTER);
         resultCard.addView(resultTitle);
         resultCard.addView(resultName, fullWidth(0, 12, 0, 7));
@@ -195,22 +195,22 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         resultCard.addView(resultTime, fullWidth(0, 6, 0, 0));
         root.addView(resultCard, fullWidth(0, 0, 0, 14));
 
-        LinearLayout developerCard = cardContainer();
-        developerCard.addView(label("PRIVATE DEVELOPMENT TEST", 12, Color.rgb(74, 85, 104), true));
+        LinearLayout testCard = cardContainer();
+        testCard.addView(label("AUTHORIZED PILOT TEST", 11, Color.rgb(102, 112, 133), true));
         developerTokenInput = new EditText(this);
-        developerTokenInput.setHint("Paste a generated test credential");
+        developerTokenInput.setHint("Paste a temporary test credential");
         developerTokenInput.setSingleLine(true);
         developerTokenInput.setTextSize(13);
         developerTokenInput.setPadding(dp(12), dp(12), dp(12), dp(12));
         developerTokenInput.setBackground(rounded(Color.rgb(245, 247, 250), 8));
-        developerCard.addView(developerTokenInput, fullWidth(0, 9, 0, 8));
-        Button simulateButton = actionButton("Submit Test Credential", Color.rgb(74, 85, 104), Color.WHITE);
+        testCard.addView(developerTokenInput, fullWidth(0, 9, 0, 8));
+        Button simulateButton = actionButton("Submit Test Credential", Color.rgb(71, 84, 103), Color.WHITE);
         simulateButton.setOnClickListener(view -> submitCredential(
             developerTokenInput.getText().toString(),
             "qr"
         ));
-        developerCard.addView(simulateButton);
-        root.addView(developerCard, fullWidth(0, 0, 0, 0));
+        testCard.addView(simulateButton);
+        root.addView(testCard, fullWidth(0, 0, 0, 0));
 
         return scrollView;
     }
@@ -220,17 +220,17 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         boolean checkIn = "check_in".equals(mode);
         styleModeButton(checkInButton, checkIn);
         styleModeButton(checkOutButton, !checkIn);
-        resultTitle.setText(checkIn ? "MORNING CHECK-IN READY" : "CHECKOUT READY");
-        resultName.setText("Waiting for a QR code or NFC card");
+        resultTitle.setText(checkIn ? "CHECK-IN READY" : "CHECKOUT READY");
+        resultName.setText("Waiting for a student or staff credential");
         resultMeta.setText("");
         resultTime.setText("");
         resultCard.setBackground(rounded(Color.WHITE, 12));
     }
 
     private void styleModeButton(Button button, boolean selected) {
-        button.setTextColor(selected ? Color.WHITE : Color.rgb(26, 42, 74));
+        button.setTextColor(selected ? Color.WHITE : Color.rgb(11, 31, 58));
         button.setBackground(rounded(
-            selected ? Color.rgb(26, 42, 74) : Color.rgb(240, 247, 244),
+            selected ? Color.rgb(11, 31, 58) : Color.rgb(240, 247, 244),
             9
         ));
     }
@@ -246,7 +246,7 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
             .addOnSuccessListener(barcode -> {
                 String value = barcode.getRawValue();
                 if (value == null || value.trim().isEmpty()) {
-                    showFailure("QR code contains no credential", "INVALID QR");
+                    showFailure("QR code contains no credential.", "INVALID QR");
                     return;
                 }
                 submitCredential(value, "qr");
@@ -267,7 +267,7 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         String credential = readNdefCredential(tag);
         if (credential == null || credential.trim().isEmpty()) {
             runOnUiThread(() -> showFailure(
-                "This NFC tag has not been enrolled for WTS attendance.",
+                "This NFC card has not been enrolled for WTS attendance.",
                 "UNKNOWN NFC CARD"
             ));
             return;
@@ -278,7 +278,6 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
     private String readNdefCredential(Tag tag) {
         Ndef ndef = Ndef.get(tag);
         if (ndef == null) return null;
-
         try {
             NdefMessage message = ndef.getCachedNdefMessage();
             if (message == null) {
@@ -295,7 +294,6 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
                 ) {
                     return parseTextRecord(record.getPayload());
                 }
-
                 byte[] payload = record.getPayload();
                 if (payload != null && payload.length > 0) {
                     String value = new String(payload, StandardCharsets.UTF_8).trim();
@@ -348,7 +346,7 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
             qrButton.setEnabled(false);
             resultCard.setBackground(rounded(Color.rgb(255, 248, 225), 12));
             resultTitle.setText("PROCESSING…");
-            resultName.setText("Verifying credential");
+            resultName.setText("Verifying attendance credential");
             resultMeta.setText("");
             resultTime.setText("");
         });
@@ -356,7 +354,6 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         String eventId = UUID.randomUUID().toString();
         String localRecordedAt = currentIsoTimestamp();
         String mode = attendanceMode;
-
         networkExecutor.execute(() -> callAttendanceApi(
             credential,
             eventId,
@@ -409,7 +406,6 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
                 : connection.getInputStream();
             String responseText = readStream(stream);
             JSONObject response = new JSONObject(responseText);
-
             runOnUiThread(() -> renderResponse(response, statusCode));
         } catch (Exception error) {
             runOnUiThread(() -> showFailure(
@@ -426,45 +422,52 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
     private void renderResponse(JSONObject response, int statusCode) {
         boolean ok = response.optBoolean("ok", false);
         String code = response.optString("code", "UNKNOWN_RESPONSE");
+        String personType = response.optString("person_type", "student");
 
         if (!ok) {
-            String message;
-            switch (code) {
-                case "NO_SCHOOL_TODAY":
-                    message = "Attendance is closed because today is not a configured school day.";
-                    break;
-                case "UNKNOWN_OR_INACTIVE_CREDENTIAL":
-                    message = "Credential is unknown, suspended or replaced.";
-                    break;
-                case "STUDENT_INACTIVE":
-                    message = "The linked student is no longer active.";
-                    break;
-                case "NO_ATTENDANCE_RULE":
-                    message = "No attendance rule covers this student's class.";
-                    break;
-                case "NO_CHECK_IN_FOR_TODAY":
-                    message = "Checkout cannot be recorded before today's check-in.";
-                    break;
-                case "DEVICE_AUTH_FAILED":
-                case "DEVICE_AUTH_REQUIRED":
-                    message = "This scanner device is not authorised. Reconfigure the device.";
-                    break;
-                default:
-                    message = "Attendance was not recorded (" + code + ").";
-                    break;
-            }
-            showFailure(message, "NOT RECORDED");
+            showFailure(errorMessageFor(code, personType), "NOT RECORDED");
             return;
         }
 
         JSONObject student = response.optJSONObject("student");
+        JSONObject staff = response.optJSONObject("staff");
         JSONObject event = response.optJSONObject("event");
-        String name = student == null ? "Student" : student.optString("name", "Student");
-        String classKey = student == null ? "" : student.optString("class_key", "");
+        boolean isStaff = "staff".equalsIgnoreCase(personType) || staff != null;
+
+        String name;
+        String identityMeta;
+        if (isStaff) {
+            name = firstNonEmpty(
+                staff == null ? "" : staff.optString("full_name", ""),
+                staff == null ? "" : staff.optString("name", ""),
+                student == null ? "" : student.optString("name", ""),
+                "Staff member"
+            );
+            String staffNumber = staff == null ? "" : staff.optString("staff_number", "");
+            String designation = staff == null ? "" : staff.optString("designation", "");
+            String department = staff == null ? "" : staff.optString("department", "");
+            identityMeta = joinMeta(
+                "STAFF",
+                designation,
+                department,
+                staffNumber.isEmpty() ? "" : "ID " + staffNumber
+            );
+        } else {
+            name = student == null ? "Student" : student.optString("name", "Student");
+            String classKey = student == null ? "" : student.optString("class_key", "");
+            String admission = student == null ? "" : student.optString("admno", "");
+            identityMeta = joinMeta(
+                "STUDENT",
+                formatClassKey(classKey),
+                admission.isEmpty() ? "" : "ADM " + admission
+            );
+        }
+
         String attendanceStatus = event == null
             ? ""
             : event.optString("attendance_status", "");
         int lateMinutes = event == null ? 0 : event.optInt("late_minutes", 0);
+        int earlyMinutes = event == null ? 0 : event.optInt("early_departure_minutes", 0);
         String eventTime = event == null ? "" : event.optString("event_time", "");
         boolean duplicate = response.optBoolean("duplicate", false);
 
@@ -472,37 +475,78 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         String heading;
         if (duplicate) {
             background = Color.rgb(227, 242, 253);
-            heading = code.equals("ALREADY_CHECKED_OUT")
-                ? "ALREADY CHECKED OUT"
+            heading = "check_out".equals(attendanceMode)
+                ? "CHECKOUT ALREADY RECORDED"
                 : "ATTENDANCE ALREADY RECORDED";
             playDuplicateFeedback();
         } else if ("late".equals(attendanceStatus)) {
             background = Color.rgb(255, 243, 224);
-            heading = "LATE ARRIVAL";
+            heading = isStaff ? "STAFF LATE ARRIVAL" : "STUDENT LATE ARRIVAL";
             playSuccessFeedback();
-        } else if ("early".equals(attendanceStatus) && "check_out".equals(attendanceMode)) {
+        } else if (
+            "check_out".equals(attendanceMode) &&
+            ("early".equals(attendanceStatus) || "early_departure".equals(attendanceStatus) || earlyMinutes > 0)
+        ) {
             background = Color.rgb(255, 235, 238);
-            heading = "EARLY CHECKOUT RECORDED";
+            heading = isStaff ? "STAFF EARLY DEPARTURE" : "EARLY CHECKOUT RECORDED";
             playSuccessFeedback();
         } else {
             background = Color.rgb(232, 245, 233);
-            heading = "ATTENDANCE RECORDED";
+            heading = isStaff
+                ? ("check_out".equals(attendanceMode) ? "STAFF CHECKOUT RECORDED" : "STAFF CHECK-IN RECORDED")
+                : ("check_out".equals(attendanceMode) ? "STUDENT CHECKOUT RECORDED" : "STUDENT CHECK-IN RECORDED");
             playSuccessFeedback();
+        }
+
+        String statusMeta = "";
+        if (lateMinutes > 0) {
+            statusMeta = lateMinutes + " minutes late";
+        } else if (earlyMinutes > 0) {
+            statusMeta = earlyMinutes + " minutes early";
+        } else if (!attendanceStatus.isEmpty()) {
+            statusMeta = attendanceStatus.replace('_', ' ').toUpperCase(Locale.US);
         }
 
         resultCard.setBackground(rounded(background, 12));
         resultTitle.setText(heading);
         resultName.setText(name);
-
-        StringBuilder metadata = new StringBuilder(formatClassKey(classKey));
-        if (lateMinutes > 0) {
-            metadata.append(" • ").append(lateMinutes).append(" minutes late");
-        } else if (!attendanceStatus.isEmpty()) {
-            metadata.append(" • ").append(attendanceStatus.replace('_', ' ').toUpperCase(Locale.US));
-        }
-        resultMeta.setText(metadata.toString());
+        resultMeta.setText(joinMeta(identityMeta, statusMeta));
         resultTime.setText(formatServerTime(eventTime));
         developerTokenInput.setText("");
+    }
+
+    private String errorMessageFor(String code, String personType) {
+        switch (code) {
+            case "NO_SCHOOL_TODAY":
+                return "Attendance is closed because today is not a configured school day.";
+            case "NO_STAFF_WORK_TODAY":
+                return "Staff attendance is closed because today is not a configured work day.";
+            case "UNKNOWN_OR_INACTIVE_CREDENTIAL":
+                return "Credential is unknown, suspended or replaced.";
+            case "STUDENT_INACTIVE":
+                return "The linked student is no longer active.";
+            case "STAFF_INACTIVE":
+                return "The linked staff profile is inactive or attendance is not required.";
+            case "NO_ATTENDANCE_RULE":
+                return "No student attendance rule covers this class.";
+            case "STAFF_RULE_NOT_CONFIGURED":
+            case "NO_STAFF_ATTENDANCE_RULE":
+                return "The staff working-hour rule has not yet been configured.";
+            case "NO_CHECK_IN_FOR_TODAY":
+                return "Checkout cannot be recorded before today's student check-in.";
+            case "NO_STAFF_CHECK_IN_FOR_TODAY":
+                return "Staff checkout cannot be recorded before today's check-in.";
+            case "STAFF_AUTOMATIC_ABSENCE_DISABLED":
+                return "Automatic staff absence is currently disabled during setup.";
+            case "DEVICE_AUTH_FAILED":
+            case "DEVICE_AUTH_REQUIRED":
+                return "This scanner device is not authorised. Reconfigure the school device.";
+            case "SOURCE_NOT_ALLOWED":
+            case "MODALITY_NOT_ALLOWED":
+                return "This attendance method is not enabled for the current rule.";
+            default:
+                return "Attendance was not recorded (" + code + ").";
+        }
     }
 
     private void showFailure(String message, String heading) {
@@ -520,7 +564,7 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         container.setPadding(dp(20), dp(6), dp(20), 0);
 
         EditText codeInput = new EditText(this);
-        codeInput.setHint("Device code");
+        codeInput.setHint("School device code");
         codeInput.setSingleLine(true);
         codeInput.setText(preferences.getString(KEY_DEVICE_CODE, ""));
 
@@ -539,8 +583,8 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
         container.addView(secretInput);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
-            .setTitle("Configure Attendance Scanner")
-            .setMessage("Enter the private credentials issued to this school-owned phone.")
+            .setTitle("Configure WTS Attendance Scanner")
+            .setMessage("Enter the private credentials issued to this school-owned device.")
             .setView(container)
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Save", null)
@@ -583,20 +627,20 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
             deviceStatus.setText("Not configured — scanning is disabled");
             deviceStatus.setTextColor(Color.rgb(185, 28, 28));
         } else {
-            deviceStatus.setText("Configured as " + code);
+            deviceStatus.setText("Authorized device: " + code);
             deviceStatus.setTextColor(Color.rgb(6, 95, 70));
         }
     }
 
     private void refreshNfcStatus() {
         if (nfcAdapter == null) {
-            nfcStatus.setText("NFC is unavailable on this phone — QR scanning remains available");
+            nfcStatus.setText("NFC unavailable on this phone — QR scanning remains available");
             nfcStatus.setTextColor(Color.rgb(146, 64, 14));
         } else if (!nfcAdapter.isEnabled()) {
             nfcStatus.setText("NFC is switched off — enable it in phone settings");
             nfcStatus.setTextColor(Color.rgb(185, 28, 28));
         } else {
-            nfcStatus.setText("NFC READY — tap an enrolled card against the phone");
+            nfcStatus.setText("NFC READY — tap an enrolled student or staff card");
             nfcStatus.setTextColor(Color.rgb(6, 95, 70));
         }
     }
@@ -668,12 +712,29 @@ public final class MainActivity extends Activity implements NfcAdapter.ReaderCal
 
     private String formatServerTime(String value) {
         if (value == null || value.isEmpty()) return "";
-        return "Server time: " + value.replace('T', ' ');
+        return "Official server time: " + value.replace('T', ' ');
     }
 
     private String formatClassKey(String value) {
-        if (value == null) return "";
+        if (value == null || value.isEmpty() || "STAFF".equalsIgnoreCase(value)) return "";
         return value.replace('-', ' ').toUpperCase(Locale.US);
+    }
+
+    private String firstNonEmpty(String... values) {
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) return value.trim();
+        }
+        return "";
+    }
+
+    private String joinMeta(String... values) {
+        StringBuilder builder = new StringBuilder();
+        for (String value : values) {
+            if (value == null || value.trim().isEmpty()) continue;
+            if (builder.length() > 0) builder.append(" • ");
+            builder.append(value.trim());
+        }
+        return builder.toString();
     }
 
     private String readStream(InputStream stream) throws Exception {
