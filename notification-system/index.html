@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1f3a">
+  <meta name="description" content="Way to Success school notification management for guardians, templates, queues and delivery providers.">
+  <title>WTS Notification Management</title>
+  <link rel="icon" href="./app-icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest?v=2">
+  <link rel="stylesheet" href="./styles.css?v=20260712-6">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">WTS</div><div><strong>Notifications</strong><span>School Communication</span></div></div>
+      <nav class="nav" aria-label="Notification sections">
+        <button class="nav-item active" data-view="dashboard"><span>▦</span>Dashboard</button>
+        <button class="nav-item" data-view="contacts"><span>☎</span>Guardians</button>
+        <button class="nav-item" data-view="templates"><span>✎</span>Templates</button>
+        <button class="nav-item" data-view="messages"><span>✉</span>Messages</button>
+        <button class="nav-item" data-view="providers"><span>⬢</span>Providers</button>
+        <button class="nav-item" data-view="settings"><span>⚙</span>Safety Settings</button>
+        <button class="nav-item" data-view="attempts"><span>↻</span>Delivery Attempts</button>
+      </nav>
+      <div class="sidebar-status"><i id="connectionDot"></i><div><strong id="connectionState">Not connected</strong><span id="modeState">Delivery disabled</span></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1 id="pageTitle">Notification Dashboard</h1></div>
+        <div class="top-actions"><button class="secondary" id="refreshButton">Refresh</button><button class="primary" id="connectButton">Administrator login</button></div>
+      </header>
+
+      <section class="safety-banner" id="safetyBanner"><strong>Protected setup mode</strong><span>Real WhatsApp delivery is disabled. Mock delivery is available for controlled testing.</span></section>
+
+      <section class="view active" id="view-dashboard">
+        <div class="section-head"><div><p class="eyebrow">SCHOOL-WIDE COMMUNICATION</p><h2>Notification overview</h2></div><span id="lastUpdated">Not loaded</span></div>
+        <div class="metrics">
+          <article><span>Guardian contacts</span><strong id="metricContacts">0</strong><small id="metricOptedIn">0 opted in</small></article>
+          <article><span>Draft messages</span><strong id="metricDraft">0</strong><small>Awaiting approval</small></article>
+          <article><span>Queued</span><strong id="metricQueued">0</strong><small>Ready for worker</small></article>
+          <article><span>Delivered</span><strong id="metricSent">0</strong><small>Mock or live</small></article>
+          <article><span>Failed</span><strong id="metricFailed">0</strong><small>Needs review</small></article>
+          <article><span>Active templates</span><strong id="metricTemplates">0</strong><small>English, Yoruba and bilingual</small></article>
+        </div>
+        <div class="dashboard-grid">
+          <article class="panel"><div class="panel-head"><div><p class="eyebrow">DELIVERY SAFETY</p><h3>Current operating mode</h3></div></div><div id="modeCard" class="mode-card"></div><div class="quick-actions"><button class="secondary" id="runMockTest">Run end-to-end mock test</button><button class="secondary" id="releaseLocks">Recover stale locks</button></div></article>
+          <article class="panel"><div class="panel-head"><div><p class="eyebrow">ATTENDANCE INTEGRATION</p><h3>Prepare parent drafts</h3></div></div><div class="form-row"><div class="field"><label>Date</label><input id="prepareDate" type="date"></div><div class="field"><label>Academic session</label><input id="prepareSession" value="2026/2027"></div></div><p class="help">Creates consent-controlled drafts only. It does not queue or send them automatically.</p><button class="primary" id="prepareDrafts">Prepare attendance drafts</button><div id="prepareResult"></div></article>
+        </div>
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">AUTOMATION HEALTH</p><h3>Scheduled workers</h3></div></div><div id="cronList" class="health-grid"></div></article>
+      </section>
+
+      <section class="view" id="view-contacts">
+        <div class="section-head"><div><p class="eyebrow">CENTRAL GUARDIAN RECORDS</p><h2>Parents and consent</h2></div><a class="primary link-button" href="../central-registry/index.html">Open Central Registry</a></div>
+        <div class="panel filters"><div class="field grow"><label>Search</label><input id="contactSearch" placeholder="Student, guardian or phone"></div><div class="field"><label>Consent</label><select id="contactStatus"><option value="">All</option><option value="opted_in">Opted in</option><option value="pending">Pending</option><option value="opted_out">Opted out</option><option value="revoked">Revoked</option></select></div><button class="secondary" id="contactRefresh">Search</button></div>
+        <div id="contactList" class="card-list"></div><div id="contactEmpty" class="empty hidden">No guardian contacts match the current filters.</div>
+      </section>
+
+      <section class="view" id="view-templates">
+        <div class="section-head"><div><p class="eyebrow">MESSAGE LIBRARY</p><h2>Templates and previews</h2></div><button class="primary" id="newTemplate">New template</button></div>
+        <div class="panel filters"><div class="field grow"><label>Search</label><input id="templateSearch" placeholder="Template name or code"></div><div class="field"><label>Source</label><select id="templateSource"><option value="">All</option><option value="attendance">Attendance</option><option value="results">Results</option><option value="exams">Exams</option><option value="general">General</option></select></div><div class="field"><label>Language</label><select id="templateLanguage"><option value="">All</option><option value="en">English</option><option value="yo">Yoruba</option><option value="both">Bilingual</option></select></div><div class="field"><label>Status</label><select id="templateStatus"><option value="">All</option><option value="active">Active</option><option value="draft">Draft</option><option value="inactive">Inactive</option></select></div></div>
+        <div id="templateList" class="card-list"></div><div id="templateEmpty" class="empty hidden">No matching templates.</div>
+      </section>
+
+      <section class="view" id="view-messages">
+        <div class="section-head"><div><p class="eyebrow">APPROVAL AND DELIVERY</p><h2>Message queue</h2></div><button class="primary" id="newDraft">Create manual draft</button></div>
+        <div class="panel filters"><div class="field grow"><label>Search</label><input id="messageSearch" placeholder="Recipient, destination or message"></div><div class="field"><label>Source</label><select id="messageSource"><option value="">All</option><option value="attendance">Attendance</option><option value="results">Results</option><option value="general">General</option></select></div><div class="field"><label>Status</label><select id="messageStatus"><option value="">All</option><option value="draft">Draft</option><option value="queued">Queued</option><option value="sending">Sending</option><option value="sent">Sent</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select></div><button class="secondary" id="messageRefresh">Refresh</button></div>
+        <div id="messageList" class="card-list"></div><div id="messageEmpty" class="empty hidden">No matching messages.</div>
+      </section>
+
+      <section class="view" id="view-providers">
+        <div class="section-head"><div><p class="eyebrow">DELIVERY INFRASTRUCTURE</p><h2>Providers and connectivity</h2></div><button class="primary" id="newProvider">Add provider</button></div>
+        <div id="providerList" class="provider-grid"></div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="section-head"><div><p class="eyebrow">ACTIVATION GATES</p><h2>Notification safety settings</h2></div></div>
+        <form id="settingsForm" class="panel settings-grid">
+          <div class="field"><label>Active provider</label><select id="settingProvider"></select></div>
+          <div class="field"><label>Maximum attempts</label><input id="settingAttempts" type="number" min="1" max="10"></div>
+          <div class="field"><label>Retry base seconds</label><input id="settingRetry" type="number" min="30"></div>
+          <div class="field"><label>Stale lock minutes</label><input id="settingStale" type="number" min="2" max="120"></div>
+          <div class="field"><label>Quiet hours start</label><input id="settingQuietStart" type="time"></div>
+          <div class="field"><label>Quiet hours end</label><input id="settingQuietEnd" type="time"></div>
+          <label class="toggle"><input id="settingDryRun" type="checkbox"> Dry-run mode</label>
+          <label class="toggle"><input id="settingDelivery" type="checkbox"> Enable delivery</label>
+          <label class="toggle"><input id="settingAttendanceDrafts" type="checkbox"> Automatic attendance drafts</label>
+          <label class="toggle"><input id="settingAutoQueue" type="checkbox"> Automatic queue approval</label>
+          <label class="toggle"><input id="settingAttendanceEnabled" type="checkbox"> Attendance notifications enabled</label>
+          <label class="toggle"><input id="settingResultEnabled" type="checkbox"> Result notifications enabled</label>
+          <label class="toggle"><input id="settingConsent" type="checkbox"> Require explicit guardian consent</label>
+          <label class="toggle"><input id="settingVerified" type="checkbox"> Require verified guardian number</label>
+          <div class="production-gate full"><strong>Live activation gate</strong><p>Required only when switching off dry-run and enabling real delivery.</p><label class="toggle"><input id="settingDedicatedNumber" type="checkbox"> Dedicated school number confirmed</label><div class="field"><label>Production approval phrase</label><input id="settingApprovalPhrase" placeholder="ENABLE LIVE SCHOOL NOTIFICATIONS"></div></div>
+          <div class="full"><button class="primary">Save safety configuration</button></div>
+        </form>
+      </section>
+
+      <section class="view" id="view-attempts">
+        <div class="section-head"><div><p class="eyebrow">APPEND-ONLY DELIVERY LOG</p><h2>Delivery attempts</h2></div><button class="secondary" id="attemptRefresh">Refresh</button></div>
+        <div class="panel filters"><div class="field grow"><label>Search</label><input id="attemptSearch" placeholder="Recipient, destination or error"></div><div class="field"><label>Status</label><select id="attemptStatus"><option value="">All</option><option value="started">Started</option><option value="sent">Sent</option><option value="failed">Failed</option><option value="skipped">Skipped</option></select></div></div>
+        <div class="table-wrap panel"><table><thead><tr><th>Recipient</th><th>Provider</th><th>Attempt</th><th>Status</th><th>Error</th><th>Started</th></tr></thead><tbody id="attemptRows"></tbody></table><div id="attemptEmpty" class="empty hidden">No delivery attempts found.</div></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="connectionDialog"><form method="dialog" class="dialog-card" id="connectionForm"><div class="dialog-head"><div><p class="eyebrow">SECURE ADMINISTRATOR ACCESS</p><h2>Connect Notification Management</h2></div><button value="cancel" class="icon">×</button></div><p>Credentials remain only in this browser tab and expire after 20 minutes of inactivity.</p><div class="field"><label>Administrator code</label><input id="adminCode" required></div><div class="field"><label>Administrator secret</label><input id="adminSecret" type="password" required></div><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button value="default" class="primary">Sign in</button></div></form></dialog>
+
+  <dialog id="formDialog"><form method="dialog" class="dialog-card wide" id="dynamicForm"><div class="dialog-head"><div><p class="eyebrow" id="formEyebrow">NOTIFICATION MANAGEMENT</p><h2 id="formTitle">Form</h2></div><button value="cancel" class="icon">×</button></div><div id="formBody" class="form-grid"></div><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button value="default" class="primary" id="formSubmit">Save</button></div></form></dialog>
+
+  <dialog id="previewDialog"><div class="dialog-card wide"><div class="dialog-head"><div><p class="eyebrow">TEMPLATE PREVIEW</p><h2 id="previewTitle">Preview</h2></div><button class="icon" id="previewClose">×</button></div><div id="previewBody" class="message-preview"></div></div></dialog>
+
+  <div id="toastContainer" class="toasts"></div>
+  <script src="./session-hardening.js?v=20260712-2"></script>
+  <script src="./config.js?v=20260712-6"></script>
+  <script src="./app.js?v=20260712-6"></script>
+  <script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js?v=3").catch(()=>{}));}</script>
+</body>
+</html>

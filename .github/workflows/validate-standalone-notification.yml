@@ -1,0 +1,50 @@
+name: Validate Standalone Notification
+
+on:
+  pull_request:
+    paths:
+      - "notification-system/**"
+      - "vercel.json"
+      - ".github/workflows/validate-standalone-notification.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate application JavaScript
+        run: |
+          node --check notification-system/session-hardening.js
+          node --check notification-system/config.js
+          node --check notification-system/app.js
+          node --check notification-system/service-worker.js
+      - name: Confirm production application files
+        run: |
+          test -s notification-system/index.html
+          test -s notification-system/styles.css
+          test -s notification-system/config.js
+          test -s notification-system/notification-config.json
+          test -s notification-system/session-hardening.js
+          test -s notification-system/manifest.webmanifest
+          test -s notification-system/app-icon.svg
+          test -s notification-system/service-worker.js
+          test -s notification-system/vercel.json
+          grep -q './styles.css' notification-system/index.html
+          grep -q './session-hardening.js' notification-system/index.html
+          grep -q 'Notification Dashboard' notification-system/index.html
+          grep -q 'serviceWorker' notification-system/index.html
+          grep -q 'sessionStorage' notification-system/session-hardening.js
+          grep -q 'TIMEOUT_MS' notification-system/session-hardening.js
+          grep -q 'school_notification_console_read_api' notification-system/app.js
+          grep -q 'school_notification_console_write_api' notification-system/app.js
+          grep -q 'view=contacts' vercel.json
+      - name: Reject server-side secrets in frontend
+        run: |
+          if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|WTS_WHATSAPP_GATEWAY_API_KEY|WTS_WHATSAPP_GATEWAY_TOKEN' notification-system; then
+            echo "Server-side secret reference found in notification frontend."
+            exit 1
+          fi

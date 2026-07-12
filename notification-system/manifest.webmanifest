@@ -1,0 +1,13 @@
+{
+  "name":"WTS Notification Management",
+  "short_name":"WTS Notify",
+  "description":"School-wide guardian consent, message approval, templates and delivery management.",
+  "id":"./",
+  "start_url":"./index.html",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#f3f7fb",
+  "theme_color":"#0b1f3a",
+  "categories":["education","communications","business"],
+  "icons":[{"src":"./app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
