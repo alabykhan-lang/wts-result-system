@@ -1,0 +1,10 @@
+{
+  "name":"WTS Central School Registry",
+  "short_name":"WTS Registry",
+  "start_url":"./index.html",
+  "display":"standalone",
+  "background_color":"#f3f7fb",
+  "theme_color":"#0b1f3a",
+  "description":"Central admissions, student, staff, guardian and application-access management for Way to Success Standard Schools.",
+  "icons":[{"src":"./app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
