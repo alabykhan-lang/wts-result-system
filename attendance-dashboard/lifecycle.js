@@ -1,0 +1,2 @@
+"use strict";
+(function(){const files=["./lifecycle-core.js","./lifecycle-admissions.js","./lifecycle-movements.js"];function load(i){if(i>=files.length)return;const s=document.createElement("script");s.src=files[i];s.async=false;s.onload=()=>load(i+1);s.onerror=()=>{const n=document.createElement("div");n.className="toast error";n.textContent=`Unable to load ${files[i]}`;document.querySelector("#toastContainer")?.appendChild(n)};document.body.appendChild(s)}load(0)})();

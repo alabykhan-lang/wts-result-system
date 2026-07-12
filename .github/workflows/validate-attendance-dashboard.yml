@@ -1,0 +1,117 @@
+name: Validate Attendance Dashboard
+
+on:
+  pull_request:
+    paths:
+      - "attendance-dashboard/**"
+      - "attendance-control.html"
+      - ".github/workflows/validate-attendance-dashboard.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check attendance-dashboard/app.js
+          node --check attendance-dashboard/qr-print.js
+          node --check attendance-dashboard/qr-print-autoload.js
+          node --check attendance-dashboard/staff.js
+          node --check attendance-dashboard/staff-qr-print.js
+          node --check attendance-dashboard/staff-portal.js
+          node --check attendance-dashboard/student-departures.js
+          node --check attendance-dashboard/device-security.js
+          node --check attendance-dashboard/operations.js
+          node --check attendance-dashboard/operations-core.js
+          node --check attendance-dashboard/operations-roster.js
+          node --check attendance-dashboard/operations-calendar.js
+          node --check attendance-dashboard/lifecycle.js
+          node --check attendance-dashboard/lifecycle-core.js
+          node --check attendance-dashboard/lifecycle-admissions.js
+          node --check attendance-dashboard/lifecycle-movements.js
+          node --check attendance-dashboard/analytics.js
+          node --check attendance-dashboard/analytics-core.js
+          node --check attendance-dashboard/analytics-overview.js
+          node --check attendance-dashboard/analytics-reports.js
+          node --check attendance-dashboard/analytics-automation.js
+          node --check attendance-dashboard/dashboard-config-loader.js
+          node --check attendance-dashboard/controls.js
+          node --check attendance-dashboard/controls-core.js
+          node --check attendance-dashboard/controls-attendance.js
+          node --check attendance-dashboard/controls-communication.js
+          node --check attendance-dashboard/controls-admin.js
+          node --check attendance-dashboard/management-report.js
+          node --check attendance-dashboard/deployment-tools.js
+          node --check attendance-dashboard/deployment-core.js
+          node --check attendance-dashboard/deployment-providers.js
+          node --check attendance-dashboard/deployment-guardians.js
+          node --check attendance-dashboard/deployment-tests.js
+          node --check attendance-dashboard/deployment-recovery.js
+          node --check attendance-dashboard/parent-contacts.js
+
+      - name: Confirm dashboard files
+        run: |
+          test -s attendance-control.html
+          test -s attendance-dashboard/control-room.html
+          test -s attendance-dashboard/index.html
+          test -s attendance-dashboard/styles.css
+          test -s attendance-dashboard/app.js
+          test -s attendance-dashboard/qr-print.html
+          test -s attendance-dashboard/qr-print.css
+          test -s attendance-dashboard/qr-print.js
+          test -s attendance-dashboard/qr-print-autoload.js
+          test -s attendance-dashboard/staff.html
+          test -s attendance-dashboard/staff.css
+          test -s attendance-dashboard/staff.js
+          test -s attendance-dashboard/staff-qr-print.html
+          test -s attendance-dashboard/staff-qr-print.js
+          test -s attendance-dashboard/staff-portal.html
+          test -s attendance-dashboard/staff-portal.js
+          test -s attendance-dashboard/student-departures.html
+          test -s attendance-dashboard/student-departures.js
+          test -s attendance-dashboard/device-security.html
+          test -s attendance-dashboard/device-security.js
+          test -s attendance-dashboard/operations.html
+          test -s attendance-dashboard/operations.js
+          test -s attendance-dashboard/operations-core.js
+          test -s attendance-dashboard/operations-roster.js
+          test -s attendance-dashboard/operations-calendar.js
+          test -s attendance-dashboard/lifecycle.html
+          test -s attendance-dashboard/lifecycle.js
+          test -s attendance-dashboard/lifecycle-core.js
+          test -s attendance-dashboard/lifecycle-admissions.js
+          test -s attendance-dashboard/lifecycle-movements.js
+          test -s attendance-dashboard/analytics.html
+          test -s attendance-dashboard/analytics.js
+          test -s attendance-dashboard/analytics-core.js
+          test -s attendance-dashboard/analytics-overview.js
+          test -s attendance-dashboard/analytics-reports.js
+          test -s attendance-dashboard/analytics-automation.js
+          test -s attendance-dashboard/dashboard-config-loader.js
+          test -s attendance-dashboard/attendance-config.example.json
+          test -s attendance-dashboard/controls.html
+          test -s attendance-dashboard/controls.js
+          test -s attendance-dashboard/controls-core.js
+          test -s attendance-dashboard/controls-attendance.js
+          test -s attendance-dashboard/controls-communication.js
+          test -s attendance-dashboard/controls-admin.js
+          test -s attendance-dashboard/management-report.html
+          test -s attendance-dashboard/management-report.js
+          test -s attendance-dashboard/deployment-tools.html
+          test -s attendance-dashboard/deployment-tools.js
+          test -s attendance-dashboard/deployment-core.js
+          test -s attendance-dashboard/deployment-providers.js
+          test -s attendance-dashboard/deployment-guardians.js
+          test -s attendance-dashboard/deployment-tests.js
+          test -s attendance-dashboard/deployment-recovery.js
+          test -s attendance-dashboard/parent-contacts.html
+          test -s attendance-dashboard/parent-contacts.js

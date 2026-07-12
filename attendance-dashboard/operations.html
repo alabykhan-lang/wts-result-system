@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>WTS Attendance Operations</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    body{background:#f4f7fb}.ops{max-width:1440px;margin:auto;padding:24px}.hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:25px;border-radius:22px;background:linear-gradient(145deg,#0b1f3a,#17436f);color:#fff}.hero h1{margin:6px 0;font-family:Georgia,serif}.hero p{margin:0;color:#cbd8e8}.actions,.tabs,.inline-actions{display:flex;gap:8px;flex-wrap:wrap}.tabs{margin:18px 0;padding:5px;border-radius:13px;background:#e8eef6}.tabs button{border:0;border-radius:9px;padding:10px 14px;background:transparent;color:#667085;font-weight:800}.tabs button.active{background:#fff;color:#0b1f3a}.tab{display:none}.tab.active{display:block}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin:18px 0}.metric{padding:17px;border:1px solid #dfe5ec;border-radius:15px;background:#fff}.metric span,.metric strong{display:block}.metric span{color:#667085;font-size:10px;text-transform:uppercase}.metric strong{margin-top:7px;color:#0b1f3a;font-size:27px}.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.readiness{display:grid;gap:9px}.ready-row{display:flex;justify-content:space-between;gap:12px;padding:12px;border-radius:11px;background:#f8fafc}.ready-row strong{color:#0b1f3a}.table-wrap{overflow:auto}.ops-table{width:100%;min-width:1120px;border-collapse:collapse}.ops-table th,.ops-table td{padding:9px;border-bottom:1px solid #e5e9ef;text-align:left;font-size:11px}.ops-table th{background:#f8fafc;color:#475467;text-transform:uppercase}.ops-table select,.ops-table input{min-width:120px;border:1px solid #dfe5ec;border-radius:8px;padding:7px}.filter-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:14px}.filter-row .field{min-width:150px}.calendar-list,.exception-list,.batch-list{display:grid;gap:9px}.record-card{display:grid;grid-template-columns:1fr auto;gap:12px;padding:13px;border:1px solid #dfe5ec;border-radius:12px;background:#fff}.record-card strong,.record-card span,.record-card small{display:block}.record-card span,.record-card small{margin-top:3px;color:#667085}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}.check-row{display:flex;gap:13px;flex-wrap:wrap}.warning-box{padding:13px;border:1px solid #fedf89;border-radius:12px;background:#fef0c7;color:#7a2e0e}.hidden{display:none!important}@media(max-width:980px){.ops{padding:14px}.hero{align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}}@media(max-width:560px){.metrics{grid-template-columns:1fr 1fr}.tabs{overflow:auto;flex-wrap:nowrap}.tabs button{white-space:nowrap}}
+  </style>
+</head>
+<body>
+  <main class="ops">
+    <header class="hero">
+      <div><p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1>Attendance Operations & Session Preparation</h1><p>Prepare the 2026/2027 roster, calendar, authorised absences and protected activation.</p></div>
+      <div class="actions"><a class="secondary-button" href="./control-room.html">Control Room</a><button class="primary-button" id="connectButton">Connect</button></div>
+    </header>
+
+    <section class="metrics">
+      <article class="metric"><span>Projected records</span><strong id="projectedCount">0</strong></article>
+      <article class="metric"><span>Projected active</span><strong id="activeCount">0</strong></article>
+      <article class="metric"><span>Graduating SS3</span><strong id="graduatingCount">0</strong></article>
+      <article class="metric"><span>Pending decisions</span><strong id="pendingCount">0</strong></article>
+      <article class="metric"><span>Applied roster</span><strong id="appliedCount">0</strong></article>
+    </section>
+
+    <nav class="tabs">
+      <button class="active" data-tab="overview">Readiness</button>
+      <button data-tab="roster">Roster</button>
+      <button data-tab="calendar">Calendar</button>
+      <button data-tab="exceptions">Student Exceptions</button>
+      <button data-tab="activation">Session Activation</button>
+    </nav>
+
+    <section class="tab active" id="tab-overview">
+      <div class="grid">
+        <article class="panel"><div class="panel-header"><div><p class="eyebrow">LATEST BATCH</p><h3 id="batchTitle">Not loaded</h3></div><button class="secondary-button" id="refreshButton">Refresh</button></div><div id="batchSummary" class="readiness"></div></article>
+        <article class="panel"><div class="panel-header"><div><p class="eyebrow">SAFETY CHECKS</p><h3>Operational readiness</h3></div></div><div id="readinessList" class="readiness"></div></article>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-roster">
+      <article class="panel">
+        <div class="panel-header"><div><p class="eyebrow">2026/2027 PREPARATION</p><h3>Roster decisions</h3></div><div class="inline-actions"><button class="secondary-button" id="newProjection">New projection</button><button class="secondary-button" id="finalPortalSync">Import final portal roster</button></div></div>
+        <div class="filter-row">
+          <div class="field grow"><label>Batch</label><select id="batchSelect"></select></div>
+          <div class="field"><label>Search</label><input id="rosterSearch" placeholder="Student name"></div>
+          <div class="field"><label>Source class</label><select id="classFilter"><option value="">All classes</option></select></div>
+          <div class="field"><label>Decision</label><select id="decisionFilter"><option value="">All</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="rejected">Rejected</option></select></div>
+          <button class="primary-button" id="loadRoster">Load</button>
+        </div>
+        <div class="warning-box">Projection decisions do not modify the result portal. The attendance roster is applied only after every decision is confirmed and the batch is approved.</div>
+        <div class="inline-actions" style="margin:14px 0"><button class="secondary-button" id="confirmVisible">Confirm filtered pending decisions</button><button class="secondary-button" id="submitReview">Submit for review</button><button class="secondary-button" id="approveRoster">Approve roster</button><button class="primary-button" id="applyRoster">Apply attendance roster</button></div>
+        <div class="table-wrap"><table class="ops-table"><thead><tr><th>Student</th><th>Source</th><th>Proposed</th><th>Action</th><th>Final class</th><th>Decision</th><th>Save</th></tr></thead><tbody id="rosterBody"></tbody></table></div>
+      </article>
+    </section>
+
+    <section class="tab" id="tab-calendar">
+      <div class="grid">
+        <article class="panel"><div class="panel-header"><div><p class="eyebrow">DATE OVERRIDE</p><h3>Add school calendar day</h3></div></div>
+          <form id="calendarForm" class="form-grid">
+            <div class="field"><label>Date</label><input type="date" id="calendarDate" required></div>
+            <div class="field"><label>Day type</label><select id="dayType"><option value="holiday">Holiday</option><option value="closure">School closure</option><option value="school_day">Special school day</option><option value="exam_day">Examination day</option><option value="special_event">Special event</option><option value="staff_only">Staff-only day</option></select></div>
+            <div class="field full"><label>Title</label><input id="calendarTitle" required></div>
+            <div class="field full"><label>Note</label><input id="calendarNote"></div>
+            <div class="full"><label>Attendance required for</label><div class="check-row"><label><input type="checkbox" id="calendarStudents"> Students</label><label><input type="checkbox" id="calendarStaff"> Staff</label></div></div>
+            <div class="field"><label>Check-in opens override</label><input type="time" id="calendarOpen"></div>
+            <div class="field"><label>Late after override</label><input type="time" id="calendarLate"></div>
+            <div class="field"><label>Absence cutoff override</label><input type="time" id="calendarCutoff"></div>
+            <div class="field"><label>Student closing override</label><input type="time" id="calendarClose"></div>
+            <div class="full"><button class="primary-button">Save calendar day</button></div>
+          </form>
+        </article>
+        <article class="panel"><div class="panel-header"><div><p class="eyebrow">CURRENT OVERRIDES</p><h3>School calendar</h3></div><button class="secondary-button" id="loadCalendar">Refresh</button></div><div id="calendarList" class="calendar-list"></div></article>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-exceptions">
+      <div class="grid">
+        <article class="panel"><div class="panel-header"><div><p class="eyebrow">AUTHORISED ABSENCE</p><h3>Record student exception</h3></div></div>
+          <form id="exceptionForm" class="form-grid">
+            <div class="field full"><label>Student</label><select id="exceptionStudent" required></select></div>
+            <div class="field"><label>Type</label><select id="exceptionType"><option value="medical">Medical</option><option value="leave">Leave</option><option value="official_assignment">Official assignment</option><option value="authorised_absence">Authorised absence</option><option value="suspension">Suspension</option></select></div>
+            <div class="field"><label>Status</label><select id="exceptionStatus"><option value="approved">Approved</option><option value="pending">Pending</option></select></div>
+            <div class="field"><label>From</label><input type="date" id="exceptionStart" required></div>
+            <div class="field"><label>To</label><input type="date" id="exceptionEnd" required></div>
+            <div class="field full"><label>Reason</label><input id="exceptionReason" required></div>
+            <div class="full"><button class="primary-button">Save exception</button></div>
+          </form>
+        </article>
+        <article class="panel"><div class="panel-header"><div><p class="eyebrow">EXCEPTION REGISTER</p><h3>Student leave and authorised absence</h3></div><button class="secondary-button" id="loadExceptions">Refresh</button></div><div id="exceptionList" class="exception-list"></div></article>
+      </div>
+    </section>
+
+    <section class="tab" id="tab-activation">
+      <article class="panel">
+        <div class="panel-header"><div><p class="eyebrow">PROTECTED ACTIVATION</p><h3>2026/2027 operational settings</h3></div></div>
+        <form id="activationForm" class="form-grid">
+          <div class="field"><label>Session</label><input id="activationSession" value="2026/2027"></div>
+          <div class="field"><label>Term</label><select id="activationTerm"><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div>
+          <div class="field"><label>Operational start date</label><input type="date" id="activationStart" required></div>
+          <div class="field"><label>Operational end date</label><input type="date" id="activationEnd" required></div>
+          <div class="field"><label>Rollout stage</label><select id="rolloutStage"><option value="development">Development</option><option value="pilot">Pilot</option><option value="production">Production</option></select></div>
+          <div class="full check-row"><label><input type="checkbox" id="studentAuto"> Enable student automatic absence</label><label><input type="checkbox" id="staffAuto"> Enable staff automatic absence</label></div>
+          <div class="warning-box full">Automatic absence cannot be enabled until the student roster and active rules are ready. Pilot or production also requires an approved school-owned device.</div>
+          <div class="full"><button class="primary-button">Save guarded session configuration</button></div>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <dialog id="connectionDialog"><form method="dialog" class="dialog-card" id="connectionForm"><div class="dialog-header"><div><p class="eyebrow">PRIVATE ADMINISTRATOR ACCESS</p><h2>Connect operations</h2></div><button value="cancel" class="icon-button">×</button></div><div class="field"><label>Administrator code</label><input id="adminCode" required></div><div class="field"><label>Administrator secret</label><input id="adminSecret" type="password" required></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Connect</button></div></form></dialog>
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="./operations.js"></script>
+</body>
+</html>

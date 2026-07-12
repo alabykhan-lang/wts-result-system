@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1a2a4a">
+  <title>WTS Staff QR Card Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./qr-print.css">
+</head>
+<body>
+  <header class="studio-header no-print">
+    <div><p>WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1>Staff QR Attendance Card Studio</h1><span>Digital staff time-book credentials for 2026/2027</span></div>
+    <div class="header-actions"><a href="./staff.html" class="secondary-button">Back to staff dashboard</a><button class="primary-button" id="printButton">Print cards</button></div>
+  </header>
+
+  <main class="studio-layout">
+    <aside class="control-panel no-print">
+      <section class="control-card">
+        <p class="eyebrow">STAFF CARD DATA</p><h2>Prepare staff cards</h2>
+        <p class="help-text">Newly issued QR credentials load here automatically. Raw tokens are used only inside this browser to render the cards.</p>
+        <textarea id="dataInput" spellcheck="false" aria-label="Staff card JSON"></textarea>
+        <div class="button-row"><button class="primary-button" id="generateButton">Generate cards</button><button class="secondary-button" id="loadSampleButton">Load sample</button><button class="secondary-button" id="clearButton">Clear</button></div>
+      </section>
+      <section class="control-card">
+        <p class="eyebrow">PRINT LAYOUT</p><h2>A4 card arrangement</h2>
+        <label class="field"><span>Cards per page</span><select id="cardsPerPage"><option value="8" selected>8 cards — 2 × 4</option><option value="6">6 cards — 2 × 3</option><option value="4">4 cards — 2 × 2</option></select></label>
+        <label class="field check-field"><input type="checkbox" id="showCutMarks" checked><span>Show trimming guides</span></label>
+        <label class="field check-field"><input type="checkbox" id="showPhoto" checked><span>Show staff photographs</span></label>
+      </section>
+      <section class="control-card status-card"><p class="eyebrow">STATUS</p><strong id="cardCount">0 cards prepared</strong><span id="pageCount">0 A4 pages</span><div id="messageBox" class="message-box">Issue a QR credential from the staff dashboard or load the sample.</div></section>
+    </aside>
+
+    <section class="preview-area">
+      <div class="preview-toolbar no-print"><div><strong>Print preview</strong><span>Physical card size: approximately 85.6 × 54 mm</span></div><span class="security-pill">Tokens are not stored</span></div>
+      <div id="pagesContainer" class="pages-container"></div>
+    </section>
+  </main>
+
+  <template id="cardTemplate">
+    <article class="student-card">
+      <div class="card-topline"></div>
+      <header class="card-header"><div class="school-mark">WTS</div><div><h3>WAY TO SUCCESS STANDARD SCHOOLS</h3><p>Ifedapo Community, Oko/Ijado Road, Ejigbo</p></div></header>
+      <div class="card-body">
+        <div class="photo-frame"><span class="photo-initials">ST</span><img alt="Staff photograph"></div>
+        <div class="student-info"><span class="card-label">STAFF ATTENDANCE ID</span><h4 class="student-name">STAFF NAME</h4><dl><div><dt>Position</dt><dd class="staff-designation">—</dd></div><div><dt>Staff No.</dt><dd class="student-admno">—</dd></div><div><dt>Session</dt><dd class="student-session">2026/2027</dd></div></dl></div>
+        <div class="qr-zone"><canvas class="qr-canvas" width="160" height="160"></canvas><span class="credential-ending">Ending ————</span></div>
+      </div>
+      <footer class="card-footer"><span>Scan or tap at the school gate</span><strong>STAFF • PROPERTY OF WTS</strong></footer>
+    </article>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <script src="./staff-qr-print.js"></script>
+</body>
+</html>

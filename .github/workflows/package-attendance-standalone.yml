@@ -1,0 +1,60 @@
+name: Package Standalone Attendance App
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "attendance-dashboard/**"
+      - ".github/workflows/package-attendance-standalone.yml"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify sensitive keys are absent
+        run: |
+          if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' \
+            -E 'service[_-]?role|SUPABASE_SERVICE_ROLE_KEY|x-wts-device-secret' attendance-dashboard; then
+            echo "Sensitive server-side key reference found in standalone frontend."
+            exit 1
+          fi
+
+      - name: Build standalone directory
+        run: |
+          mkdir -p dist/wts-attendance-system
+          cp -R attendance-dashboard/. dist/wts-attendance-system/
+          rm -f dist/wts-attendance-system/attendance-config.json
+          cp docs/SCHOOL_PLATFORM_ARCHITECTURE.md dist/wts-attendance-system/PLATFORM_ARCHITECTURE.md
+          cat > dist/wts-attendance-system/README.md <<'EOF'
+          # WTS Attendance System
+
+          Standalone attendance administration frontend for Way to Success Standard Schools, Ejigbo.
+
+          Before deployment:
+
+          1. Copy `attendance-config.example.json` to `attendance-config.json`.
+          2. Insert only the public Supabase URL and publishable key.
+          3. Never place service-role, device, administrator or WhatsApp provider secrets in frontend files.
+          4. Deploy this directory as an independent Vercel project.
+
+          The root route opens the Attendance Control Room.
+          EOF
+
+      - name: Validate packaged JavaScript
+        run: |
+          find dist/wts-attendance-system -maxdepth 1 -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Create ZIP archive
+        run: |
+          cd dist
+          zip -qr WTS_Attendance_Standalone.zip wts-attendance-system
+
+      - name: Upload standalone artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WTS-Attendance-Standalone
+          path: dist/WTS_Attendance_Standalone.zip
+          retention-days: 30
