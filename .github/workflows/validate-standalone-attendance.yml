@@ -23,6 +23,7 @@ jobs:
           node --check attendance-dashboard/app.js
           node --check attendance-dashboard/service-worker.js
           node --check attendance-dashboard/staff-portal-security-patch.js
+          node --check attendance-dashboard/staff-applications.js
       - name: Confirm production application files
         run: |
           test -s attendance-dashboard/index.html
@@ -31,6 +32,8 @@ jobs:
           test -s attendance-dashboard/staff-portal.html
           test -s attendance-dashboard/staff-portal-secure.html
           test -s attendance-dashboard/staff-portal-security-patch.js
+          test -s attendance-dashboard/staff-applications.html
+          test -s attendance-dashboard/staff-applications.js
           test -s attendance-dashboard/styles.css
           test -s attendance-dashboard/production-ui.css
           test -s attendance-dashboard/session-hardening.js
@@ -48,6 +51,10 @@ jobs:
           grep -q 'embedded=1' attendance-dashboard/staff-portal-secure.html
           grep -q 'createSignedUrl' attendance-dashboard/staff-portal-security-patch.js
           grep -q 'staff-profile-photos' attendance-dashboard/staff-portal-security-patch.js
+          grep -q 'staff_application_admin_read_api' attendance-dashboard/staff-applications.js
+          grep -q 'staff_application_admin_write_api' attendance-dashboard/staff-applications.js
+          grep -q 'archiveStaff' attendance-dashboard/staff-applications.js
+          grep -q 'staff-applications' vercel.json
           grep -q 'SAMEORIGIN' vercel.json
       - name: Reject server-side secrets in frontend
         run: |
