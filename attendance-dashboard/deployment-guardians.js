@@ -35,7 +35,7 @@ window.WTSDeployGuardians = (() => {
     }
     return csvRows.slice(1).map((values) => {
       const record = Object.fromEntries(headers.map((header, index) => [header, (values[index] || "").trim()]));
-      const preferredChannels = String(record.preferredChannels || "sms")
+      const preferredChannels = String(record.preferredChannels || "whatsapp")
         .split(/[|;\s]+/).map((value) => value.trim().toLowerCase()).filter(Boolean);
       return {
         studentAdmissionNumber: record.studentAdmissionNumber || "",
@@ -44,7 +44,7 @@ window.WTSDeployGuardians = (() => {
         relationship: record.relationship || "",
         phone: record.phone || "",
         email: record.email || "",
-        preferredChannels: preferredChannels.length ? preferredChannels : ["sms"],
+        preferredChannels: preferredChannels.length ? preferredChannels : ["whatsapp"],
         isPrimary: ["true", "yes", "1", "primary"].includes(String(record.isPrimary || "").toLowerCase())
       };
     });
@@ -74,7 +74,8 @@ window.WTSDeployGuardians = (() => {
       const rows = data.rows || [];
       $("#importRows").innerHTML = rows.map((row) => `
         <tr><td>${row.row_number}</td><td>${escapeHtml(row.student_admission_number || row.student_name || "—")}</td><td>${escapeHtml(row.guardian_name)}</td><td>${escapeHtml(row.phone || row.email || "—")}</td><td>${escapeHtml(row.match_status)}</td><td>${escapeHtml((row.validation_errors || []).join(", ") || "None")}</td></tr>`).join("");
-      $("#guardianValidation").innerHTML = `<div class="${data.batch.status === "validated" ? "success-box" : "warning-box"}"><strong>${escapeHtml(data.batch.status)}</strong><br>${data.batch.valid_rows || 0} valid, ${data.batch.invalid_rows || 0} invalid.</div>`;
+      const consentNote = data.batch.status === "applied" ? "<br>Imported WhatsApp numbers remain pending until consent is recorded in the Parent Contact Library." : "";
+      $("#guardianValidation").innerHTML = `<div class="${data.batch.status === "validated" || data.batch.status === "applied" ? "success-box" : "warning-box"}"><strong>${escapeHtml(data.batch.status)}</strong><br>${data.batch.valid_rows || 0} valid, ${data.batch.invalid_rows || 0} invalid.${consentNote}</div>`;
     } catch (error) { toast(error.message, "error"); }
   }
 
@@ -89,7 +90,7 @@ window.WTSDeployGuardians = (() => {
         sourceFilename: file.name,
         rows
       });
-      $("#guardianValidation").innerHTML = `<div class="${result.status === "validated" ? "success-box" : "warning-box"}"><strong>${escapeHtml(result.status)}</strong><br>${result.valid_rows} valid row(s); ${result.invalid_rows} blocked row(s).</div>`;
+      $("#guardianValidation").innerHTML = `<div class="${result.status === "validated" ? "success-box" : "warning-box"}"><strong>${escapeHtml(result.status)}</strong><br>${result.valid_rows} valid row(s); ${result.invalid_rows} blocked row(s). No WhatsApp consent is assumed.</div>`;
       toast("Guardian CSV validation completed.", "success");
       await loadImports();
       await loadRows(result.batch_id);
@@ -97,10 +98,10 @@ window.WTSDeployGuardians = (() => {
   }
 
   async function applyBatch(batchId) {
-    if (!confirm("Apply only the validated rows from this batch to the guardian register?")) return;
+    if (!confirm("Apply only the validated rows? Imported WhatsApp numbers will remain pending consent.")) return;
     try {
       const result = await write("applyGuardianImport", { batchId });
-      toast(`${result.applied_rows} guardian contact(s) applied.`, "success");
+      toast(`${result.applied_rows} guardian contact(s) applied with pending WhatsApp consent.`, "success");
       await loadImports();
       await loadRows(batchId);
     } catch (error) { toast(error.message, "error"); }
@@ -109,9 +110,9 @@ window.WTSDeployGuardians = (() => {
   function template() {
     const content = [
       "studentAdmissionNumber,studentName,guardianName,relationship,phone,email,preferredChannels,isPrimary",
-      ",EXACT STUDENT NAME,GUARDIAN NAME,Father,08000000000,,sms|whatsapp,true"
+      ",EXACT STUDENT NAME,GUARDIAN NAME,Father,08000000000,,whatsapp,true"
     ].join("\n");
-    download("WTS_Guardian_Import_Template.csv", content, "text/csv;charset=utf-8");
+    download("WTS_Parent_WhatsApp_Import_Template.csv", content, "text/csv;charset=utf-8");
   }
 
   $("#guardianImportForm").addEventListener("submit", validateCsv);
