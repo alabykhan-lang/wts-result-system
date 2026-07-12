@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1f3a">
+  <meta name="description" content="Way to Success Notification Control Center for guardian consent, templates, drafts and delivery monitoring.">
+  <title>WTS Notification Control Center</title>
+  <link rel="icon" href="./app-icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css?v=20260712-1">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">WTS</div><div><strong>Notifications</strong><span>Management Control Center</span></div></div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="dashboard"><span>▦</span>Dashboard</button>
+      <button class="nav-item" data-view="contacts"><span>👪</span>Contacts</button>
+      <button class="nav-item" data-view="templates"><span>✎</span>Templates</button>
+      <button class="nav-item" data-view="messages"><span>✉</span>Drafts & Queue</button>
+      <button class="nav-item" data-view="attempts"><span>↻</span>Delivery Attempts</button>
+      <button class="nav-item" data-view="providers"><span>⚙</span>Providers</button>
+      <button class="nav-item" data-view="readiness"><span>✓</span>Readiness</button>
+    </nav>
+    <div class="sidebar-status"><i id="connectionDot"></i><div><strong id="connectionState">Not connected</strong><span>Administrator access required</span></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1 id="pageTitle">Notification Dashboard</h1></div>
+      <div class="top-actions"><span class="mode-badge" id="modeBadge">Protected mode</span><button class="secondary-button" id="refreshButton">Refresh</button><button class="primary-button" id="connectButton">Administrator login</button></div>
+    </header>
+
+    <div class="protection-banner"><strong>Real delivery protection:</strong> WhatsApp messages cannot be sent live from this interface. Only dry-run delivery through the mock provider can be enabled until the production activation checklist is completed.</div>
+    <div id="sessionBar" class="session-bar hidden"><div><strong id="sessionIdentity">Administrator session</strong><small>Stored only in this browser tab • expires after 20 minutes of inactivity</small></div><button class="text-button" id="signOutButton">Sign out</button></div>
+
+    <section class="view active" id="view-dashboard">
+      <div class="section-head"><div><p class="eyebrow">LIVE NOTIFICATION STATE</p><h2>Delivery overview</h2></div><span id="lastUpdated">Not loaded</span></div>
+      <div class="metric-grid">
+        <article class="metric navy"><span>Active contacts</span><strong id="metricContacts">0</strong><small>Guardian contact profiles</small></article>
+        <article class="metric green"><span>WhatsApp opt-ins</span><strong id="metricOptedIn">0</strong><small>Explicit consent recorded</small></article>
+        <article class="metric blue"><span>Active templates</span><strong id="metricTemplates">18</strong><small>English, Yoruba and bilingual</small></article>
+        <article class="metric amber"><span>Drafts</span><strong id="metricDrafts">0</strong><small>Awaiting approval or queueing</small></article>
+        <article class="metric slate"><span>Failed</span><strong id="metricFailed">0</strong><small>Requires management review</small></article>
+      </div>
+      <div class="dashboard-grid">
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">DELIVERY SAFETY</p><h3>Current operating mode</h3></div><span id="deliveryStatus" class="status-pill protected">Protected</span></div><div id="safetySummary" class="safety-list"></div><div class="button-row"><button class="primary-button" id="enableDryRun">Enable dry-run</button><button class="secondary-button" id="disableDelivery">Disable delivery</button></div></article>
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">QUICK ACTIONS</p><h3>Management tools</h3></div></div><div class="quick-grid"><button id="prepareDrafts">Prepare attendance drafts</button><button id="runMockWorker">Run mock worker</button><button data-open-view="templates">Review templates</button><button data-open-view="readiness">Production readiness</button></div></article>
+      </div>
+      <article class="panel system-panel"><div><p class="eyebrow">CONNECTED SOURCES</p><h3>One notification system for the school</h3></div><div class="system-flow"><span>Central Registry</span><i>→</i><span>Attendance</span><span>Results</span><span>Exams</span><i>→</i><span>Notification Queue</span><i>→</i><span>WhatsApp Provider</span></div><p>Guardian records and consent originate from the Central Registry. Attendance and Results generate drafts; management controls approval and delivery from this application.</p></article>
+    </section>
+
+    <section class="view" id="view-contacts">
+      <div class="section-head"><div><p class="eyebrow">GUARDIAN CONSENT</p><h2>Parent and guardian contacts</h2></div><a class="secondary-button" href="../central-registry/index.html">Open Central Registry</a></div>
+      <div class="panel filters"><div class="field grow"><label>Search</label><input id="contactSearch" placeholder="Student, guardian, admission number or phone"></div><div class="field"><label>Consent status</label><select id="contactStatus"><option value="">All</option><option value="opted_in">Opted in</option><option value="pending">Pending</option><option value="opted_out">Opted out</option><option value="revoked">Revoked</option></select></div><button class="secondary-button" id="contactRefresh">Search</button></div>
+      <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Student</th><th>Guardian</th><th>WhatsApp</th><th>Language</th><th>Consent</th><th>Verified</th><th>Actions</th></tr></thead><tbody id="contactRows"></tbody></table></div><div class="empty hidden" id="contactEmpty">No guardian contacts found. Add guardian details through the Central Registry.</div></div>
+    </section>
+
+    <section class="view" id="view-templates">
+      <div class="section-head"><div><p class="eyebrow">MESSAGE LIBRARY</p><h2>Notification templates</h2></div><button class="primary-button" id="newTemplate">Create template</button></div>
+      <div class="panel filters"><div class="field grow"><label>Search</label><input id="templateSearch" placeholder="Template name or code"></div><div class="field"><label>Source</label><select id="templateSource"><option value="">All</option><option value="attendance">Attendance</option><option value="results">Results</option><option value="exams">Exams</option><option value="general">General</option></select></div><div class="field"><label>Language</label><select id="templateLanguage"><option value="">All</option><option value="en">English</option><option value="yo">Yoruba</option><option value="both">English + Yoruba</option></select></div><button class="secondary-button" id="templateRefresh">Search</button></div>
+      <div id="templateList" class="card-list"></div><div class="empty hidden" id="templateEmpty">No matching templates found.</div>
+    </section>
+
+    <section class="view" id="view-messages">
+      <div class="section-head"><div><p class="eyebrow">APPROVAL QUEUE</p><h2>Drafts and messages</h2></div><button class="primary-button" id="newDraft">Create manual draft</button></div>
+      <div class="panel filters"><div class="field grow"><label>Search</label><input id="messageSearch" placeholder="Recipient, message or template"></div><div class="field"><label>Status</label><select id="messageStatus"><option value="">All</option><option value="draft">Draft</option><option value="queued">Queued</option><option value="sending">Sending</option><option value="sent">Sent</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select></div><div class="field"><label>Source</label><select id="messageSource"><option value="">All</option><option value="attendance">Attendance</option><option value="results">Results</option><option value="exams">Exams</option><option value="general">General</option></select></div><button class="secondary-button" id="messageRefresh">Refresh</button></div>
+      <div id="messageList" class="card-list"></div><div class="empty hidden" id="messageEmpty">No messages found.</div>
+    </section>
+
+    <section class="view" id="view-attempts">
+      <div class="section-head"><div><p class="eyebrow">DELIVERY AUDIT</p><h2>Delivery attempts</h2></div><button class="secondary-button" id="attemptRefresh">Refresh</button></div>
+      <div class="panel filters"><div class="field"><label>Status</label><select id="attemptStatus"><option value="">All</option><option value="started">Started</option><option value="sent">Sent</option><option value="failed">Failed</option><option value="skipped">Skipped</option></select></div></div>
+      <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Recipient</th><th>Source</th><th>Provider</th><th>Attempt</th><th>Status</th><th>Started</th><th>Error</th></tr></thead><tbody id="attemptRows"></tbody></table></div><div class="empty hidden" id="attemptEmpty">No delivery attempts recorded.</div></div>
+    </section>
+
+    <section class="view" id="view-providers">
+      <div class="section-head"><div><p class="eyebrow">DELIVERY CHANNELS</p><h2>Provider configuration</h2></div></div>
+      <div id="providerList" class="provider-grid"></div>
+      <article class="panel settings-panel"><div class="panel-head"><div><p class="eyebrow">SYSTEM SETTINGS</p><h3>Retries, quiet hours and feature controls</h3></div></div><form id="settingsForm" class="form-grid"><div class="field"><label>Maximum attempts</label><input id="maxAttempts" type="number" min="1" max="10"></div><div class="field"><label>Retry base seconds</label><input id="retryBase" type="number" min="30"></div><div class="field"><label>Stale lock minutes</label><input id="staleLock" type="number" min="2" max="120"></div><div class="field"><label>Quiet hours start</label><input id="quietStart" type="time"></div><div class="field"><label>Quiet hours end</label><input id="quietEnd" type="time"></div><label class="check"><input id="attendanceEnabled" type="checkbox"> Attendance notifications enabled</label><label class="check"><input id="resultEnabled" type="checkbox"> Result notifications enabled</label><label class="check"><input id="autoDrafts" type="checkbox"> Automatic attendance drafts</label><label class="check"><input id="requireVerified" type="checkbox"> Require verified guardian number</label><div class="full"><button class="primary-button">Save safe settings</button></div></form></article>
+    </section>
+
+    <section class="view" id="view-readiness">
+      <div class="section-head"><div><p class="eyebrow">PRODUCTION GATE</p><h2>WhatsApp readiness</h2></div><button class="secondary-button" id="readinessRefresh">Refresh</button></div>
+      <div id="readinessList" class="readiness-list"></div>
+      <article class="panel activation-panel"><h3>Live activation remains blocked</h3><p id="activationMessage">A dedicated school number, provider credentials, consent pilot and management approval are still required.</p><button class="secondary-button" id="requestActivation">Record activation request</button></article>
+    </section>
+  </main>
+</div>
+
+<dialog id="loginDialog"><form method="dialog" class="dialog-card" id="loginForm"><div class="dialog-head"><div><p class="eyebrow">SECURE MANAGEMENT ACCESS</p><h2>Connect Notification Control</h2></div><button value="cancel" class="icon-button">×</button></div><p>Credentials remain only in this browser tab and expire after inactivity.</p><div class="field"><label>Administrator code</label><input id="adminCode" autocomplete="username" required></div><div class="field"><label>Administrator secret</label><input id="adminSecret" type="password" autocomplete="current-password" required></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Sign in</button></div></form></dialog>
+
+<dialog id="formDialog"><form method="dialog" class="dialog-card wide" id="dynamicForm"><div class="dialog-head"><div><p class="eyebrow" id="formEyebrow">NOTIFICATION CONTROL</p><h2 id="formTitle">Form</h2></div><button value="cancel" class="icon-button">×</button></div><div id="formBody" class="form-grid"></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button" id="formSubmit">Save</button></div></form></dialog>
+<div id="toastContainer" class="toast-container" aria-live="polite"></div>
+<script src="./config.js?v=20260712-1"></script>
+<script src="./session.js?v=20260712-1"></script>
+<script src="./app.js?v=20260712-1"></script>
+</body>
+</html>
