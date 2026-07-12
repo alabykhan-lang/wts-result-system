@@ -1,0 +1,65 @@
+name: Validate Central Registry
+
+on:
+  pull_request:
+    paths:
+      - "central-registry/**"
+      - "vercel.json"
+      - ".github/workflows/validate-central-registry.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate JavaScript
+        run: |
+          node --check central-registry/config.js
+          node --check central-registry/session.js
+          node --check central-registry/app.js
+      - name: Confirm application files
+        run: |
+          test -s central-registry/index.html
+          test -s central-registry/section.html
+          test -s central-registry/styles.css
+          test -s central-registry/config.js
+          test -s central-registry/session.js
+          test -s central-registry/app.js
+          test -s central-registry/manifest.webmanifest
+          test -s central-registry/app-icon.svg
+          test -s central-registry/vercel.json
+          grep -q 'Central Registry Dashboard' central-registry/index.html
+          grep -q 'school_registry_admin_read_api' central-registry/app.js
+          grep -q 'school_registry_student_write_api' central-registry/app.js
+          grep -q 'school_registry_staff_write_api' central-registry/app.js
+          grep -q 'school_registry_access_write_api' central-registry/app.js
+          grep -q 'school_admissions_write_api' central-registry/app.js
+          grep -q 'sessionStorage' central-registry/session.js
+          grep -q 'section.html?view=students' vercel.json
+          grep -q 'section.html?view=admissions' vercel.json
+          grep -q 'section.html?view=staff' vercel.json
+          grep -q 'X-Frame-Options' vercel.json
+      - name: Serve and verify local application assets
+        run: |
+          python3 -m http.server 4173 --directory central-registry >/tmp/registry-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 1
+          curl -fsS http://127.0.0.1:4173/index.html | grep -q 'Central Registry Dashboard'
+          curl -fsS http://127.0.0.1:4173/styles.css | grep -q '.app-shell'
+          curl -fsS http://127.0.0.1:4173/config.js | grep -q 'WTSRegistryConfig'
+          curl -fsS http://127.0.0.1:4173/session.js | grep -q 'WTSRegistrySession'
+          curl -fsS http://127.0.0.1:4173/app.js | grep -q 'school_registry_admin_read_api'
+          curl -fsS 'http://127.0.0.1:4173/section.html?view=students' | grep -q 'Opening Central Registry'
+          curl -fsS http://127.0.0.1:4173/manifest.webmanifest | grep -q 'WTS Central School Registry'
+          curl -fsS http://127.0.0.1:4173/app-icon.svg | grep -q '<svg'
+      - name: Reject server-side secrets
+        run: |
+          if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|x-wts-device-secret' central-registry; then
+            echo "Server-side secret reference found in Central Registry frontend."
+            exit 1
+          fi

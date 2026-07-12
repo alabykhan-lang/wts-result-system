@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1f3a">
+  <meta name="description" content="Way to Success Central School Registry for admissions, students, staff, guardians and application access.">
+  <title>WTS Central School Registry</title>
+  <link rel="icon" href="./app-icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css?v=20260712-1">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">WTS</div><div><strong>Central Registry</strong><span>Way to Success Schools</span></div></div>
+      <nav class="nav" aria-label="Registry sections">
+        <button class="nav-item active" data-view="dashboard"><span>▦</span>Dashboard</button>
+        <button class="nav-item" data-view="students"><span>🎓</span>Students</button>
+        <button class="nav-item" data-view="admissions"><span>＋</span>Admissions</button>
+        <button class="nav-item" data-view="staff"><span>👥</span>Staff</button>
+        <button class="nav-item" data-view="access"><span>🔐</span>Portal Access</button>
+        <button class="nav-item" data-view="sync"><span>↻</span>Synchronization</button>
+      </nav>
+      <div class="sidebar-status"><i id="connectionDot"></i><div><strong id="connectionState">Not connected</strong><span>Management access required</span></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton">☰</button>
+        <div><p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1 id="pageTitle">Central Registry Dashboard</h1></div>
+        <div class="top-actions"><span class="session-badge">Single source of truth</span><button class="secondary-button" id="refreshButton">Refresh</button><button class="primary-button" id="connectButton">Administrator login</button></div>
+      </header>
+
+      <div class="security-note"><strong>Independent access:</strong> adding a student or staff member creates a permanent school identity. Portal access is assigned separately by management.</div>
+      <div id="sessionBar" class="session-bar hidden"><div><strong id="sessionIdentity">Administrator session</strong><small>Stored only in this browser tab • 20-minute inactivity timeout</small></div><button class="text-button" id="signOutButton">Sign out</button></div>
+
+      <section class="view active" id="view-dashboard">
+        <div class="section-head"><div><p class="eyebrow">LIVE SCHOOL DATABASE</p><h2>Registry overview</h2></div><span id="lastUpdated">Not loaded</span></div>
+        <div class="metric-grid">
+          <article class="metric navy"><span>Permanent identities</span><strong id="metricPeople">809</strong><small>Students, staff and guardians</small></article>
+          <article class="metric green"><span>Active students</span><strong id="metricStudents">785</strong><small>Shared by all systems</small></article>
+          <article class="metric blue"><span>Active staff</span><strong id="metricStaff">24</strong><small>Access assigned separately</small></article>
+          <article class="metric amber"><span>Pending admissions</span><strong id="metricAdmissions">0</strong><small>Awaiting review or enrollment</small></article>
+          <article class="metric slate"><span>Sync events</span><strong id="metricSync">0</strong><small>Pending or failed</small></article>
+        </div>
+        <div class="dashboard-grid">
+          <article class="panel"><div class="panel-head"><div><p class="eyebrow">APPLICATION ACCESS</p><h3>Active access grants</h3></div><button class="text-button" data-open-view="access">Manage access</button></div><div id="accessSummary" class="access-summary"></div></article>
+          <article class="panel"><div class="panel-head"><div><p class="eyebrow">QUICK ACTIONS</p><h3>Management tools</h3></div></div><div class="quick-grid"><button data-action="newStudent">Admit student</button><button data-action="newAdmission">Create application</button><button data-action="newStaff">Register staff</button><button data-open-view="sync">Review synchronization</button></div></article>
+        </div>
+        <article class="panel architecture-panel"><div><p class="eyebrow">CONNECTED SCHOOL SYSTEMS</p><h3>One database, separate applications</h3></div><div class="system-flow"><span>Central Registry</span><i>→</i><span>Results</span><span>Finance</span><span>Attendance</span><span>Notifications</span></div><p>Students and staff are created once. Each system consumes the same permanent identity and receives only the permissions it needs.</p></article>
+      </section>
+
+      <section class="view" id="view-students">
+        <div class="section-head"><div><p class="eyebrow">STUDENT LIFECYCLE</p><h2>Student registry</h2></div><button class="primary-button" data-action="newStudent">Add student</button></div>
+        <div class="panel filters"><div class="field grow"><label>Search</label><input id="studentSearch" placeholder="Name or admission number"></div><div class="field"><label>Class</label><select id="studentClass"><option value="">All classes</option></select></div><div class="field"><label>Status</label><select id="studentStatus"><option value="active">Active</option><option value="">All</option><option value="archived">Archived</option><option value="graduated">Graduated</option><option value="transferred">Transferred</option><option value="withdrawn">Withdrawn</option></select></div><button class="secondary-button" id="studentRefresh">Search</button></div>
+        <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Student</th><th>Class</th><th>Admission No.</th><th>Status</th><th>Guardian</th><th>Actions</th></tr></thead><tbody id="studentRows"></tbody></table></div><div class="empty hidden" id="studentEmpty">No matching students found.</div></div>
+      </section>
+
+      <section class="view" id="view-admissions">
+        <div class="section-head"><div><p class="eyebrow">CENTRAL ADMISSIONS</p><h2>Admission applications</h2></div><button class="primary-button" data-action="newAdmission">New application</button></div>
+        <div class="panel filters"><div class="field grow"><label>Search</label><input id="admissionSearch" placeholder="Student, guardian or application number"></div><div class="field"><label>Status</label><select id="admissionStatus"><option value="">All statuses</option><option value="draft">Draft</option><option value="submitted">Submitted</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="enrolled">Enrolled</option></select></div><button class="secondary-button" id="admissionRefresh">Search</button></div>
+        <div id="admissionList" class="card-list"></div><div class="empty hidden" id="admissionEmpty">No admission applications found.</div>
+      </section>
+
+      <section class="view" id="view-staff">
+        <div class="section-head"><div><p class="eyebrow">STAFF LIFECYCLE</p><h2>Staff registry</h2></div><button class="primary-button" data-action="newStaff">Register staff</button></div>
+        <div class="panel filters"><div class="field grow"><label>Search</label><input id="staffSearch" placeholder="Name, staff number or email"></div><div class="field"><label>Status</label><select id="staffStatus"><option value="active">Active</option><option value="">All</option><option value="suspended">Suspended</option><option value="archived">Archived</option><option value="exited">Exited</option></select></div><button class="secondary-button" id="staffRefresh">Search</button></div>
+        <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Designation</th><th>Category</th><th>Status</th><th>Login</th><th>Access</th><th>Actions</th></tr></thead><tbody id="staffRows"></tbody></table></div><div class="empty hidden" id="staffEmpty">No matching staff found.</div></div>
+      </section>
+
+      <section class="view" id="view-access">
+        <div class="section-head"><div><p class="eyebrow">LEAST-PRIVILEGE ACCESS</p><h2>Portal access manager</h2></div></div>
+        <div class="panel access-search"><div class="field grow"><label>Find student or staff</label><input id="accessSearch" placeholder="Search by name, number or email"></div><select id="accessPersonType"><option value="staff">Staff</option><option value="student">Student</option></select><button class="secondary-button" id="accessFind">Find</button></div>
+        <div class="access-layout"><article class="panel"><h3>People</h3><div id="accessPeople" class="people-list"></div></article><article class="panel"><div id="accessDetail" class="empty">Select a person to manage application access.</div></article></div>
+      </section>
+
+      <section class="view" id="view-sync">
+        <div class="section-head"><div><p class="eyebrow">DATA SYNCHRONIZATION</p><h2>Registry event outbox</h2></div><button class="secondary-button" id="syncRefresh">Refresh</button></div>
+        <div class="panel filters"><div class="field"><label>Status</label><select id="syncStatus"><option value="">All</option><option value="pending">Pending</option><option value="completed">Completed</option><option value="failed">Failed</option></select></div></div>
+        <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Entity</th><th>Target systems</th><th>Status</th><th>Created</th></tr></thead><tbody id="syncRows"></tbody></table></div><div class="empty hidden" id="syncEmpty">No synchronization events found.</div></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="loginDialog"><form method="dialog" class="dialog-card" id="loginForm"><div class="dialog-head"><div><p class="eyebrow">SECURE MANAGEMENT ACCESS</p><h2>Connect Central Registry</h2></div><button value="cancel" class="icon-button">×</button></div><p>Credentials remain only in this browser tab and expire after inactivity.</p><div class="field"><label>Administrator code</label><input id="adminCode" autocomplete="username" required></div><div class="field"><label>Administrator secret</label><input id="adminSecret" type="password" autocomplete="current-password" required></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Sign in</button></div></form></dialog>
+
+  <dialog id="formDialog"><form method="dialog" class="dialog-card wide" id="dynamicForm"><div class="dialog-head"><div><p class="eyebrow" id="formEyebrow">CENTRAL REGISTRY</p><h2 id="formTitle">Form</h2></div><button value="cancel" class="icon-button">×</button></div><div id="formBody" class="form-grid"></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button" id="formSubmit">Save</button></div></form></dialog>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+  <script src="./config.js?v=20260712-1"></script>
+  <script src="./session.js?v=20260712-1"></script>
+  <script src="./app.js?v=20260712-1"></script>
+</body>
+</html>

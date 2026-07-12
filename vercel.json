@@ -1,34 +1,26 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "redirects": [
-    { "source": "/", "destination": "/attendance-dashboard/control-room.html", "permanent": false },
-    { "source": "/parents", "destination": "/attendance-dashboard/parent-contacts.html", "permanent": false },
-    { "source": "/students", "destination": "/attendance-dashboard/index.html", "permanent": false },
-    { "source": "/staff", "destination": "/attendance-dashboard/staff.html", "permanent": false },
-    { "source": "/staff-applications", "destination": "/attendance-dashboard/staff-applications.html", "permanent": false },
-    { "source": "/staff-portal", "destination": "/attendance-dashboard/staff-portal-secure.html", "permanent": false },
-    {
-      "source": "/attendance-dashboard/staff-portal",
-      "destination": "/attendance-dashboard/staff-portal-secure",
-      "permanent": false,
-      "missing": [{ "type": "query", "key": "embedded" }]
-    },
-    { "source": "/operations", "destination": "/attendance-dashboard/operations.html", "permanent": false },
-    { "source": "/analytics", "destination": "/attendance-dashboard/analytics.html", "permanent": false },
-    { "source": "/controls", "destination": "/attendance-dashboard/controls.html", "permanent": false },
-    { "source": "/deployment", "destination": "/attendance-dashboard/deployment-tools.html", "permanent": false }
+  "$schema":"https://openapi.vercel.sh/vercel.json",
+  "cleanUrls":true,
+  "trailingSlash":false,
+  "redirects":[
+    {"source":"/","destination":"/central-registry/index.html","permanent":false},
+    {"source":"/registry","destination":"/central-registry/index.html","permanent":false},
+    {"source":"/students","destination":"/central-registry/section.html?view=students","permanent":false},
+    {"source":"/staff","destination":"/central-registry/section.html?view=staff","permanent":false}
   ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(self), geolocation=(self), microphone=()" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
-      ]
-    }
-  ]
+  "rewrites":[
+    {"source":"/styles.css","destination":"/central-registry/simple.css"},
+    {"source":"/config.js","destination":"/central-registry/config.js"},
+    {"source":"/session.js","destination":"/central-registry/session.js"},
+    {"source":"/app.js","destination":"/central-registry/app.js"},
+    {"source":"/app-icon.svg","destination":"/central-registry/app-icon.svg"},
+    {"source":"/manifest.webmanifest","destination":"/central-registry/manifest.webmanifest"}
+  ],
+  "headers":[{"source":"/(.*)","headers":[
+    {"key":"X-Content-Type-Options","value":"nosniff"},
+    {"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},
+    {"key":"Permissions-Policy","value":"camera=(), geolocation=(), microphone=()"},
+    {"key":"X-Frame-Options","value":"DENY"},
+    {"key":"Cache-Control","value":"no-store, max-age=0"}
+  ]}]
 }

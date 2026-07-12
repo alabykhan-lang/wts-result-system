@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - "attendance-dashboard/**"
-      - "vercel.json"
       - "index.html"
       - ".github/workflows/validate-standalone-attendance.yml"
   workflow_dispatch:
@@ -54,8 +53,6 @@ jobs:
           grep -q 'staff_application_admin_read_api' attendance-dashboard/staff-applications.js
           grep -q 'staff_application_admin_write_api' attendance-dashboard/staff-applications.js
           grep -q 'archiveStaff' attendance-dashboard/staff-applications.js
-          grep -q 'staff-applications' vercel.json
-          grep -q 'SAMEORIGIN' vercel.json
       - name: Reject server-side secrets in frontend
         run: |
           if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|x-wts-device-secret' attendance-dashboard; then
