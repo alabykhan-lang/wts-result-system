@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>Opening WTS Central Registry</title>
+  <style>html,body{height:100%;margin:0;background:#f3f7fb;color:#0b1f3a;font-family:Arial,sans-serif}main{height:100%;display:grid;place-items:center;text-align:center;padding:24px}.mark{width:58px;height:58px;margin:auto;border-radius:18px;display:grid;place-items:center;background:#0b1f3a;color:#d6a84f;font-weight:900}p{color:#667085}</style>
+</head>
+<body>
+  <main><div><div class="mark">WTS</div><h1>Opening Central Registry</h1><p>Loading the requested management section…</p></div></main>
+  <script>
+    (async function(){
+      var allowed=["students","admissions","staff","access","sync"];
+      var requested=new URLSearchParams(location.search).get("view");
+      if(allowed.indexOf(requested)===-1){requested="dashboard";}
+      try{
+        var response=await fetch("./index.html",{cache:"no-store"});
+        if(!response.ok){throw new Error("Registry shell unavailable");}
+        var html=await response.text();
+        var activation="<script>window.addEventListener('load',function(){var b=document.querySelector('.nav-item[data-view=\""+requested+"\"]');if(b){b.click();}});<\/script>";
+        html=html.replace("</body>",activation+"</body>");
+        document.open();document.write(html);document.close();
+      }catch(error){document.querySelector("p").textContent="Unable to load the Registry section. Open the main Registry dashboard and try again.";}
+    })();
+  </script>
+</body>
+</html>
