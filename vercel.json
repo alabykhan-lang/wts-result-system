@@ -11,6 +11,7 @@
     {"source":"/attempts","destination":"/notification-control/section.html?view=attempts","permanent":false},
     {"source":"/providers","destination":"/notification-control/section.html?view=providers","permanent":false},
     {"source":"/readiness","destination":"/notification-control/section.html?view=readiness","permanent":false},
+    {"source":"/imports","destination":"/notification-control/imports.html","permanent":false},
     {"source":"/registry","destination":"/central-registry/index.html","permanent":false}
   ],
   "headers":[
