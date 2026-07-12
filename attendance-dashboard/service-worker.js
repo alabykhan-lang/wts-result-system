@@ -1,10 +1,11 @@
 "use strict";
 
-const CACHE_NAME = "wts-attendance-shell-v1";
+const CACHE_NAME = "wts-attendance-shell-v2";
 const APP_SHELL = [
   "/attendance-dashboard/index.html",
   "/attendance-dashboard/styles.css",
   "/attendance-dashboard/production-ui.css",
+  "/attendance-dashboard/session-hardening.js",
   "/attendance-dashboard/app.js",
   "/attendance-dashboard/app-icon.svg",
   "/attendance-dashboard/manifest.webmanifest"
