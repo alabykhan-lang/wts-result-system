@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>WTS Staff Application Management</title>
+  <link rel="stylesheet" href="./styles.css?v=20260712-6">
+  <link rel="stylesheet" href="./production-ui.css?v=20260712-6">
+  <style>
+    body{background:#f3f7fb}.page{max-width:1480px;margin:auto;padding:22px}.hero{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:24px;border-radius:22px;background:linear-gradient(145deg,#0b1f3a,#17436f);color:#fff;box-shadow:0 18px 44px rgba(11,31,58,.18)}.hero h1{margin:5px 0;font-size:32px}.hero p{margin:0;color:#d6e1ee}.hero-actions,.inline,.filters{display:flex;gap:8px;flex-wrap:wrap}.hero a{color:#fff}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:18px 0}.metric{padding:16px;border:1px solid #dfe6ee;border-radius:15px;background:#fff;box-shadow:0 9px 25px rgba(11,31,58,.06)}.metric span,.metric strong{display:block}.metric span{font-size:10px;color:#667085;text-transform:uppercase}.metric strong{margin-top:6px;font-size:27px;color:#0b1f3a}.tabs{display:flex;gap:6px;margin:16px 0;padding:5px;border-radius:13px;background:#e8eef6;overflow:auto}.tabs button{border:0;border-radius:9px;padding:10px 14px;background:transparent;color:#667085;font-weight:800;white-space:nowrap}.tabs button.active{background:#fff;color:#0b1f3a}.tab{display:none}.tab.active{display:block}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.panel{padding:19px;border:1px solid #dfe6ee;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(11,31,58,.07)}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.panel h2{margin:4px 0;color:#0b1f3a}.filters{align-items:end;margin-bottom:14px}.filters .field{min-width:160px}.list{display:grid;gap:10px}.application{padding:14px;border:1px solid #e1e7ed;border-radius:13px;background:#fff}.application-head{display:flex;justify-content:space-between;gap:12px}.application strong,.application span,.application small{display:block}.application span,.application small{margin-top:4px;color:#667085}.application-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.application-meta div{padding:9px;border-radius:9px;background:#f8fafc}.application-meta label,.application-meta b{display:block}.application-meta label{font-size:9px;color:#667085;text-transform:uppercase}.application-meta b{margin-top:3px;font-size:11px;color:#0b1f3a}.badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:9px;font-weight:900;text-transform:uppercase}.pending{background:#fef0c7;color:#b54708}.active{background:#dcfae6;color:#087443}.rejected,.suspended,.archived{background:#fee4e2;color:#b42318}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.full{grid-column:1/-1}.field{display:grid;gap:6px}.field label{font-size:10px;font-weight:800;color:#475467;text-transform:uppercase}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #d0d5dd;border-radius:9px}.field textarea{min-height:80px;resize:vertical}.notice{padding:12px;border:1px solid #fedf89;border-radius:11px;background:#fffaeb;color:#7a2e0e;font-size:12px;line-height:1.5}.empty{padding:28px;border:1px dashed #d0d5dd;border-radius:12px;text-align:center;color:#667085}.profile-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:13px;border:1px solid #e1e7ed;border-radius:12px}.profile-row strong,.profile-row span,.profile-row small{display:block}.profile-row span,.profile-row small{margin-top:4px;color:#667085}.dialog-card{min-width:min(520px,92vw)}@media(max-width:980px){.page{padding:14px}.hero{align-items:flex-start;flex-direction:column}.metrics{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.application-meta{grid-template-columns:1fr 1fr}}@media(max-width:520px){.metrics{grid-template-columns:1fr 1fr}.metric:last-child{grid-column:1/-1}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.application-head,.profile-row{display:grid}.application-meta{grid-template-columns:1fr}.inline button{flex:1}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <div><p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1>Staff Application Management</h1><p>Review registrations, approve or reject applications, manually enroll staff and preserve historical attendance during lifecycle changes.</p></div>
+    <div class="hero-actions"><a class="secondary-button" href="./control-room.html">Control Room</a><a class="secondary-button" href="./staff-portal-secure.html">Staff Portal</a><button class="primary-button" id="connectButton">Administrator login</button></div>
+  </header>
+
+  <section class="metrics">
+    <article class="metric"><span>Pending</span><strong id="pendingCount">0</strong></article>
+    <article class="metric"><span>Active applications</span><strong id="activeCount">0</strong></article>
+    <article class="metric"><span>Rejected</span><strong id="rejectedCount">0</strong></article>
+    <article class="metric"><span>Suspended</span><strong id="suspendedCount">0</strong></article>
+    <article class="metric"><span>Manual profiles</span><strong id="manualCount">0</strong></article>
+  </section>
+
+  <nav class="tabs">
+    <button class="active" data-tab="applications">Applications</button>
+    <button data-tab="enroll">Manual Enrollment</button>
+    <button data-tab="directory">Staff Directory</button>
+  </nav>
+
+  <section class="tab active" id="tab-applications">
+    <article class="panel">
+      <div class="panel-head"><div><p class="eyebrow">SELF-SERVICE REGISTRATIONS</p><h2>Application review</h2></div><button class="secondary-button" id="refreshApplications">Refresh</button></div>
+      <div class="filters"><div class="field"><label>Status</label><select id="applicationStatus"><option value="pending">Pending</option><option value="">All</option><option value="active">Active</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option><option value="archived">Archived</option></select></div><div class="field grow"><label>Search</label><input id="applicationSearch" placeholder="Name, email or phone"></div></div>
+      <div class="notice">Staff photographs are private. This custom administrator workspace shows whether a photograph exists but does not expose its file URL. A future authenticated management gateway will provide short-lived previews.</div>
+      <div id="applicationList" class="list" style="margin-top:13px"></div>
+    </article>
+  </section>
+
+  <section class="tab" id="tab-enroll">
+    <div class="grid">
+      <article class="panel"><div class="panel-head"><div><p class="eyebrow">MANAGEMENT ENROLLMENT</p><h2>Add staff directly</h2></div></div>
+        <form id="manualForm" class="form-grid">
+          <div class="field full"><label>Full name</label><input id="manualName" required minlength="3"></div>
+          <div class="field"><label>Email</label><input id="manualEmail" type="email"></div>
+          <div class="field"><label>Phone</label><input id="manualPhone"></div>
+          <div class="field"><label>Staff number</label><input id="manualNumber" placeholder="Leave blank to generate"></div>
+          <div class="field"><label>Category</label><select id="manualCategory"><option value="teaching">Teaching</option><option value="non_teaching">Non-teaching</option><option value="management">Management</option><option value="contract">Contract</option><option value="casual">Casual</option></select></div>
+          <div class="field"><label>Department</label><input id="manualDepartment"></div>
+          <div class="field"><label>Designation</label><input id="manualDesignation"></div>
+          <div class="field full"><label>Address</label><input id="manualAddress"></div>
+          <label class="full"><input type="checkbox" id="manualAttendance" checked> Attendance required</label>
+          <div class="full"><button class="primary-button">Enroll staff member</button></div>
+        </form>
+      </article>
+      <article class="panel"><p class="eyebrow">ENROLLMENT POLICY</p><h2>Preserve identity and history</h2><div class="notice">Manual enrollment creates an attendance profile only. It does not create result-portal credentials. Staff may later register through self-service and management can link the account to the existing profile.</div></article>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-directory">
+    <article class="panel"><div class="panel-head"><div><p class="eyebrow">STAFF LIFECYCLE</p><h2>Attendance staff directory</h2></div><button class="secondary-button" id="refreshProfiles">Refresh</button></div><div class="filters"><div class="field grow"><label>Search</label><input id="profileSearch" placeholder="Name, staff number or email"></div></div><div id="profileList" class="list"></div></article>
+  </section>
+</main>
+
+<dialog id="connectionDialog"><form method="dialog" class="dialog-card" id="connectionForm"><div class="dialog-header"><div><p class="eyebrow">SECURE ADMINISTRATOR ACCESS</p><h2>Connect staff management</h2></div><button value="cancel" class="icon-button">×</button></div><div class="field"><label>Administrator code</label><input id="adminCode" required></div><div class="field"><label>Administrator secret</label><input id="adminSecret" type="password" required></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Sign in</button></div></form></dialog>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./dashboard-config-loader.js"></script>
+<script src="./staff-applications.js"></script>
+</body>
+</html>
