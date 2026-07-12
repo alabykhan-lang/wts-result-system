@@ -24,6 +24,7 @@ jobs:
       - name: Confirm application files
         run: |
           test -s central-registry/index.html
+          test -s central-registry/section.html
           test -s central-registry/styles.css
           test -s central-registry/config.js
           test -s central-registry/session.js
@@ -38,7 +39,24 @@ jobs:
           grep -q 'school_registry_access_write_api' central-registry/app.js
           grep -q 'school_admissions_write_api' central-registry/app.js
           grep -q 'sessionStorage' central-registry/session.js
+          grep -q 'section.html?view=students' vercel.json
+          grep -q 'section.html?view=admissions' vercel.json
+          grep -q 'section.html?view=staff' vercel.json
           grep -q 'X-Frame-Options' vercel.json
+      - name: Serve and verify local application assets
+        run: |
+          python3 -m http.server 4173 --directory central-registry >/tmp/registry-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 1
+          curl -fsS http://127.0.0.1:4173/index.html | grep -q 'Central Registry Dashboard'
+          curl -fsS http://127.0.0.1:4173/styles.css | grep -q '.app-shell'
+          curl -fsS http://127.0.0.1:4173/config.js | grep -q 'WTSRegistryConfig'
+          curl -fsS http://127.0.0.1:4173/session.js | grep -q 'WTSRegistrySession'
+          curl -fsS http://127.0.0.1:4173/app.js | grep -q 'school_registry_admin_read_api'
+          curl -fsS 'http://127.0.0.1:4173/section.html?view=students' | grep -q 'Opening Central Registry'
+          curl -fsS http://127.0.0.1:4173/manifest.webmanifest | grep -q 'WTS Central School Registry'
+          curl -fsS http://127.0.0.1:4173/app-icon.svg | grep -q '<svg'
       - name: Reject server-side secrets
         run: |
           if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|x-wts-device-secret' central-registry; then
