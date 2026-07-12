@@ -19,6 +19,7 @@ jobs:
           node-version: "22"
       - name: Validate application JavaScript
         run: |
+          node --check notification-system/session-hardening.js
           node --check notification-system/config.js
           node --check notification-system/app.js
           node --check notification-system/service-worker.js
@@ -27,12 +28,16 @@ jobs:
           test -s notification-system/index.html
           test -s notification-system/styles.css
           test -s notification-system/production-ui.css
+          test -s notification-system/session-hardening.js
           test -s notification-system/manifest.webmanifest
           test -s notification-system/app-icon.svg
           test -s notification-system/service-worker.js
           grep -q '/notification-system/styles.css' notification-system/index.html
+          grep -q '/notification-system/session-hardening.js' notification-system/index.html
           grep -q 'Critical fallback' notification-system/index.html
           grep -q 'serviceWorker' notification-system/index.html
+          grep -q 'sessionStorage' notification-system/session-hardening.js
+          grep -q 'TIMEOUT_MS' notification-system/session-hardening.js
       - name: Reject server-side secrets in frontend
         run: |
           if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|WTS_WHATSAPP_GATEWAY_API_KEY' notification-system; then
