@@ -2,37 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b1f3a">
-  <title>WTS Attendance Administration</title>
-  <link rel="stylesheet" href="./styles.css">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Way to Success student and staff attendance administration system.">
+  <title>WTS Digital Attendance System</title>
+  <link rel="icon" href="/attendance-dashboard/app-icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/attendance-dashboard/manifest.webmanifest?v=1">
+  <link rel="stylesheet" href="/attendance-dashboard/styles.css?v=20260712-2">
+  <link rel="stylesheet" href="/attendance-dashboard/production-ui.css?v=20260712-2">
+  <style>
+    /* Critical fallback: keeps the application usable if an external stylesheet is delayed. */
+    :root{--navy:#0b1f3a;--green:#0f7c5c;--gold:#d6a84f;--bg:#f3f7fb;--card:#fff;--text:#172033;--muted:#667085;--border:#dfe6ee}*{box-sizing:border-box}html{min-width:320px;background:var(--bg)}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}.app-shell{min-height:100vh;display:grid;grid-template-columns:270px minmax(0,1fr)}.sidebar{position:sticky;top:0;height:100vh;padding:24px 18px;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--navy),#07152a);color:#fff}.brand-block{display:flex;align-items:center;gap:12px;padding:4px 8px 26px}.brand-mark{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--gold);color:var(--navy);font-weight:900}.brand-block strong,.brand-block span{display:block}.brand-block span{font-size:12px;color:#adbed4}.nav-list{display:grid;gap:8px}.nav-item{border:0;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:11px;background:transparent;color:#c6d3e4;text-align:left;font-weight:700}.nav-item.active{background:rgba(255,255,255,.12);color:#fff}.sidebar-footer{margin-top:auto;padding:14px;border-radius:14px;background:rgba(255,255,255,.08);display:flex;gap:10px;align-items:center}.sidebar-footer strong,.sidebar-footer span{display:block}.sidebar-footer span{font-size:11px;color:#adbed4}.status-dot{width:10px;height:10px;border-radius:50%;background:#fdb022}.main-area{min-width:0;padding:0 34px 40px}.topbar{min-height:96px;display:flex;align-items:center;justify-content:space-between;gap:18px}.topbar h1{margin:4px 0 0;font-size:27px;color:var(--navy)}.eyebrow{margin:0;color:var(--green);font-size:10px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}.topbar-actions{display:flex;align-items:center;gap:10px}.session-pill{padding:9px 13px;border-radius:999px;background:#e8eef6;color:var(--navy);font-size:12px;font-weight:750}.primary-button,.secondary-button{border-radius:10px;padding:10px 15px;font-weight:750}.primary-button{border:0;background:var(--navy);color:#fff}.secondary-button{border:1px solid var(--border);background:#fff;color:var(--navy)}.development-banner{margin:18px 0;padding:13px 16px;border:1px solid #abefc6;border-radius:12px;background:#ecfdf3;color:#075f46;font-size:13px}.view{display:none}.view.active{display:block}.section-heading{margin:25px 0 16px;display:flex;align-items:end;justify-content:space-between;gap:16px}.section-heading h2{margin:5px 0 0;color:var(--navy);font-size:24px}.metric-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}.metric-card{min-height:132px;padding:18px;border-radius:18px;color:#fff}.metric-card span,.metric-card strong,.metric-card small{display:block}.metric-card strong{margin:12px 0 8px;font-size:34px}.metric-card.navy{background:#16345f}.metric-card.green{background:#08724f}.metric-card.amber{background:#b36b06}.metric-card.red{background:#a42b21}.metric-card.blue{background:#175cd3}.metric-card.slate{background:#475467}.content-grid{display:grid;gap:18px;margin-top:18px}.two-column{grid-template-columns:1.15fr .85fr}.three-column{grid-template-columns:repeat(3,1fr)}.panel,.mini-metric,.report-card{padding:20px;border:1px solid var(--border);border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(11,31,58,.08)}.panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px}.empty-state{min-height:210px;display:grid;place-items:center;text-align:center;color:var(--muted)}.action-tile{min-height:105px;padding:16px;border:1px solid var(--border);border-radius:16px;background:#fff;text-align:left}.filter-panel{display:flex;align-items:end;gap:12px}.field{display:grid;gap:6px;min-width:180px}.field.grow{flex:1}.field input,.field select{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:10px}.credential-layout{display:grid;grid-template-columns:390px 1fr;gap:18px;margin-top:18px}.hidden{display:none!important}.device-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.device-grid,.report-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:18px}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.full-span{grid-column:1/-1}.dialog-card{border:0;border-radius:18px;padding:22px;min-width:min(460px,92vw)}.dialog-header,.dialog-actions{display:flex;justify-content:space-between;gap:10px}.menu-button{display:none}.toast-container{position:fixed;right:16px;bottom:90px;z-index:200}
+    @media(max-width:820px){body{padding-bottom:80px}.app-shell{display:block}.sidebar{position:fixed;left:0;right:0;bottom:0;top:auto;height:74px;padding:7px 8px;z-index:100}.brand-block,.sidebar-footer{display:none}.nav-list{height:100%;grid-template-columns:repeat(6,1fr);gap:3px}.nav-item{padding:6px 2px;flex-direction:column;justify-content:center;gap:2px;font-size:8px;text-align:center}.main-area{padding:0 14px 24px}.topbar{position:sticky;top:0;z-index:20;margin:0 -14px;padding:12px 14px;min-height:76px;background:rgba(243,247,251,.96)}.topbar h1{font-size:21px}.session-pill,.topbar .secondary-button{display:none}.metric-grid{grid-template-columns:repeat(2,1fr);gap:9px}.metric-card{min-height:108px;padding:14px}.metric-card strong{font-size:28px}.content-grid,.two-column,.three-column,.credential-layout,.device-grid,.report-grid,.settings-grid{grid-template-columns:1fr}.quick-actions{grid-template-columns:1fr 1fr}.filter-panel{display:grid}.device-summary-grid{grid-template-columns:1fr 1fr}.panel{padding:15px}.section-heading h2{font-size:20px}}
+  </style>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <div class="brand-block">
         <div class="brand-mark">WTS</div>
-        <div>
-          <strong>Way to Success</strong>
-          <span>Attendance Control Room</span>
-        </div>
+        <div><strong>Way to Success</strong><span>Digital Attendance System</span></div>
       </div>
-
       <nav class="nav-list" aria-label="Attendance sections">
         <button class="nav-item active" data-view="overview"><span>◫</span> Overview</button>
         <button class="nav-item" data-view="credentials"><span>▣</span> Credentials</button>
         <button class="nav-item" data-view="devices"><span>⌁</span> Devices</button>
         <button class="nav-item" data-view="reports"><span>▤</span> Reports</button>
         <button class="nav-item" data-view="settings"><span>⚙</span> Settings</button>
-        <button class="nav-item" data-view="audit"><span>✓</span> Audit Trail</button>
+        <button class="nav-item" data-view="audit"><span>✓</span> Audit</button>
       </nav>
-
       <div class="sidebar-footer">
         <div class="status-dot warning"></div>
-        <div>
-          <strong id="environmentLabel">Development</strong>
-          <span id="connectionLabel">Preview data</span>
-        </div>
+        <div><strong id="environmentLabel">Setup mode</strong><span id="connectionLabel">Secure data not connected</span></div>
       </div>
     </aside>
 
@@ -44,102 +48,70 @@
           <h1 id="pageTitle">Attendance Overview</h1>
         </div>
         <div class="topbar-actions">
+          <span class="system-mode-badge">Independent system</span>
           <span class="session-pill" id="sessionPill">2026/2027 • 1st Term</span>
           <button class="secondary-button" id="refreshButton">Refresh</button>
-          <button class="primary-button" id="connectButton">Connect live data</button>
+          <button class="primary-button" id="connectButton">Administrator login</button>
         </div>
       </header>
 
+      <div class="app-shortcuts" aria-label="Attendance workspaces">
+        <a href="./control-room.html">Control Room</a>
+        <a href="./staff.html">Staff Time Book</a>
+        <a href="./parent-contacts.html">Parent Contacts</a>
+        <a href="./operations.html">Operations</a>
+        <a href="./analytics.html">Analytics</a>
+      </div>
+
       <div class="development-banner" id="developmentBanner">
-        <strong>Development preview:</strong> The interface is complete, but management actions remain disabled until the secure administrator service is connected.
+        <strong>Setup mode:</strong> The attendance platform is ready for configuration. Live records and management actions become available after secure administrator sign-in.
       </div>
 
       <section class="view active" id="view-overview">
         <div class="section-heading">
-          <div>
-            <p class="eyebrow">TODAY</p>
-            <h2 id="todayLabel">Attendance status</h2>
-          </div>
-          <div class="segmented-control" role="group" aria-label="Attendance mode">
-            <button class="active">Check-in</button>
-            <button>Checkout</button>
-          </div>
+          <div><p class="eyebrow">TODAY</p><h2 id="todayLabel">Attendance status</h2></div>
+          <div class="segmented-control" role="group" aria-label="Attendance mode"><button class="active">Check-in</button><button>Checkout</button></div>
         </div>
-
         <div class="metric-grid">
-          <article class="metric-card navy"><span>Expected</span><strong id="metricExpected">267</strong><small>Development roster</small></article>
+          <article class="metric-card navy"><span>Expected</span><strong id="metricExpected">267</strong><small>Prepared roster</small></article>
           <article class="metric-card green"><span>Present</span><strong id="metricPresent">0</strong><small id="presentPercent">0% recorded</small></article>
           <article class="metric-card amber"><span>Late</span><strong id="metricLate">0</strong><small>After 7:45 a.m.</small></article>
           <article class="metric-card red"><span>Absent</span><strong id="metricAbsent">0</strong><small>After 10:00 a.m.</small></article>
           <article class="metric-card blue"><span>Waiting</span><strong id="metricWaiting">267</strong><small>Not yet processed</small></article>
-          <article class="metric-card slate"><span>Checked out</span><strong id="metricCheckout">0</strong><small>From 3:30 p.m.</small></article>
+          <article class="metric-card slate"><span>Checked out</span><strong id="metricCheckout">0</strong><small>Actual departure recorded</small></article>
         </div>
-
         <div class="content-grid two-column">
           <article class="panel">
-            <div class="panel-header">
-              <div><p class="eyebrow">LIVE FEED</p><h3>Latest arrivals</h3></div>
-              <span class="live-badge"><i></i> Live</span>
-            </div>
-            <div class="empty-state" id="latestEventsEmpty">
-              <div class="empty-icon">⇄</div>
-              <h4>No attendance events yet</h4>
-              <p>Scans will appear here immediately after QR, NFC, RFID or gate-terminal activity.</p>
-            </div>
+            <div class="panel-header"><div><p class="eyebrow">LIVE MOVEMENT</p><h3>Latest arrivals and departures</h3></div><span class="live-badge"><i></i> Live</span></div>
+            <div class="empty-state" id="latestEventsEmpty"><div><div class="empty-icon">⇄</div><h4>No attendance movement yet</h4><p>Authorized QR, NFC, RFID and terminal activity will appear here instantly.</p></div></div>
             <div class="arrival-list" id="arrivalList"></div>
           </article>
-
           <article class="panel">
-            <div class="panel-header">
-              <div><p class="eyebrow">CLASS PERFORMANCE</p><h3>Attendance by class</h3></div>
-              <button class="text-button" data-view-target="reports">Open reports</button>
-            </div>
+            <div class="panel-header"><div><p class="eyebrow">CLASS PERFORMANCE</p><h3>Attendance by class</h3></div><button class="text-button" data-view-target="reports">Open reports</button></div>
             <div class="class-progress-list" id="classProgressList"></div>
           </article>
         </div>
-
         <div class="content-grid three-column quick-actions">
           <button class="action-tile" data-view-target="credentials"><span>▣</span><strong>Issue credentials</strong><small>QR, NFC, RFID or hybrid</small></button>
-          <button class="action-tile" data-view-target="devices"><span>⌁</span><strong>Register a device</strong><small>Scanner or gate terminal</small></button>
-          <button class="action-tile" data-view-target="reports"><span>⇩</span><strong>Export register</strong><small>Daily PDF or spreadsheet</small></button>
+          <button class="action-tile" data-view-target="devices"><span>⌁</span><strong>Manage devices</strong><small>School scanners and terminals</small></button>
+          <button class="action-tile" data-view-target="reports"><span>⇩</span><strong>Prepare reports</strong><small>Registers, lateness and departure</small></button>
         </div>
       </section>
 
       <section class="view" id="view-credentials">
-        <div class="section-heading">
-          <div><p class="eyebrow">STUDENT ACCESS</p><h2>Credential management</h2></div>
-          <button class="primary-button restricted-action" id="bulkQrButton">Generate class QR cards</button>
-        </div>
-
+        <div class="section-heading"><div><p class="eyebrow">STUDENT ACCESS</p><h2>Credential management</h2></div><button class="primary-button restricted-action" id="bulkQrButton">Generate class QR cards</button></div>
         <div class="panel filter-panel">
           <div class="field grow"><label for="studentSearch">Search student</label><input id="studentSearch" type="search" placeholder="Name or admission number"></div>
           <div class="field"><label for="classFilter">Class</label><select id="classFilter"><option value="">All secondary classes</option></select></div>
           <button class="secondary-button" id="studentSearchButton">Search</button>
         </div>
-
         <div class="credential-layout">
-          <article class="panel student-list-panel">
-            <div class="panel-header"><div><p class="eyebrow">STUDENTS</p><h3 id="studentCountLabel">Development roster</h3></div></div>
-            <div class="student-list" id="studentList"></div>
-          </article>
-
+          <article class="panel student-list-panel"><div class="panel-header"><div><p class="eyebrow">STUDENTS</p><h3 id="studentCountLabel">Prepared roster</h3></div></div><div class="student-list" id="studentList"></div></article>
           <article class="panel credential-detail-panel" id="credentialDetailPanel">
-            <div class="empty-state" id="studentEmptyState">
-              <div class="empty-icon">◎</div>
-              <h4>Select a student</h4>
-              <p>Choose a student to view, issue, replace or suspend attendance credentials.</p>
-            </div>
+            <div class="empty-state" id="studentEmptyState"><div><div class="empty-icon">◎</div><h4>Select a student</h4><p>Choose a student to view, issue, replace or suspend attendance credentials.</p></div></div>
             <div class="student-detail hidden" id="studentDetail">
-              <div class="student-profile">
-                <div class="avatar large" id="studentAvatar">ST</div>
-                <div><p class="eyebrow" id="studentClass">CLASS</p><h3 id="studentName">Student name</h3><span id="studentAdmno">Admission number</span></div>
-              </div>
-              <div class="credential-actions">
-                <button class="primary-button restricted-action" data-credential-type="qr">Issue QR</button>
-                <button class="secondary-button restricted-action" data-credential-type="nfc">Issue NFC</button>
-                <button class="secondary-button restricted-action" data-credential-type="rfid">Issue RFID</button>
-                <button class="secondary-button restricted-action" data-credential-type="hybrid">Issue Hybrid</button>
-              </div>
+              <div class="student-profile"><div class="avatar large" id="studentAvatar">ST</div><div><p class="eyebrow" id="studentClass">CLASS</p><h3 id="studentName">Student name</h3><span id="studentAdmno">Admission number</span></div></div>
+              <div class="credential-actions"><button class="primary-button restricted-action" data-credential-type="qr">Issue QR</button><button class="secondary-button restricted-action" data-credential-type="nfc">Issue NFC</button><button class="secondary-button restricted-action" data-credential-type="rfid">Issue RFID</button><button class="secondary-button restricted-action" data-credential-type="hybrid">Issue Hybrid</button></div>
               <div class="credential-list" id="credentialList"></div>
             </div>
           </article>
@@ -147,87 +119,49 @@
       </section>
 
       <section class="view" id="view-devices">
-        <div class="section-heading">
-          <div><p class="eyebrow">INFRASTRUCTURE</p><h2>Attendance devices</h2></div>
-          <button class="primary-button restricted-action" id="registerDeviceButton">Register device</button>
-        </div>
-        <div class="device-summary-grid">
-          <article class="mini-metric"><span>Total devices</span><strong id="deviceTotal">2</strong></article>
-          <article class="mini-metric"><span>Online</span><strong id="deviceOnline">1</strong></article>
-          <article class="mini-metric"><span>Offline</span><strong id="deviceOffline">0</strong></article>
-          <article class="mini-metric"><span>Development</span><strong id="deviceDevelopment">2</strong></article>
-        </div>
+        <div class="section-heading"><div><p class="eyebrow">SECURE INFRASTRUCTURE</p><h2>Authorized attendance devices</h2></div><button class="primary-button restricted-action" id="registerDeviceButton">Register device</button></div>
+        <div class="device-summary-grid"><article class="mini-metric"><span>Total devices</span><strong id="deviceTotal">2</strong></article><article class="mini-metric"><span>Online</span><strong id="deviceOnline">1</strong></article><article class="mini-metric"><span>Offline</span><strong id="deviceOffline">0</strong></article><article class="mini-metric"><span>Setup</span><strong id="deviceDevelopment">2</strong></article></div>
         <div class="device-grid" id="deviceGrid"></div>
       </section>
 
       <section class="view" id="view-reports">
-        <div class="section-heading">
-          <div><p class="eyebrow">ANALYTICS</p><h2>Attendance reports</h2></div>
-          <button class="primary-button restricted-action">Export report</button>
-        </div>
-        <div class="panel filter-panel">
-          <div class="field"><label>Date from</label><input type="date" id="reportFrom"></div>
-          <div class="field"><label>Date to</label><input type="date" id="reportTo"></div>
-          <div class="field"><label>Class</label><select><option>All classes</option></select></div>
-          <div class="field"><label>Status</label><select><option>All statuses</option><option>Present</option><option>Late</option><option>Absent</option><option>Excused</option></select></div>
-          <button class="secondary-button">Generate</button>
-        </div>
-        <div class="report-grid">
-          <article class="report-card"><span>▤</span><h3>Daily attendance register</h3><p>Complete class-by-class register for a selected date.</p><button class="text-button">Prepare report</button></article>
-          <article class="report-card"><span>⌚</span><h3>Latecomers report</h3><p>Arrival time, minutes late and recurring lateness patterns.</p><button class="text-button">Prepare report</button></article>
-          <article class="report-card"><span>○</span><h3>Absence report</h3><p>Absent, excused and manually adjusted attendance records.</p><button class="text-button">Prepare report</button></article>
-          <article class="report-card"><span>↗</span><h3>Monthly performance</h3><p>Attendance percentage by student, class and section.</p><button class="text-button">Prepare report</button></article>
-        </div>
+        <div class="section-heading"><div><p class="eyebrow">ANALYTICS</p><h2>Attendance reports</h2></div><button class="primary-button restricted-action">Export report</button></div>
+        <div class="panel filter-panel"><div class="field"><label>Date from</label><input type="date" id="reportFrom"></div><div class="field"><label>Date to</label><input type="date" id="reportTo"></div><div class="field"><label>Class</label><select><option>All classes</option></select></div><div class="field"><label>Status</label><select><option>All statuses</option><option>Present</option><option>Late</option><option>Absent</option><option>Excused</option></select></div><button class="secondary-button">Generate</button></div>
+        <div class="report-grid"><article class="report-card"><span>▤</span><h3>Daily attendance register</h3><p>Complete class-by-class register for a selected date.</p><button class="text-button">Prepare report</button></article><article class="report-card"><span>⌚</span><h3>Latecomers report</h3><p>Arrival time, minutes late and recurring lateness patterns.</p><button class="text-button">Prepare report</button></article><article class="report-card"><span>○</span><h3>Absence report</h3><p>Absent, excused and manually adjusted records.</p><button class="text-button">Prepare report</button></article><article class="report-card"><span>↗</span><h3>Monthly performance</h3><p>Attendance percentage by student, class and section.</p><button class="text-button">Prepare report</button></article></div>
       </section>
 
       <section class="view" id="view-settings">
         <div class="section-heading"><div><p class="eyebrow">CONFIGURATION</p><h2>Attendance settings</h2></div><button class="primary-button restricted-action">Save changes</button></div>
         <div class="settings-grid">
-          <article class="panel">
-            <div class="panel-header"><div><p class="eyebrow">OPERATIONAL CONTEXT</p><h3>Session and term</h3></div></div>
-            <div class="form-grid">
-              <div class="field"><label>Environment</label><select disabled><option>Development</option></select></div>
-              <div class="field"><label>Academic session</label><input value="2026/2027" disabled></div>
-              <div class="field"><label>Term</label><select><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div>
-              <div class="field"><label>Roster source</label><input value="Portal promotion outcome" disabled></div>
-            </div>
-          </article>
-          <article class="panel">
-            <div class="panel-header"><div><p class="eyebrow">SCHOOL DAY</p><h3>Attendance timing</h3></div></div>
-            <div class="form-grid">
-              <div class="field"><label>Gate opens</label><input type="time" value="06:40"></div>
-              <div class="field"><label>Late after</label><input type="time" value="07:45"></div>
-              <div class="field"><label>Absent after</label><input type="time" value="10:00"></div>
-              <div class="field"><label>Checkout opens</label><input type="time" value="15:30"></div>
-            </div>
-          </article>
-          <article class="panel full-span">
-            <div class="panel-header"><div><p class="eyebrow">MODALITIES</p><h3>Enabled attendance methods</h3></div></div>
-            <div class="modality-grid" id="modalityGrid"></div>
-          </article>
+          <article class="panel"><div class="panel-header"><div><p class="eyebrow">OPERATIONAL CONTEXT</p><h3>Session and term</h3></div></div><div class="form-grid"><div class="field"><label>Environment</label><select disabled><option>Setup mode</option></select></div><div class="field"><label>Academic session</label><input value="2026/2027" disabled></div><div class="field"><label>Term</label><select><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div><div class="field"><label>Roster source</label><input value="Approved school database" disabled></div></div></article>
+          <article class="panel"><div class="panel-header"><div><p class="eyebrow">SCHOOL DAY</p><h3>Attendance timing</h3></div></div><div class="form-grid"><div class="field"><label>Gate opens</label><input type="time" value="06:40"></div><div class="field"><label>Late after</label><input type="time" value="07:45"></div><div class="field"><label>Absent after</label><input type="time" value="10:00"></div><div class="field"><label>Student closing time</label><input type="time" value="15:30"></div></div></article>
+          <article class="panel full-span"><div class="panel-header"><div><p class="eyebrow">MODALITIES</p><h3>Enabled attendance methods</h3></div></div><div class="modality-grid" id="modalityGrid"></div></article>
         </div>
       </section>
 
       <section class="view" id="view-audit">
         <div class="section-heading"><div><p class="eyebrow">ACCOUNTABILITY</p><h2>Administrative audit trail</h2></div></div>
-        <article class="panel">
-          <div class="empty-state"><div class="empty-icon">✓</div><h4>No management actions in preview mode</h4><p>Credential issuance, suspension, device registration and settings changes will be recorded here with timestamps and administrator identity.</p></div>
-        </article>
+        <article class="panel"><div class="empty-state"><div><div class="empty-icon">✓</div><h4>No management actions in setup mode</h4><p>Credential issuance, corrections, device registration and configuration changes will be recorded here with administrator identity and time.</p></div></div></article>
       </section>
     </main>
   </div>
 
   <dialog id="connectionDialog">
     <form method="dialog" class="dialog-card" id="connectionForm">
-      <div class="dialog-header"><div><p class="eyebrow">PRIVATE DEVELOPMENT ACCESS</p><h2>Connect attendance data</h2></div><button value="cancel" class="icon-button" aria-label="Close">×</button></div>
-      <p class="dialog-note">Credentials stay on this device. They are not included in the repository.</p>
-      <div class="field"><label for="deviceCodeInput">Development device code</label><input id="deviceCodeInput" autocomplete="off" required></div>
-      <div class="field"><label for="deviceSecretInput">Development device secret</label><input id="deviceSecretInput" type="password" autocomplete="off" required></div>
-      <div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button" id="saveConnectionButton">Save and connect</button></div>
+      <div class="dialog-header"><div><p class="eyebrow">SECURE ADMINISTRATOR ACCESS</p><h2>Connect attendance data</h2></div><button value="cancel" class="icon-button" aria-label="Close">×</button></div>
+      <p class="dialog-note">Credentials stay on this authorized device and are never committed to the repository.</p>
+      <div class="field"><label for="deviceCodeInput">Administrator or device code</label><input id="deviceCodeInput" autocomplete="username" required></div>
+      <div class="field"><label for="deviceSecretInput">Secure access secret</label><input id="deviceSecretInput" type="password" autocomplete="current-password" required></div>
+      <div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button" id="saveConnectionButton">Sign in securely</button></div>
     </form>
   </dialog>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
-  <script src="./app.js"></script>
+  <script src="/attendance-dashboard/app.js?v=20260712-2"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("/attendance-dashboard/service-worker.js?v=1").catch(() => {}));
+    }
+  </script>
 </body>
 </html>
