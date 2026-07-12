@@ -22,11 +22,15 @@ jobs:
           node --check attendance-dashboard/session-hardening.js
           node --check attendance-dashboard/app.js
           node --check attendance-dashboard/service-worker.js
+          node --check attendance-dashboard/staff-portal-security-patch.js
       - name: Confirm production application files
         run: |
           test -s attendance-dashboard/index.html
           test -s attendance-dashboard/control-room.html
           test -s attendance-dashboard/pilot-readiness.html
+          test -s attendance-dashboard/staff-portal.html
+          test -s attendance-dashboard/staff-portal-secure.html
+          test -s attendance-dashboard/staff-portal-security-patch.js
           test -s attendance-dashboard/styles.css
           test -s attendance-dashboard/production-ui.css
           test -s attendance-dashboard/session-hardening.js
@@ -41,6 +45,10 @@ jobs:
           grep -q 'TIMEOUT_MS' attendance-dashboard/session-hardening.js
           grep -q 'pilot-readiness.html' attendance-dashboard/control-room.html
           grep -q 'Temporary records remaining' attendance-dashboard/pilot-readiness.html
+          grep -q 'embedded=1' attendance-dashboard/staff-portal-secure.html
+          grep -q 'createSignedUrl' attendance-dashboard/staff-portal-security-patch.js
+          grep -q 'staff-profile-photos' attendance-dashboard/staff-portal-security-patch.js
+          grep -q 'SAMEORIGIN' vercel.json
       - name: Reject server-side secrets in frontend
         run: |
           if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|x-wts-device-secret' attendance-dashboard; then
