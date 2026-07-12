@@ -4,9 +4,15 @@
   "trailingSlash":false,
   "redirects":[
     {"source":"/","destination":"/attendance-dashboard/control-room.html","permanent":false},
+    {"source":"/parents","destination":"/attendance-dashboard/parent-contacts.html","permanent":false},
     {"source":"/students","destination":"/attendance-dashboard/index.html","permanent":false},
     {"source":"/staff","destination":"/attendance-dashboard/staff.html","permanent":false},
+    {"source":"/staff-applications","destination":"/attendance-dashboard/staff-applications.html","permanent":false},
+    {"source":"/staff-portal","destination":"/attendance-dashboard/staff-portal-secure.html","permanent":false},
+    {"source":"/operations","destination":"/attendance-dashboard/operations.html","permanent":false},
     {"source":"/analytics","destination":"/attendance-dashboard/analytics.html","permanent":false},
+    {"source":"/controls","destination":"/attendance-dashboard/controls.html","permanent":false},
+    {"source":"/deployment","destination":"/attendance-dashboard/deployment-tools.html","permanent":false},
     {"source":"/devices","destination":"/attendance-dashboard/device-security.html","permanent":false}
   ],
   "rewrites":[
