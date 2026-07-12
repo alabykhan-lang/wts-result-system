@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>WTS Attendance Pilot Readiness</title>
+  <link rel="stylesheet" href="./styles.css?v=20260712-4">
+  <link rel="stylesheet" href="./production-ui.css?v=20260712-4">
+  <style>
+    body{background:#f3f7fb}.page{max-width:1320px;margin:auto;padding:24px}.hero{padding:26px;border-radius:22px;background:linear-gradient(145deg,#0b1f3a,#17436f);color:#fff;box-shadow:0 20px 48px rgba(11,31,58,.18)}.hero h1{margin:6px 0;font-size:34px}.hero p{margin:0;color:#d7e0eb;line-height:1.55}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.actions a{display:inline-flex;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:800}.actions .primary{background:#fff;color:#0b1f3a}.actions .secondary{border:1px solid rgba(255,255,255,.32);color:#fff}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}.summary article{padding:17px;border:1px solid #dfe6ee;border-radius:15px;background:#fff;box-shadow:0 10px 28px rgba(11,31,58,.07)}.summary span,.summary strong{display:block}.summary span{font-size:10px;color:#667085;text-transform:uppercase}.summary strong{margin-top:7px;font-size:27px;color:#0b1f3a}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.panel{padding:20px;border:1px solid #dfe6ee;border-radius:18px;background:#fff;box-shadow:0 12px 32px rgba(11,31,58,.07)}.panel h2{margin:5px 0 16px;color:#0b1f3a}.list{display:grid;gap:10px}.row{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:start;padding:13px;border:1px solid #e4e9ef;border-radius:12px}.icon{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:900}.pass .icon{background:#dcfae6;color:#087443}.hold .icon{background:#fef0c7;color:#b54708}.blocked .icon{background:#fee4e2;color:#b42318}.row strong,.row small{display:block}.row small{margin-top:4px;color:#667085;line-height:1.45}.badge{padding:4px 8px;border-radius:999px;font-size:9px;font-weight:900;text-transform:uppercase}.pass .badge{background:#dcfae6;color:#087443}.hold .badge{background:#fef0c7;color:#b54708}.blocked .badge{background:#fee4e2;color:#b42318}.notice{margin-top:18px;padding:14px;border:1px solid #abefc6;border-radius:13px;background:#ecfdf3;color:#075f46;line-height:1.5}.timeline{counter-reset:item;display:grid;gap:12px}.step{position:relative;padding:14px 14px 14px 52px;border:1px solid #e4e9ef;border-radius:12px}.step:before{counter-increment:item;content:counter(item);position:absolute;left:13px;top:13px;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#e8eef6;color:#0b1f3a;font-weight:900}.step strong,.step small{display:block}.step small{margin-top:4px;color:#667085;line-height:1.45}@media(max-width:900px){.page{padding:14px}.summary{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.hero h1{font-size:27px}}@media(max-width:480px){.summary{grid-template-columns:1fr}.row{grid-template-columns:auto 1fr}.badge{grid-column:2}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p>
+      <h1>Attendance Pilot Readiness Center</h1>
+      <p>Verified software results, protected activation gates and the remaining steps before the first real school-owned-device pilot.</p>
+      <div class="actions"><a class="primary" href="./control-room.html">Return to Control Room</a><a class="secondary" href="./operations.html">Open Session Preparation</a><a class="secondary" href="./device-security.html">Open Device Security</a></div>
+    </header>
+
+    <section class="summary">
+      <article><span>Backend scan tests</span><strong>10/10</strong></article>
+      <article><span>Temporary records remaining</span><strong>0</strong></article>
+      <article><span>Automatic absence</span><strong>OFF</strong></article>
+      <article><span>Parent delivery</span><strong>OFF</strong></article>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <p class="eyebrow">VERIFIED ON 12 JULY 2026</p>
+        <h2>Completed technical checks</h2>
+        <div class="list">
+          <div class="row pass"><span class="icon">✓</span><div><strong>Student routing</strong><small>QR credential routed to the student processor and returned the correct student identity and JSS 1 class.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Staff routing</strong><small>QR credential routed to the staff processor and returned staff category and designation.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Authorized-device security</strong><small>The school development scanner was approved for both student and staff attendance.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Check-in and checkout</strong><small>Both person types recorded check-in and checkout through the shared secure scan route.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Idempotent retry protection</strong><small>Replaying the same client event returned IDEMPOTENT_REPLAY without creating a duplicate event.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Duplicate attendance protection</strong><small>A new event after check-in returned ALREADY_CHECKED_IN; a second checkout returned ALREADY_CHECKED_OUT.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Student excess-time calculation</strong><small>The controlled checkout test calculated minutes after the configured closing time correctly.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Open-ended staff departure</strong><small>Staff checkout was accepted without a fixed expected closing time or early-departure penalty.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Android scanner 0.2.0</strong><small>The unified student-and-staff APK compiled successfully in GitHub Actions.</small></div><span class="badge">Passed</span></div>
+          <div class="row pass"><span class="icon">✓</span><div><strong>Cleanup and restoration</strong><small>All test cards, events, daily records and helper functions were removed; standard rules were restored.</small></div><span class="badge">Passed</span></div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <p class="eyebrow">ACTIVATION GATES</p>
+        <h2>Still required before real use</h2>
+        <div class="list">
+          <div class="row hold"><span class="icon">1</span><div><strong>Install APK on school-owned phone</strong><small>Manual physical-device installation and camera scan still require the user’s phone.</small></div><span class="badge">Pending</span></div>
+          <div class="row hold"><span class="icon">2</span><div><strong>Approve final 2026/2027 roster</strong><small>Promotion, retention, graduation, withdrawals and new admissions must be completed first.</small></div><span class="badge">Pending</span></div>
+          <div class="row hold"><span class="icon">3</span><div><strong>Enter official operational dates</strong><small>First-term opening and closing dates remain deliberately unset.</small></div><span class="badge">Pending</span></div>
+          <div class="row hold"><span class="icon">4</span><div><strong>Activate approved staff rule</strong><small>Arrival opens 6:40 a.m.; late after 7:45 a.m.; checkout remains open-ended.</small></div><span class="badge">Pending</span></div>
+          <div class="row hold"><span class="icon">5</span><div><strong>Enroll a small real pilot group</strong><small>Recommended: 10 students, 3 staff members, one authorized phone and QR credentials.</small></div><span class="badge">Pending</span></div>
+          <div class="row blocked"><span class="icon">!</span><div><strong>Automatic absence</strong><small>Must remain disabled until the roster, rules, dates and pilot results are approved.</small></div><span class="badge">Blocked</span></div>
+          <div class="row blocked"><span class="icon">!</span><div><strong>Real WhatsApp delivery</strong><small>Must remain disabled until parent contacts, consent, templates and a dedicated test number are ready.</small></div><span class="badge">Blocked</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel" style="margin-top:18px">
+      <p class="eyebrow">RECOMMENDED REAL PILOT SEQUENCE</p>
+      <h2>Next operational steps</h2>
+      <div class="timeline">
+        <div class="step"><strong>Install scanner 0.2.0</strong><small>Replace the earlier APK on the authorized school phone and confirm camera access.</small></div>
+        <div class="step"><strong>Run one student QR scan</strong><small>Confirm the student identity, class, check-in result and dashboard event.</small></div>
+        <div class="step"><strong>Run one staff QR scan</strong><small>Confirm the staff identity, designation, check-in and later checkout result.</small></div>
+        <div class="step"><strong>Review dashboard and audit trail</strong><small>Verify server time, duplicate protection and administrator records.</small></div>
+        <div class="step"><strong>Expand to the controlled group</strong><small>Only after the two-person physical test succeeds should the pilot expand to 10 students and 3 staff members.</small></div>
+      </div>
+      <div class="notice"><strong>Protected state confirmed:</strong> operational dates are unset, the staff rule is inactive, automatic absence is off, parent notifications are off, and no pilot test record remains in the database.</div>
+    </section>
+  </main>
+</body>
+</html>
