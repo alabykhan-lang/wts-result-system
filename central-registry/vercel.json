@@ -4,11 +4,11 @@
   "trailingSlash":false,
   "redirects":[
     {"source":"/","destination":"/index.html","permanent":false},
-    {"source":"/students","destination":"/index.html?view=students","permanent":false},
-    {"source":"/admissions","destination":"/index.html?view=admissions","permanent":false},
-    {"source":"/staff","destination":"/index.html?view=staff","permanent":false},
-    {"source":"/access","destination":"/index.html?view=access","permanent":false},
-    {"source":"/sync","destination":"/index.html?view=sync","permanent":false}
+    {"source":"/students","destination":"/section.html?view=students","permanent":false},
+    {"source":"/admissions","destination":"/section.html?view=admissions","permanent":false},
+    {"source":"/staff","destination":"/section.html?view=staff","permanent":false},
+    {"source":"/access","destination":"/section.html?view=access","permanent":false},
+    {"source":"/sync","destination":"/section.html?view=sync","permanent":false}
   ],
   "headers":[
     {"source":"/(.*)","headers":[
