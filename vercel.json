@@ -9,7 +9,7 @@
     {"source":"/staff","destination":"/central-registry/section.html?view=staff","permanent":false}
   ],
   "rewrites":[
-    {"source":"/styles.css","destination":"/central-registry/styles.css"},
+    {"source":"/styles.css","destination":"/central-registry/simple.css"},
     {"source":"/config.js","destination":"/central-registry/config.js"},
     {"source":"/session.js","destination":"/central-registry/session.js"},
     {"source":"/app.js","destination":"/central-registry/app.js"},
