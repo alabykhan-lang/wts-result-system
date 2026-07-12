@@ -1,0 +1,40 @@
+name: Validate Standalone Attendance
+
+on:
+  pull_request:
+    paths:
+      - "attendance-dashboard/**"
+      - "vercel.json"
+      - "index.html"
+      - ".github/workflows/validate-standalone-attendance.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate application JavaScript
+        run: |
+          node --check attendance-dashboard/app.js
+          node --check attendance-dashboard/service-worker.js
+      - name: Confirm production application files
+        run: |
+          test -s attendance-dashboard/index.html
+          test -s attendance-dashboard/styles.css
+          test -s attendance-dashboard/production-ui.css
+          test -s attendance-dashboard/manifest.webmanifest
+          test -s attendance-dashboard/app-icon.svg
+          test -s attendance-dashboard/service-worker.js
+          grep -q '/attendance-dashboard/styles.css' attendance-dashboard/index.html
+          grep -q 'Critical fallback' attendance-dashboard/index.html
+          grep -q 'serviceWorker' attendance-dashboard/index.html
+      - name: Reject server-side secrets in frontend
+        run: |
+          if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|x-wts-device-secret' attendance-dashboard; then
+            echo "Server-side secret reference found in attendance frontend."
+            exit 1
+          fi
