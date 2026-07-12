@@ -7,6 +7,7 @@
     { "source": "/parents", "destination": "/attendance-dashboard/parent-contacts.html", "permanent": false },
     { "source": "/students", "destination": "/attendance-dashboard/index.html", "permanent": false },
     { "source": "/staff", "destination": "/attendance-dashboard/staff.html", "permanent": false },
+    { "source": "/staff-applications", "destination": "/attendance-dashboard/staff-applications.html", "permanent": false },
     { "source": "/staff-portal", "destination": "/attendance-dashboard/staff-portal-secure.html", "permanent": false },
     {
       "source": "/attendance-dashboard/staff-portal",
