@@ -1,0 +1,5 @@
+{
+  "supabaseUrl": "https://YOUR_PROJECT.supabase.co",
+  "publishableKey": "YOUR_PUBLIC_ANON_OR_PUBLISHABLE_KEY",
+  "storageKey": "wts_attendance_admin_connection"
+}
