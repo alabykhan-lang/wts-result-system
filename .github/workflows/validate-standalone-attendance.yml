@@ -19,6 +19,7 @@ jobs:
           node-version: "22"
       - name: Validate application JavaScript
         run: |
+          node --check attendance-dashboard/session-hardening.js
           node --check attendance-dashboard/app.js
           node --check attendance-dashboard/service-worker.js
       - name: Confirm production application files
@@ -26,12 +27,16 @@ jobs:
           test -s attendance-dashboard/index.html
           test -s attendance-dashboard/styles.css
           test -s attendance-dashboard/production-ui.css
+          test -s attendance-dashboard/session-hardening.js
           test -s attendance-dashboard/manifest.webmanifest
           test -s attendance-dashboard/app-icon.svg
           test -s attendance-dashboard/service-worker.js
           grep -q '/attendance-dashboard/styles.css' attendance-dashboard/index.html
+          grep -q '/attendance-dashboard/session-hardening.js' attendance-dashboard/index.html
           grep -q 'Critical fallback' attendance-dashboard/index.html
           grep -q 'serviceWorker' attendance-dashboard/index.html
+          grep -q 'sessionStorage' attendance-dashboard/session-hardening.js
+          grep -q 'TIMEOUT_MS' attendance-dashboard/session-hardening.js
       - name: Reject server-side secrets in frontend
         run: |
           if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|x-wts-device-secret' attendance-dashboard; then
