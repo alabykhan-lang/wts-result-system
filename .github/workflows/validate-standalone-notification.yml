@@ -1,0 +1,41 @@
+name: Validate Standalone Notification
+
+on:
+  pull_request:
+    paths:
+      - "notification-system/**"
+      - "vercel.json"
+      - "index.html"
+      - ".github/workflows/validate-standalone-notification.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate application JavaScript
+        run: |
+          node --check notification-system/config.js
+          node --check notification-system/app.js
+          node --check notification-system/service-worker.js
+      - name: Confirm production application files
+        run: |
+          test -s notification-system/index.html
+          test -s notification-system/styles.css
+          test -s notification-system/production-ui.css
+          test -s notification-system/manifest.webmanifest
+          test -s notification-system/app-icon.svg
+          test -s notification-system/service-worker.js
+          grep -q '/notification-system/styles.css' notification-system/index.html
+          grep -q 'Critical fallback' notification-system/index.html
+          grep -q 'serviceWorker' notification-system/index.html
+      - name: Reject server-side secrets in frontend
+        run: |
+          if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|WTS_WHATSAPP_GATEWAY_API_KEY' notification-system; then
+            echo "Server-side secret reference found in notification frontend."
+            exit 1
+          fi
