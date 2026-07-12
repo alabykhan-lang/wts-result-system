@@ -1,0 +1,22 @@
+{
+  "$schema":"https://openapi.vercel.sh/vercel.json",
+  "cleanUrls":true,
+  "trailingSlash":false,
+  "redirects":[
+    {"source":"/","destination":"/index.html","permanent":false},
+    {"source":"/students","destination":"/index.html?view=students","permanent":false},
+    {"source":"/admissions","destination":"/index.html?view=admissions","permanent":false},
+    {"source":"/staff","destination":"/index.html?view=staff","permanent":false},
+    {"source":"/access","destination":"/index.html?view=access","permanent":false},
+    {"source":"/sync","destination":"/index.html?view=sync","permanent":false}
+  ],
+  "headers":[
+    {"source":"/(.*)","headers":[
+      {"key":"X-Content-Type-Options","value":"nosniff"},
+      {"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},
+      {"key":"Permissions-Policy","value":"camera=(), geolocation=(), microphone=()"},
+      {"key":"X-Frame-Options","value":"DENY"},
+      {"key":"Cache-Control","value":"no-store, max-age=0"}
+    ]}
+  ]
+}
