@@ -1,0 +1,17 @@
+@import url('/attendance-dashboard/styles.css');
+
+/* Management sees the four daily attendance tools first. */
+.hub-card.pilot,
+.hub-card.operations,
+.hub-card.parents,
+.hub-card.controls,
+.hub-card.deployment,
+.hub-card.lifecycle,
+.hub-card.portal,
+.hub-card.departures{display:none!important}
+
+.hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.hub-header p:last-child{font-size:0}
+.hub-header p:last-child::after{content:'Receive attendance from the school scanner, QR, NFC or card reader; monitor students and staff; and open attendance reports.';font-size:14px}
+
+@media(max-width:680px){.hub-grid{grid-template-columns:1fr!important}}

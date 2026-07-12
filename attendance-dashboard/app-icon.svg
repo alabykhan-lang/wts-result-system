@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WTS Attendance">
+  <rect width="512" height="512" rx="112" fill="#0b1f3a"/>
+  <circle cx="256" cy="256" r="174" fill="#0f7c5c" opacity=".22"/>
+  <path d="M150 164h212a26 26 0 0 1 26 26v172a26 26 0 0 1-26 26H150a26 26 0 0 1-26-26V190a26 26 0 0 1 26-26Z" fill="#fff"/>
+  <path d="M124 218h264v-28a26 26 0 0 0-26-26H150a26 26 0 0 0-26 26v28Z" fill="#d6a84f"/>
+  <path d="M178 129v67M334 129v67" stroke="#fff" stroke-width="28" stroke-linecap="round"/>
+  <path d="m185 300 46 46 99-111" fill="none" stroke="#0f7c5c" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

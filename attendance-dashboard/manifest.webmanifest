@@ -1,0 +1,38 @@
+{
+  "name": "WTS Digital Attendance System",
+  "short_name": "WTS Attendance",
+  "description": "Student and staff attendance administration for Way to Success Standard Schools, Ejigbo.",
+  "id": "/attendance-dashboard/",
+  "start_url": "/attendance-dashboard/index.html",
+  "scope": "/attendance-dashboard/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f7fb",
+  "theme_color": "#0b1f3a",
+  "categories": ["education", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/attendance-dashboard/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Student Attendance",
+      "short_name": "Students",
+      "url": "/attendance-dashboard/index.html"
+    },
+    {
+      "name": "Staff Management",
+      "short_name": "Staff",
+      "url": "/attendance-dashboard/staff.html"
+    },
+    {
+      "name": "Parent Contacts",
+      "short_name": "Parents",
+      "url": "/attendance-dashboard/parent-contacts.html"
+    }
+  ]
+}
