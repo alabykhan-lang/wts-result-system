@@ -1,0 +1,64 @@
+name: Validate Notification Control
+
+on:
+  pull_request:
+    paths:
+      - "notification-control/**"
+      - "central-registry/config.js"
+      - "vercel.json"
+      - ".github/workflows/validate-notification-control.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate JavaScript
+        run: |
+          node --check notification-control/config.js
+          node --check notification-control/session.js
+          node --check notification-control/app.js
+      - name: Confirm application files and APIs
+        run: |
+          test -s notification-control/index.html
+          test -s notification-control/section.html
+          test -s notification-control/styles.css
+          test -s notification-control/config.js
+          test -s notification-control/session.js
+          test -s notification-control/app.js
+          test -s notification-control/manifest.webmanifest
+          test -s notification-control/app-icon.svg
+          test -s central-registry/config.js
+          grep -q 'Notification Dashboard' notification-control/index.html
+          grep -q 'school_notification_control_read_api' notification-control/app.js
+          grep -q 'school_notification_control_write_api' notification-control/app.js
+          grep -q 'sessionStorage' notification-control/session.js
+          grep -q 'central-registry/config.js' notification-control/config.js
+          grep -q 'section.html?view=contacts' vercel.json
+          grep -q 'section.html?view=readiness' vercel.json
+          grep -q 'X-Frame-Options' vercel.json
+      - name: Serve and verify local assets
+        run: |
+          python3 -m http.server 4174 >/tmp/notification-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 1
+          curl -fsS http://127.0.0.1:4174/notification-control/index.html | grep -q 'Notification Dashboard'
+          curl -fsS http://127.0.0.1:4174/notification-control/styles.css | grep -q '.app-shell'
+          curl -fsS http://127.0.0.1:4174/notification-control/config.js | grep -q 'WTSNotificationConfigReady'
+          curl -fsS http://127.0.0.1:4174/notification-control/session.js | grep -q 'WTSNotificationSession'
+          curl -fsS http://127.0.0.1:4174/notification-control/app.js | grep -q 'school_notification_control_read_api'
+          curl -fsS 'http://127.0.0.1:4174/notification-control/section.html?view=contacts' | grep -q 'Opening Notification Control'
+          curl -fsS http://127.0.0.1:4174/notification-control/manifest.webmanifest | grep -q 'WTS Notification Control Center'
+          curl -fsS http://127.0.0.1:4174/notification-control/app-icon.svg | grep -q '<svg'
+          curl -fsS http://127.0.0.1:4174/central-registry/config.js | grep -q 'WTSRegistryConfig'
+      - name: Reject privileged secrets
+        run: |
+          if grep -RIn --exclude='*.md' --exclude='*.yml' --exclude='*.yaml' -E 'SUPABASE_SERVICE_ROLE_KEY|service_role_key|x-wts-device-secret|WTS_WHATSAPP_GATEWAY_TOKEN' notification-control; then
+            echo "Privileged secret reference found in Notification Control frontend."
+            exit 1
+          fi
