@@ -56,6 +56,7 @@ jobs:
           node --check attendance-dashboard/deployment-guardians.js
           node --check attendance-dashboard/deployment-tests.js
           node --check attendance-dashboard/deployment-recovery.js
+          node --check attendance-dashboard/parent-contacts.js
 
       - name: Confirm dashboard files
         run: |
@@ -96,6 +97,7 @@ jobs:
           test -s attendance-dashboard/analytics-reports.js
           test -s attendance-dashboard/analytics-automation.js
           test -s attendance-dashboard/dashboard-config-loader.js
+          test -s attendance-dashboard/attendance-config.example.json
           test -s attendance-dashboard/controls.html
           test -s attendance-dashboard/controls.js
           test -s attendance-dashboard/controls-core.js
@@ -111,3 +113,5 @@ jobs:
           test -s attendance-dashboard/deployment-guardians.js
           test -s attendance-dashboard/deployment-tests.js
           test -s attendance-dashboard/deployment-recovery.js
+          test -s attendance-dashboard/parent-contacts.html
+          test -s attendance-dashboard/parent-contacts.js
