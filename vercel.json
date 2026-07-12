@@ -6,11 +6,13 @@
     {"source":"/","destination":"/notification-system/index.html","permanent":false},
     {"source":"/contacts","destination":"/notification-system/index.html?view=contacts","permanent":false},
     {"source":"/templates","destination":"/notification-system/index.html?view=templates","permanent":false},
-    {"source":"/messages","destination":"/notification-system/index.html?view=messages","permanent":false}
+    {"source":"/messages","destination":"/notification-system/index.html?view=messages","permanent":false},
+    {"source":"/providers","destination":"/notification-system/index.html?view=providers","permanent":false},
+    {"source":"/settings","destination":"/notification-system/index.html?view=settings","permanent":false},
+    {"source":"/attempts","destination":"/notification-system/index.html?view=attempts","permanent":false}
   ],
   "rewrites":[
     {"source":"/styles.css","destination":"/notification-system/simple.css"},
-    {"source":"/production-ui.css","destination":"/notification-system/production-ui.css"},
     {"source":"/config.js","destination":"/notification-system/config.js"},
     {"source":"/session-hardening.js","destination":"/notification-system/session-hardening.js"},
     {"source":"/app.js","destination":"/notification-system/app.js"},
@@ -21,7 +23,6 @@
   "headers":[{"source":"/(.*)","headers":[
     {"key":"X-Content-Type-Options","value":"nosniff"},
     {"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},
-    {"key":"Permissions-Policy","value":"camera=(), geolocation=(), microphone=()"},
     {"key":"X-Frame-Options","value":"DENY"},
     {"key":"Cache-Control","value":"no-store, max-age=0"}
   ]}]
