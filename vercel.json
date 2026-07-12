@@ -5,11 +5,11 @@
   "redirects":[
     {"source":"/","destination":"/central-registry/index.html","permanent":false},
     {"source":"/registry","destination":"/central-registry/index.html","permanent":false},
-    {"source":"/students","destination":"/central-registry/index.html?view=students","permanent":false},
-    {"source":"/admissions","destination":"/central-registry/index.html?view=admissions","permanent":false},
-    {"source":"/staff","destination":"/central-registry/index.html?view=staff","permanent":false},
-    {"source":"/access","destination":"/central-registry/index.html?view=access","permanent":false},
-    {"source":"/sync","destination":"/central-registry/index.html?view=sync","permanent":false}
+    {"source":"/students","destination":"/central-registry/section.html?view=students","permanent":false},
+    {"source":"/admissions","destination":"/central-registry/section.html?view=admissions","permanent":false},
+    {"source":"/staff","destination":"/central-registry/section.html?view=staff","permanent":false},
+    {"source":"/access","destination":"/central-registry/section.html?view=access","permanent":false},
+    {"source":"/sync","destination":"/central-registry/section.html?view=sync","permanent":false}
   ],
   "headers":[
     {"source":"/(.*)","headers":[
