@@ -1,0 +1,2 @@
+studentAdmissionNumber,studentName,guardianName,relationship,phone,whatsappNumber,email,preferredChannels,isPrimary,preferredLanguage,consentStatus,consentSource,notes
+WTS-STU-26-000001,,Sample Parent,Mother,08012345678,08012345678,,whatsapp,true,english,pending,,Replace this sample row before upload
