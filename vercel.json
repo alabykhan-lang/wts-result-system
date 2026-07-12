@@ -7,6 +7,13 @@
     { "source": "/parents", "destination": "/attendance-dashboard/parent-contacts.html", "permanent": false },
     { "source": "/students", "destination": "/attendance-dashboard/index.html", "permanent": false },
     { "source": "/staff", "destination": "/attendance-dashboard/staff.html", "permanent": false },
+    { "source": "/staff-portal", "destination": "/attendance-dashboard/staff-portal-secure.html", "permanent": false },
+    {
+      "source": "/attendance-dashboard/staff-portal",
+      "destination": "/attendance-dashboard/staff-portal-secure",
+      "permanent": false,
+      "missing": [{ "type": "query", "key": "embedded" }]
+    },
     { "source": "/operations", "destination": "/attendance-dashboard/operations.html", "permanent": false },
     { "source": "/analytics", "destination": "/attendance-dashboard/analytics.html", "permanent": false },
     { "source": "/controls", "destination": "/attendance-dashboard/controls.html", "permanent": false },
@@ -18,7 +25,8 @@
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "DENY" }
+        { "key": "Permissions-Policy", "value": "camera=(self), geolocation=(self), microphone=()" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
       ]
     }
   ]
