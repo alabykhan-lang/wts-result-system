@@ -9,7 +9,7 @@
     {"source":"/messages","destination":"/notification-system/index.html?view=messages","permanent":false}
   ],
   "rewrites":[
-    {"source":"/styles.css","destination":"/notification-system/styles.css"},
+    {"source":"/styles.css","destination":"/notification-system/simple.css"},
     {"source":"/production-ui.css","destination":"/notification-system/production-ui.css"},
     {"source":"/config.js","destination":"/notification-system/config.js"},
     {"source":"/session-hardening.js","destination":"/notification-system/session-hardening.js"},
