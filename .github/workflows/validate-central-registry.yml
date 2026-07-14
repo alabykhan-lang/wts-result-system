@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - "central-registry/**"
-      - "vercel.json"
       - ".github/workflows/validate-central-registry.yml"
   workflow_dispatch:
 
@@ -39,10 +38,10 @@ jobs:
           grep -q 'school_registry_access_write_api' central-registry/app.js
           grep -q 'school_admissions_write_api' central-registry/app.js
           grep -q 'sessionStorage' central-registry/session.js
-          grep -q 'section.html?view=students' vercel.json
-          grep -q 'section.html?view=admissions' vercel.json
-          grep -q 'section.html?view=staff' vercel.json
-          grep -q 'X-Frame-Options' vercel.json
+          grep -q 'section.html?view=students' central-registry/vercel.json
+          grep -q 'section.html?view=admissions' central-registry/vercel.json
+          grep -q 'section.html?view=staff' central-registry/vercel.json
+          grep -q 'X-Frame-Options' central-registry/vercel.json
       - name: Serve and verify local application assets
         run: |
           python3 -m http.server 4173 --directory central-registry >/tmp/registry-http.log 2>&1 &

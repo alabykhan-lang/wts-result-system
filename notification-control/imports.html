@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>WTS Guardian Import Center</title>
+  <link rel="icon" href="./app-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=20260712-2">
+  <style>
+    body{padding:0}.import-page{max-width:1500px;margin:auto;padding:22px}.import-hero{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:24px;border-radius:22px;background:linear-gradient(145deg,#0b1f3a,#17436f);color:#fff;box-shadow:0 18px 44px rgba(11,31,58,.18)}.import-hero h1{margin:5px 0;font-family:'Playfair Display',serif}.import-hero p{margin:0;color:#d6e1ee}.import-actions{display:flex;gap:8px;flex-wrap:wrap}.import-actions a{display:inline-flex;text-decoration:none}.import-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:18px 0}.import-metric{padding:16px;border:1px solid var(--border);border-radius:15px;background:#fff;box-shadow:var(--shadow)}.import-metric span,.import-metric strong{display:block}.import-metric span{font-size:10px;color:var(--muted);text-transform:uppercase}.import-metric strong{margin-top:7px;color:var(--navy);font-size:27px}.import-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:18px}.drop-zone{padding:26px;border:2px dashed #b8c7d9;border-radius:15px;background:#f8fafc;text-align:center}.drop-zone.dragover{border-color:var(--green);background:#ecfdf3}.drop-zone input{display:none}.drop-zone label{display:inline-block;margin-top:10px;cursor:pointer}.preview-table{max-height:390px;overflow:auto;border:1px solid var(--border);border-radius:12px}.preview-table table{min-width:1050px}.batch-list{display:grid;gap:10px}.batch-card{padding:14px;border:1px solid var(--border);border-radius:13px;background:#fff}.batch-head{display:flex;justify-content:space-between;gap:12px}.batch-head strong,.batch-head span{display:block}.batch-head span{margin-top:4px;color:var(--muted);font-size:11px}.batch-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.batch-stats div{padding:9px;border-radius:9px;background:#f8fafc}.batch-stats label,.batch-stats b{display:block}.batch-stats label{font-size:9px;color:var(--muted);text-transform:uppercase}.batch-stats b{margin-top:3px}.import-tabs{display:flex;gap:6px;margin:16px 0;padding:5px;border-radius:13px;background:#e8eef6;overflow:auto}.import-tabs button{border:0;border-radius:9px;padding:10px 14px;background:transparent;color:var(--muted);font-weight:800;white-space:nowrap}.import-tabs button.active{background:#fff;color:var(--navy)}.import-tab{display:none}.import-tab.active{display:block}.rules{display:grid;gap:8px;margin-top:12px}.rule{padding:10px;border-radius:10px;background:#f8fafc;color:#475467;font-size:12px}.row-errors{color:var(--red);font-size:10px}.file-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.file-summary div{padding:10px;border-radius:10px;background:#f8fafc}.file-summary span,.file-summary strong{display:block}.file-summary span{font-size:9px;color:var(--muted);text-transform:uppercase}.file-summary strong{margin-top:4px}.session-strip{margin:14px 0;padding:12px 14px;border:1px solid #b2ddff;border-radius:12px;background:#eff8ff;display:flex;justify-content:space-between;align-items:center;color:#175cd3}.session-strip strong,.session-strip small{display:block}.session-strip small{font-size:10px;margin-top:2px}@media(max-width:1000px){.import-page{padding:14px}.import-hero{align-items:flex-start;flex-direction:column}.import-grid{grid-template-columns:1fr}.import-metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.import-metrics{grid-template-columns:1fr 1fr}.import-metric:last-child{grid-column:1/-1}.batch-stats,.file-summary{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<main class="import-page">
+  <header class="import-hero">
+    <div><p class="eyebrow">WAY TO SUCCESS STANDARD SCHOOLS, EJIGBO</p><h1>Guardian Import Center</h1><p>Validate parent contacts before synchronizing clean rows into the Central Registry and Notification System.</p></div>
+    <div class="import-actions"><a class="secondary-button" href="./index.html">Notification Dashboard</a><a class="secondary-button" href="../central-registry/index.html">Central Registry</a><a class="secondary-button" href="./guardian-import-template.csv" download>Download CSV Template</a><button class="primary-button" id="connectButton">Administrator login</button></div>
+  </header>
+
+  <div id="sessionStrip" class="session-strip hidden"><div><strong id="sessionIdentity">Administrator session</strong><small>Stored only in this browser tab</small></div><button class="text-button" id="signOutButton">Sign out</button></div>
+
+  <section class="import-metrics">
+    <article class="import-metric"><span>Import batches</span><strong id="batchCount">0</strong></article>
+    <article class="import-metric"><span>Validated</span><strong id="validatedCount">0</strong></article>
+    <article class="import-metric"><span>Partially valid</span><strong id="partialCount">0</strong></article>
+    <article class="import-metric"><span>Applied</span><strong id="appliedCount">0</strong></article>
+    <article class="import-metric"><span>Invalid rows</span><strong id="invalidRowCount">0</strong></article>
+  </section>
+
+  <nav class="import-tabs">
+    <button class="active" data-tab="upload">Upload & Validate</button>
+    <button data-tab="batches">Import Batches</button>
+    <button data-tab="rows">Batch Rows</button>
+  </nav>
+
+  <section class="import-tab active" id="tab-upload">
+    <div class="import-grid">
+      <article class="panel">
+        <div class="panel-head"><div><p class="eyebrow">CSV FILE</p><h3>Choose guardian-contact file</h3></div></div>
+        <div class="drop-zone" id="dropZone"><p><strong>Drop a CSV file here</strong></p><p>Maximum 2,000 rows. No row is applied until validation is reviewed.</p><label class="primary-button" for="csvFile">Choose CSV file</label><input id="csvFile" type="file" accept=".csv,text/csv"></div>
+        <div class="file-summary hidden" id="fileSummary"><div><span>Filename</span><strong id="fileName">—</strong></div><div><span>Rows parsed</span><strong id="parsedRows">0</strong></div><div><span>Header status</span><strong id="headerStatus">—</strong></div></div>
+        <div class="field"><label>Batch name</label><input id="batchName" placeholder="e.g. JSS1 Parent Contacts — July 2026"></div>
+        <div class="button-row" style="margin-top:12px"><button class="primary-button" id="validateBatch" disabled>Validate batch</button><button class="secondary-button" id="clearFile">Clear</button></div>
+        <div class="rules" id="importRules"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head"><div><p class="eyebrow">LOCAL PREVIEW</p><h3>Parsed rows before upload</h3></div><span id="previewNotice">No file selected</span></div>
+        <div class="preview-table"><table><thead><tr><th>#</th><th>Admission No.</th><th>Student</th><th>Guardian</th><th>Relationship</th><th>WhatsApp</th><th>Language</th><th>Consent</th></tr></thead><tbody id="previewRows"></tbody></table></div>
+        <div class="empty" id="previewEmpty">Select the CSV template, replace the sample row, and upload it here.</div>
+      </article>
+    </div>
+  </section>
+
+  <section class="import-tab" id="tab-batches">
+    <article class="panel"><div class="panel-head"><div><p class="eyebrow">VALIDATION HISTORY</p><h3>Guardian import batches</h3></div><button class="secondary-button" id="refreshBatches">Refresh</button></div><div class="filters" style="margin:12px 0"><div class="field"><label>Status</label><select id="batchStatus"><option value="">All</option><option value="validated">Validated</option><option value="partially_valid">Partially valid</option><option value="invalid">Invalid</option><option value="applied">Applied</option><option value="cancelled">Cancelled</option></select></div></div><div id="batchList" class="batch-list"></div><div class="empty hidden" id="batchEmpty">No import batches found.</div></article>
+  </section>
+
+  <section class="import-tab" id="tab-rows">
+    <article class="panel"><div class="panel-head"><div><p class="eyebrow">ROW REVIEW</p><h3 id="rowReviewTitle">Select an import batch</h3></div><button class="secondary-button" id="backToBatches">Back to batches</button></div><div class="table-wrap"><table><thead><tr><th>Row</th><th>Student</th><th>Guardian</th><th>Contact</th><th>Language</th><th>Consent</th><th>Match</th><th>Errors</th><th>Applied</th></tr></thead><tbody id="batchRows"></tbody></table></div><div class="empty" id="batchRowsEmpty">Open a batch from the Import Batches tab to inspect its rows.</div></article>
+  </section>
+</main>
+
+<dialog id="loginDialog"><form method="dialog" class="dialog-card" id="loginForm"><div class="dialog-head"><div><p class="eyebrow">SECURE MANAGEMENT ACCESS</p><h2>Connect Guardian Import Center</h2></div><button value="cancel" class="icon-button">×</button></div><div class="field"><label>Administrator code</label><input id="adminCode" required></div><div class="field"><label>Administrator secret</label><input id="adminSecret" type="password" required></div><div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button value="default" class="primary-button">Sign in</button></div></form></dialog>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./config.js?v=20260712-2"></script>
+<script src="./session.js?v=20260712-2"></script>
+<script src="./imports.js?v=20260712-2"></script>
+</body>
+</html>
