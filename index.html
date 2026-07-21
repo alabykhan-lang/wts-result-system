@@ -309,6 +309,26 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 .perf-bar-wrap{background:#f3f4f6;border-radius:20px;height:8px;overflow:hidden}
 .perf-bar{height:100%;border-radius:20px;transition:.3s}
 
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;
+  max-height:90vh;display:flex;flex-direction:column;
+  box-shadow:var(--shadow2);animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-hdr h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--g1)}
+.modal-x{background:none;border:none;font-size:1.5rem;cursor:pointer;
+  color:var(--gray);padding:2px 8px;-webkit-tap-highlight-color:transparent}
+.modal-body{padding:18px 20px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;background:#fff}
+.photo-upload{width:70px;height:84px;border-radius:8px;background:#f3f4f6;
+  border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;overflow:hidden;flex-shrink:0}
+.photo-upload img{width:100%;height:100%;object-fit:cover}
+
 /* ── BOTTOM NAV ── */
 #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:90;
   background:var(--g1);border-top:1px solid rgba(255,255,255,.1)}
