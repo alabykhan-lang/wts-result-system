@@ -305,69 +305,6 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 .promotion-preview-head{background:#f0fdf4;color:var(--g1);font-size:.8rem;font-weight:700;padding:10px 12px;border-bottom:1px solid var(--border)}
 .promotion-preview-body{max-height:260px;overflow:auto}
 
-/* COMMAND CENTER */
-.command-room{max-width:1040px;margin:0 auto;min-height:calc(100vh - 120px);display:flex;flex-direction:column;gap:12px}
-.command-room-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.command-room-head h2{font-family:'Playfair Display',serif;color:var(--g1);margin-bottom:3px;font-size:1.15rem}
-.command-room-head p{font-size:.82rem;color:var(--gray);line-height:1.4}
-.command-chat{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:12px;min-height:54vh;max-height:calc(100vh - 280px);overflow-y:auto;scroll-behavior:smooth}
-.cc-msg{display:flex;width:100%}
-.cc-msg-admin{justify-content:flex-end}
-.cc-msg-assistant{justify-content:flex-start}
-.cc-bubble{max-width:min(78%,720px);border-radius:14px;padding:10px 12px;font-size:.86rem;line-height:1.5;box-shadow:0 1px 5px rgba(26,42,74,.07)}
-.cc-msg-admin .cc-bubble{background:var(--g1);color:#fff;border-bottom-right-radius:4px}
-.cc-msg-assistant .cc-bubble{background:#f8fffb;color:#1f2937;border:1px solid var(--border);border-bottom-left-radius:4px}
-.cc-bubble strong{color:var(--g1)}
-.cc-msg-admin .cc-bubble strong{color:#fff}
-.cc-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:8px}
-.cc-card-row{display:grid;grid-template-columns:120px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid #edf7f2}
-.cc-card-row:last-child{border-bottom:none}
-.cc-card-row strong{color:var(--g1)}
-.cc-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.cc-warning{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.8rem}
-.cc-danger-note{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.8rem}
-.command-pill{display:inline-flex;align-items:center;gap:4px;background:#eef8f3;color:var(--g1);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:.72rem;font-weight:700;margin:2px}
-.command-composer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(240,247,244,0),var(--bg) 18%);padding-top:10px;z-index:40}
-.command-composer-inner{background:#fff;border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow2);padding:8px;display:grid;grid-template-columns:36px 1fr auto auto;gap:8px;align-items:end}
-.command-composer textarea{border:none;outline:none;resize:none;min-height:42px;max-height:150px;font-family:'DM Sans',sans-serif;font-size:.9rem;line-height:1.45;padding:9px 4px;background:transparent}
-.cc-icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:#f8fffb;color:var(--g1);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900}
-.cc-icon-btn:hover{border-color:var(--g3);background:#f0fdf4}
-.command-drawers{display:grid;grid-template-columns:1fr;gap:8px}
-.command-drawer{background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
-.command-drawer summary{cursor:pointer;padding:12px 14px;font-weight:800;color:var(--g1);font-size:.86rem;list-style:none}
-.command-drawer summary::-webkit-details-marker{display:none}
-.command-drawer summary:after{content:'+';float:right;color:var(--gray)}
-.command-drawer[open] summary:after{content:'-'}
-.command-drawer-body{padding:0 14px 14px;border-top:1px solid var(--border)}
-.command-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:10px;margin-top:14px}
-.command-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.command-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.audit-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto}
-.audit-item{border:1px solid var(--border);border-radius:8px;padding:9px 10px;background:#fbfffd;font-size:.78rem}
-.audit-item strong{color:var(--g1)}
-.cc-hidden-preview{display:none}
-
-/* ── MODAL ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
-  display:none;align-items:center;justify-content:center;padding:20px}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;
-  max-height:90vh;display:flex;flex-direction:column;
-  box-shadow:var(--shadow2);animation:fadeUp .2s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.modal-hdr h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--g1)}
-.modal-x{background:none;border:none;font-size:1.5rem;cursor:pointer;
-  color:var(--gray);padding:2px 8px;-webkit-tap-highlight-color:transparent}
-.modal-body{padding:18px 20px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
-.modal-foot{padding:12px 20px;border-top:1px solid var(--border);
-  display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;background:#fff}
-.photo-upload{width:70px;height:84px;border-radius:8px;background:#f3f4f6;
-  border:2px dashed var(--border);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;cursor:pointer;font-size:.6rem;
-  color:var(--gray);text-align:center;overflow:hidden;flex-shrink:0}
-.photo-upload img{width:100%;height:100%;object-fit:cover}
-
 /* ── ANALYTICS ── */
 .perf-bar-wrap{background:#f3f4f6;border-radius:20px;height:8px;overflow:hidden}
 .perf-bar{height:100%;border-radius:20px;transition:.3s}
@@ -427,7 +364,6 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .stats-row{grid-template-columns:1fr 1fr}
   .settings-grid{grid-template-columns:1fr}
   .traits-grid{grid-template-columns:1fr}
-  .command-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fees-grid{grid-template-columns:1fr 1fr}
   .fg-row{grid-template-columns:1fr}
   .sheet-header,.sheet-row{grid-template-columns:25px 1fr 55px 55px 55px 80px 55px 60px 70px;
@@ -446,13 +382,6 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .overlay{align-items:flex-end;padding:0}
   .home-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
   .subj-grid{grid-template-columns:1fr 1fr}
-  .command-grid,.command-mini-grid{grid-template-columns:1fr}
-  .command-room{min-height:calc(100vh - 150px);gap:10px}
-  .command-chat{border-radius:8px;min-height:50vh;max-height:calc(100vh - 285px);padding:10px}
-  .cc-bubble{max-width:88%;font-size:.84rem}
-  .cc-card-row{grid-template-columns:1fr;gap:2px}
-  .command-composer-inner{grid-template-columns:36px 1fr 36px 54px;gap:6px}
-  .command-composer-inner .btn{padding:8px 9px;font-size:.74rem}
 }
 
 /* ── PRINT ── */
@@ -537,10 +466,6 @@ body.admin-mode .admin-only-bn{display:flex}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Admin Panel
     </div>
-    <div class="ni admin-only" id="ni-command" onclick="navTo('command',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></svg>
-      Command Center
-    </div>
     <div class="ni admin-only" onclick="navTo('settings',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
@@ -577,7 +502,7 @@ body.admin-mode .admin-only-bn{display:flex}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Result Cards
     </div>
-    <div class="ni admin-only" id="ni-analytics" onclick="navTo('analytics',this)">
+    <div class="ni" id="ni-analytics" onclick="navTo('analytics',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Analytics
     </div>
@@ -590,7 +515,7 @@ body.admin-mode .admin-only-bn{display:flex}
   <div id="sb-user-panel" style="position:absolute;bottom:0;left:0;right:0;background:var(--g1);padding:12px 16px;border-top:1px solid rgba(125,212,176,.3)">
     <div style="font-size:.75rem;color:var(--g3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px" id="sb-user-name">--</div>
     <div id="sb-role-badge" class="badge-teacher" style="font-size:.6rem;padding:2px 8px;border-radius:10px;font-weight:700;display:inline-block;margin-bottom:8px">Teacher</div>
-    <button onclick="if(window.loadRemoteSettings){window.loadRemoteSettings();showToast('Settings refreshed');}" style="display:block;width:100%;background:rgba(125,212,176,.08);border:1px solid rgba(125,212,176,.2);color:rgba(255,255,255,.6);font-size:.72rem;padding:6px;border-radius:8px;cursor:pointer;margin-bottom:6px">&#9729; Refresh Settings</button>
+    <button onclick="refreshPortalState({force:true,notify:true})" style="display:block;width:100%;background:rgba(125,212,176,.08);border:1px solid rgba(125,212,176,.2);color:rgba(255,255,255,.6);font-size:.72rem;padding:6px;border-radius:8px;cursor:pointer;margin-bottom:6px">&#9729; Refresh Portal</button>
     <button onclick="doLogout()" style="display:block;width:100%;background:rgba(125,212,176,.18);border:1px solid rgba(125,212,176,.4);color:var(--g3);font-size:.78rem;padding:8px;border-radius:8px;cursor:pointer;font-weight:700">&#x2192; Sign Out</button>
   </div>
 </div>
@@ -896,95 +821,6 @@ body.admin-mode .admin-only-bn{display:flex}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
       <div class="tbl-wrap" style="margin:0"><div class="tbl-head"><h3>Grade Distribution</h3></div><div style="padding:16px"><canvas id="ch-dist"></canvas></div></div>
       <div class="tbl-wrap" style="margin:0"><div class="tbl-head"><h3>Subject Averages</h3></div><div style="padding:16px"><canvas id="ch-subj"></canvas></div></div>
-    </div>
-  </div>
-
-
-  <!-- COMMAND CENTER -->
-  <div class="page" id="page-command">
-    <div class="command-room">
-      <div class="command-room-head">
-        <div>
-          <h2>Command Center</h2>
-          <p>Type a command, paste scores, or upload a score sheet. Nothing is recorded until you approve the preview.</p>
-        </div>
-      </div>
-
-      <div class="command-chat" id="cc-chat"></div>
-
-      <div class="command-composer">
-        <div class="command-composer-inner">
-          <label class="cc-icon-btn" title="Upload or scan score sheet">
-            <input type="file" id="cc-upload" accept="image/*" onchange="handleCommandUpload(event)" style="display:none"/>
-            <span>&#128247;</span>
-          </label>
-          <textarea id="cc-chat-input" placeholder="Type a command, paste scores, or upload a score sheet..." onkeydown="handleCommandComposerKey(event)"></textarea>
-          <button class="btn btn-outline btn-sm" onclick="resetCommandCenter()">Clear</button>
-          <button class="btn btn-primary btn-sm" onclick="sendCommandMessage()">Send</button>
-        </div>
-      </div>
-
-      <div class="command-drawers">
-        <details class="command-drawer">
-          <summary>Advanced Tools</summary>
-          <div class="command-drawer-body">
-            <textarea class="cc-hidden-preview" id="cc-command"></textarea>
-            <textarea class="cc-hidden-preview" id="cc-raw-scores"></textarea>
-            <div class="command-grid">
-              <div class="fg"><label>Class</label><select class="sel" id="cc-class" onchange="populateCommandSubjects();populateCommandStudents()"></select></div>
-              <div class="fg"><label>Subject</label><select class="sel" id="cc-subject"></select></div>
-              <div class="fg"><label>Term</label><select class="sel" id="cc-term"><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div>
-              <div class="fg"><label>Assessment</label><select class="sel" id="cc-assessment"><option value="ca1">CA1</option><option value="ca2">CA2</option><option value="ca3">CA3</option><option value="exam">Exam</option></select></div>
-            </div>
-            <div style="font-size:.75rem;color:var(--gray);line-height:1.5;margin-bottom:12px">
-              Supported fixed patterns: Record [class] [subject] [term] [assessment] all [score], Check missing [class] [subject] [term] [assessment], Clear [class] [subject] [term] [assessment], Add student [name] [gender] to [class], Archive student [name] from [class], Transfer student [name] from [class] to [class], Record trait [class] [trait name] all [rating].
-            </div>
-            <div class="command-mini-grid">
-              <div class="fg"><label>Student Name</label><input class="inp" id="cc-stu-name" placeholder="Full name"/></div>
-              <div class="fg"><label>Gender</label><select class="sel" id="cc-stu-gender"><option value="Male">Male</option><option value="Female">Female</option></select></div>
-              <div class="fg"><label>From Class</label><select class="sel" id="cc-stu-from"></select></div>
-              <div class="fg"><label>To Class</label><select class="sel" id="cc-stu-to"></select></div>
-            </div>
-            <div class="command-actions" style="margin-bottom:14px">
-              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('add')">Add Student Command</button>
-              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('archive')">Archive Command</button>
-              <button class="btn btn-outline btn-sm" onclick="buildStudentCommand('transfer')">Transfer Command</button>
-              <button class="btn btn-outline btn-sm" onclick="buildMissingCommand()">Missing Score Command</button>
-            </div>
-            <div class="command-mini-grid">
-              <div class="fg"><label>Trait Name</label><input class="inp" id="cc-trait-name" placeholder="Punctuality"/></div>
-              <div class="fg"><label>Rating</label><input class="inp" type="number" min="1" max="5" id="cc-trait-rating" placeholder="1-5"/></div>
-              <div class="fg"><label>Student</label><select class="sel" id="cc-student-select"><option value="">Select class first</option></select></div>
-              <div class="fg"><label>Fee Paid (&#8358;)</label><input class="inp" type="number" id="cc-fee-paid" placeholder="0"/></div>
-            </div>
-            <div class="fg"><label>Remark</label><textarea class="inp" id="cc-remark-text" style="min-height:68px;resize:vertical" placeholder="Class teacher or principal remark"></textarea></div>
-            <div class="command-actions">
-              <button class="btn btn-outline btn-sm" onclick="buildTraitCommand()">Bulk Trait Command</button>
-              <button class="btn btn-outline btn-sm" onclick="recordSingleTrait()">Record Trait</button>
-              <button class="btn btn-outline btn-sm" onclick="recordFeeCommand()">Record Fee</button>
-              <button class="btn btn-outline btn-sm" onclick="recordRemarksCommand()">Record Remark</button>
-            </div>
-            <div id="cc-missing-summary" style="font-size:.82rem;color:var(--gray);margin-top:12px"></div>
-            <div class="cc-hidden-preview"><span id="cc-preview-state"></span><div id="cc-preview"></div><button id="cc-run-btn" onclick="approveAndRunCommand()" disabled></button></div>
-          </div>
-        </details>
-
-        <details class="command-drawer">
-          <summary>Submissions</summary>
-          <div class="command-drawer-body">
-            <div class="command-actions" style="margin:14px 0"><button class="btn btn-outline btn-sm" onclick="loadTeacherSubmissions()">Load Submissions</button></div>
-            <div id="cc-submissions" style="font-size:.82rem;color:var(--gray)">No submissions loaded.</div>
-          </div>
-        </details>
-
-        <details class="command-drawer">
-          <summary>Recent Activity</summary>
-          <div class="command-drawer-body">
-            <div class="command-actions" style="margin:14px 0"><button class="btn btn-outline btn-xs" onclick="clearCommandAudit()">Clear Activity</button></div>
-            <div class="audit-list" id="cc-audit-log"></div>
-          </div>
-        </details>
-      </div>
     </div>
   </div>
 
@@ -1454,7 +1290,6 @@ window.addEventListener('popstate',function(e){
       if(prev==='scores')renderScoreGrid();
       if(prev==='broadsheet')renderBroadsheet();
       if(prev==='analytics')renderAnalytics();
-      if(prev==='command')initCommandCenter();
     }
   }else{
     // At root - if logged in, stay on home
@@ -1561,61 +1396,20 @@ function loginSuccess(user){
   if(lg)document.getElementById('auth-logo').src=lg.src;
   NAV_HISTORY=['home'];
   try{history.replaceState({page:'home'},'',window.location.pathname);}catch(e){}
-  window.loadRemoteSettings=function(){
-    Promise.all([
-      dbGet('settings?key=eq.gemini_key'),
-      dbGet('settings?key=eq.app_config')
-    ]).then(function(res){
-      var kr=res[0]||[];
-      if(kr.length&&kr[0].value){
-        window._geminiKey=kr[0].value;
-        var ki=document.getElementById('gemini-key-input');
-        if(ki)ki.value=kr[0].value;
-      }
-      var cr=res[1]||[];
-      if(cr.length&&cr[0].value){
-        try{
-          var rc=JSON.parse(cr[0].value);
-          window._remoteCfg=rc;
-          localStorage.setItem('wts_cfg',JSON.stringify(rc));
-          var sb=document.getElementById('sb-session-lbl');
-          if(sb)sb.textContent=(rc.session||DEFAULT_SESSION)+' Session';
-          var hs=document.getElementById('home-session');
-          if(hs)hs.textContent=(rc.session||DEFAULT_SESSION)+' Session';
-        }catch(e){}
-      }
-    }).catch(function(e){console.error('Remote settings load failed:',e);});
-  };
-  window.loadRemoteSettings();
-  // Load shared settings from Supabase for all users
-  Promise.all([
-    dbGet('settings?key=eq.gemini_key'),
-    dbGet('settings?key=eq.app_config')
-  ]).then(function(res){
-    // Load Gemini key
-    var keyRows=res[0]||[];
-    if(keyRows.length&&keyRows[0].value){
-      window._geminiKey=keyRows[0].value;
-      var ki=document.getElementById('gemini-key-input');
-      if(ki)ki.value=keyRows[0].value;
-    }
-    // Load app config (subjects, school info, card sections etc)
-    var cfgRows=res[1]||[];
-    if(cfgRows.length&&cfgRows[0].value){
-      try{
-        var remoteCfg=JSON.parse(cfgRows[0].value);
-        window._remoteCfg=remoteCfg;
-        // Merge with localStorage (local takes precedence for user prefs)
-        localStorage.setItem('wts_cfg',JSON.stringify(remoteCfg));
-        // Update session label
-        var sb=document.getElementById('sb-session-lbl');
-        if(sb)sb.textContent=(remoteCfg.session||DEFAULT_SESSION)+' Session';
-      }catch(e){}
-    }
-  }).catch(function(){});
-  // Restore previous page on refresh
+  loadRemoteSettings({force:true}).then(function(){
+    restorePortalPageAfterLogin();
+  }).catch(function(){
+    restorePortalPageAfterLogin();
+  });
+}
+
+function restorePortalPageAfterLogin(){
   var _pg=null,_cls=null,_trm=null;
-  try{_pg=sessionStorage.getItem('wts_page');_cls=sessionStorage.getItem('wts_cls');_trm=sessionStorage.getItem('wts_term');}catch(e){}
+  try{
+    _pg=sessionStorage.getItem('wts_page');
+    _cls=sessionStorage.getItem('wts_cls');
+    _trm=sessionStorage.getItem('wts_term');
+  }catch(e){}
   if(_pg&&_pg!=='home'&&_cls&&_trm&&DEPTS[_cls]){
     CLS=_cls;TERM=_trm;
     setMode(true);
@@ -1623,6 +1417,9 @@ function loginSuccess(user){
       var _ni=document.getElementById('ni-'+_pg)||document.getElementById('ni-dashboard');
       navTo(_pg,_ni);
     });
+  }else{
+    setMode(false);
+    renderHome();
   }
 }
 
@@ -1731,7 +1528,7 @@ function sbFetch(path,opts){
   var url=SB_URL+'/rest/v1/'+path;
   var headers={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
   if(opts&&opts.headers)Object.assign(headers,opts.headers);
-  return fetch(url,Object.assign({},opts,{headers:headers}));
+  return fetch(url,Object.assign({cache:'no-store'},opts||{},{headers:headers}));
 }
 function dbGet(path){return sbFetch(path).then(function(r){return r.json();});}
 function dbPost(path,body){return sbFetch(path,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();});}
@@ -1805,6 +1602,116 @@ function saveCfg(cfg){
       .catch(function(e){console.error('Config sync failed:',e);});
   }
 }
+var REMOTE_SETTINGS_PROMISE=null;
+var PORTAL_REFRESH_PROMISE=null;
+var LAST_PORTAL_REFRESH=0;
+
+function loadRemoteSettings(options){
+  options=options||{};
+  if(REMOTE_SETTINGS_PROMISE)return REMOTE_SETTINGS_PROMISE;
+  var previousSession=getActiveSession();
+  REMOTE_SETTINGS_PROMISE=dbGet('settings?select=key,value&key=in.(app_config,gemini_key)')
+    .then(function(rows){
+      var byKey={};
+      (Array.isArray(rows)?rows:[]).forEach(function(row){byKey[row.key]=row.value;});
+      if(byKey.gemini_key){
+        window._geminiKey=byKey.gemini_key;
+        var ki=document.getElementById('gemini-key-input');
+        if(ki)ki.value=byKey.gemini_key;
+      }
+      if(byKey.app_config){
+        var remoteCfg=JSON.parse(byKey.app_config);
+        window._remoteCfg=remoteCfg;
+        localStorage.setItem('wts_cfg',JSON.stringify(remoteCfg));
+        if(previousSession!==(remoteCfg.session||DEFAULT_SESSION))clearSessionCaches();
+        var labels=[
+          ['sb-session-lbl',(remoteCfg.session||DEFAULT_SESSION)+' Session'],
+          ['home-session',(remoteCfg.session||DEFAULT_SESSION)+' Session']
+        ];
+        labels.forEach(function(item){
+          var el=document.getElementById(item[0]);
+          if(el)el.textContent=item[1];
+        });
+        var rcs=document.getElementById('rc-session');
+        if(rcs)rcs.value=remoteCfg.session||DEFAULT_SESSION;
+      }
+      return true;
+    });
+  REMOTE_SETTINGS_PROMISE=REMOTE_SETTINGS_PROMISE.then(function(result){
+    REMOTE_SETTINGS_PROMISE=null;
+    return result;
+  },function(error){
+    REMOTE_SETTINGS_PROMISE=null;
+    throw error;
+  });
+  return REMOTE_SETTINGS_PROMISE;
+}
+window.loadRemoteSettings=loadRemoteSettings;
+
+function activePageId(){
+  var page=document.querySelector('.page.active');
+  return page&&page.id?page.id.replace(/^page-/,''):'home';
+}
+
+function renderCurrentPageAfterSync(){
+  var id=activePageId();
+  if(id==='home')renderHome();
+  if(id==='dashboard')renderDash();
+  if(id==='students')renderStudents();
+  if(id==='scores')renderScoreGrid();
+  if(id==='broadsheet')renderBroadsheet();
+  if(id==='progress')renderProgress();
+  if(id==='analytics')renderAnalytics();
+  if(id==='settings')renderSettings();
+  if(id==='admin'&&CURRENT_USER&&CURRENT_USER.role==='admin')loadAdminPanel();
+  if(id==='card'){
+    var selector=document.getElementById('rc-stu');
+    var sid=selector?selector.value:'';
+    populateCardSel();
+    if(selector&&sid){
+      selector.value=sid;
+      var pubSet={};
+      subjects().forEach(function(_,idx){if(isPublished(CLS,idx))pubSet[idx]=true;});
+      var wrap=document.getElementById('rc-wrap');
+      if(wrap)wrap.innerHTML=buildCard(
+        sid,TERM,getActiveSession(),DB_SCORES[sid]||{},
+        DB_TRAITS[sid]||{affective:{},psychomotor:{}},
+        DB_FEES[sid]||{},DB_REMARKS[sid]||{},pubSet
+      );
+    }
+  }
+  var modal=document.getElementById('modal-profile');
+  if(modal&&modal.style.display==='flex'&&currentProfileSid){
+    var student=(DB_STUDENTS[CLS]||[]).find(function(s){return s.id===currentProfileSid;});
+    if(student)renderProfile(student);
+  }
+}
+
+function refreshPortalState(options){
+  options=options||{};
+  if(!CURRENT_USER)return Promise.resolve(false);
+  if(PORTAL_REFRESH_PROMISE)return PORTAL_REFRESH_PROMISE;
+  if(!options.force&&Date.now()-LAST_PORTAL_REFRESH<15000)return Promise.resolve(false);
+  PORTAL_REFRESH_PROMISE=loadRemoteSettings({force:!!options.force})
+    .then(function(){
+      if(IN_CLASS&&CLS&&DEPTS[CLS])return loadClass(CLS,null,true);
+      return true;
+    })
+    .then(function(){
+      LAST_PORTAL_REFRESH=Date.now();
+      renderCurrentPageAfterSync();
+      if(options.notify)showToast('Portal updated with the latest shared data');
+      PORTAL_REFRESH_PROMISE=null;
+      return true;
+    },function(error){
+      console.error('Portal refresh failed:',error);
+      if(options.notify)showToast('Portal refresh failed - check internet','error');
+      PORTAL_REFRESH_PROMISE=null;
+      return false;
+    });
+  return PORTAL_REFRESH_PROMISE;
+}
+
 function getSchool(){return getCfg().school||DEFAULT_SCHOOL;}
 function getAutoRemark(avg){
   if(avg===''||avg===null)return '--';
@@ -2142,607 +2049,8 @@ var DB_SCORES={};    // studentId -> {idx -> {ca1,ca2,ca3,exam}}
 var DB_TRAITS={};    // studentId -> {affective:{},psychomotor:{}}
 var DB_FEES={};      // studentId -> {}
 var DB_REMARKS={};   // studentId -> {}
-var CC_LAST_PREVIEW=null;
-var CC_AUDIT=[];
 var CHARTS={};
 
-// ============================================================
-// ADMIN COMMAND CENTER
-// ============================================================
-function requireAdminCommand(){
-  if(!CURRENT_USER||CURRENT_USER.role!=='admin'){
-    showToast('Access restricted to Admin only','error');
-    return false;
-  }
-  return true;
-}
-
-function ccNorm(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();}
-function ccClassLabel(key){return DEPTS[key]?DEPTS[key].label:key;}
-function ccClassOptions(selected){
-  return ALL_CLASSES.map(function(key){return'<option value="'+key+'" '+(key===selected?'selected':'')+'>'+ccClassLabel(key)+'</option>';}).join('');
-}
-function ccTermFromText(text){
-  var n=ccNorm(text);
-  if(/\b1st term\b|\bfirst term\b/.test(n))return'1st Term';
-  if(/\b2nd term\b|\bsecond term\b/.test(n))return'2nd Term';
-  if(/\b3rd term\b|\bthird term\b/.test(n))return'3rd Term';
-  return'';
-}
-function ccAssessmentFromText(text){
-  var n=ccNorm(text);
-  if(/\bca\s*1\b|\bca1\b/.test(n))return'ca1';
-  if(/\bca\s*2\b|\bca2\b/.test(n))return'ca2';
-  if(/\bca\s*3\b|\bca3\b/.test(n))return'ca3';
-  if(/\bexam\b|\bexamination\b/.test(n))return'exam';
-  return'';
-}
-function ccClassAliases(){
-  var out=[];
-  ALL_CLASSES.forEach(function(key){
-    var label=DEPTS[key]?DEPTS[key].label:key;
-    out.push({key:key,alias:ccNorm(key)});
-    out.push({key:key,alias:ccNorm(label)});
-    out.push({key:key,alias:ccNorm(label.replace(/-/g,' '))});
-  });
-  out.sort(function(a,b){return b.alias.length-a.alias.length;});
-  return out;
-}
-function ccFindClass(text){
-  var n=' '+ccNorm(text)+' ';
-  var aliases=ccClassAliases();
-  for(var i=0;i<aliases.length;i++){
-    if(aliases[i].alias&&n.indexOf(' '+aliases[i].alias+' ')>-1)return aliases[i].key;
-  }
-  return'';
-}
-function ccFindSubject(classKey,text){
-  var base=DEPTS[classKey]?DEPTS[classKey].subjects:subjects();
-  var list=base.slice().sort(function(a,b){return b.length-a.length;});
-  var n=' '+ccNorm(text)+' ';
-  for(var i=0;i<list.length;i++){
-    if(n.indexOf(' '+ccNorm(list[i])+' ')>-1)return {name:list[i],index:base.indexOf(list[i])};
-  }
-  return {name:'',index:-1};
-}
-function ccStripKnown(text,classKey,term,assessment,score){
-  var out=' '+ccNorm(text)+' ';
-  if(classKey){
-    ccClassAliases().filter(function(a){return a.key===classKey;}).forEach(function(a){out=out.replace(' '+a.alias+' ',' ');});
-  }
-  if(term){
-    [['1st Term',['1st term','first term']],['2nd Term',['2nd term','second term']],['3rd Term',['3rd term','third term']]].forEach(function(t){
-      if(t[0]===term)t[1].forEach(function(x){out=out.replace(' '+x+' ',' ');});
-    });
-  }
-  if(assessment){
-    var amap={ca1:['ca1','ca 1'],ca2:['ca2','ca 2'],ca3:['ca3','ca 3'],exam:['exam','examination']};
-    (amap[assessment]||[]).forEach(function(x){out=out.replace(' '+x+' ',' ');});
-  }
-  if(score!==undefined&&score!==null)out=out.replace(' '+String(score)+' ',' ');
-  return out.replace(/\ball\b/g,' ').replace(/\s+/g,' ').trim();
-}
-function ccInputVal(id){var el=document.getElementById(id);return el?el.value:'';}
-function ccContext(){
-  return {classKey:ccInputVal('cc-class')||CLS,subjectName:ccInputVal('cc-subject'),term:ccInputVal('cc-term')||TERM,assessment:ccInputVal('cc-assessment')||'ca1'};
-}
-function ccSubjectIndex(classKey,subjectName){
-  var list=DEPTS[classKey]?DEPTS[classKey].subjects:[];
-  for(var i=0;i<list.length;i++){if(ccNorm(list[i])===ccNorm(subjectName))return i;}
-  return -1;
-}
-function parseCommand(raw){
-  var text=(raw||'').trim();
-  var ctx=ccContext();
-  var m,cls,term,ass,subj,score,rest;
-  if(!text&&window._ccAiCommand)text=window._ccAiCommand;
-  if(!text)return {type:'unknown',warnings:['Enter a command first.']};
-
-  m=text.match(/^record\s+trait\s+(.+?)\s+all\s+([1-5])\s*$/i);
-  if(m){
-    rest=m[1];cls=ccFindClass(rest)||ctx.classKey;
-    return {type:'bulk_trait',label:'Record bulk trait',classKey:cls,term:ctx.term,traitName:ccStripKnown(rest,cls,'','',null).replace(/^trait\s+/,'').trim(),rating:Number(m[2]),all:true,warnings:[]};
-  }
-
-  m=text.match(/^record\s+(.+?)\s+all\s+(-?\d+(?:\.\d+)?)\s*$/i);
-  if(m){
-    rest=m[1];score=Number(m[2]);cls=ccFindClass(rest)||ctx.classKey;term=ccTermFromText(rest)||ctx.term;ass=ccAssessmentFromText(rest)||ctx.assessment;
-    subj=ccFindSubject(cls,rest);if(!subj.name&&ctx.subjectName)subj={name:ctx.subjectName,index:ccSubjectIndex(cls,ctx.subjectName)};
-    return {type:'record_scores',label:'Record bulk scores',classKey:cls,term:term,assessment:ass,subjectName:subj.name,subjectIndex:subj.index,score:score,all:true,warnings:[]};
-  }
-  m=text.match(/^check\s+missing\s+(.+)$/i);
-  if(m){
-    rest=m[1];cls=ccFindClass(rest)||ctx.classKey;term=ccTermFromText(rest)||ctx.term;ass=ccAssessmentFromText(rest)||ctx.assessment;subj=ccFindSubject(cls,rest);
-    if(!subj.name&&ctx.subjectName)subj={name:ctx.subjectName,index:ccSubjectIndex(cls,ctx.subjectName)};
-    return {type:'check_missing',label:'Check missing scores',classKey:cls,term:term,assessment:ass,subjectName:subj.name,subjectIndex:subj.index,warnings:[]};
-  }
-  m=text.match(/^clear\s+(.+)$/i);
-  if(m){
-    rest=m[1];cls=ccFindClass(rest)||ctx.classKey;term=ccTermFromText(rest)||ctx.term;ass=ccAssessmentFromText(rest)||ctx.assessment;subj=ccFindSubject(cls,rest);
-    if(!subj.name&&ctx.subjectName)subj={name:ctx.subjectName,index:ccSubjectIndex(cls,ctx.subjectName)};
-    return {type:'clear_scores',label:'Clear scores',classKey:cls,term:term,assessment:ass,subjectName:subj.name,subjectIndex:subj.index,destructive:true,warnings:['This will clear existing '+String(ass).toUpperCase()+' scores after confirmation.']};
-  }
-  m=text.match(/^add\s+student\s+(.+?)\s+(male|female|m|f)\s+to\s+(.+)$/i);
-  if(m){cls=ccFindClass(m[3])||ctx.classKey;return {type:'add_student',label:'Add student',classKey:cls,name:m[1].trim(),gender:/^f/i.test(m[2])?'Female':'Male',warnings:[]};}
-  m=text.match(/^archive\s+student\s+(.+?)\s+from\s+(.+)$/i);
-  if(m){cls=ccFindClass(m[2])||ctx.classKey;return {type:'archive_student',label:'Archive student',classKey:cls,name:m[1].trim(),destructive:true,warnings:['This archives the student after confirmation.']};}
-  m=text.match(/^transfer\s+student\s+(.+?)\s+from\s+(.+?)\s+to\s+(.+)$/i);
-  if(m){return {type:'transfer_student',label:'Transfer student',classKey:ccFindClass(m[2])||ctx.classKey,toClassKey:ccFindClass(m[3])||ctx.classKey,name:m[1].trim(),destructive:true,warnings:['This moves the student to another class after confirmation.']};}
-  m=text.match(/^record\s+trait\s+(.+?)\s+all\s+([1-5])\s*$/i);
-  if(m){
-    rest=m[1];cls=ccFindClass(rest)||ctx.classKey;
-    return {type:'bulk_trait',label:'Record bulk trait',classKey:cls,term:ctx.term,traitName:ccStripKnown(rest,cls,'','',null).replace(/^trait\s+/,'').trim(),rating:Number(m[2]),all:true,warnings:[]};
-  }
-  return {type:'unknown',warnings:['Command pattern not recognized. Use one of the supported fixed patterns first.']};
-}
-function ccValidateCommand(cmd){
-  var w=cmd.warnings||[];
-  if(['record_scores','check_missing','clear_scores','bulk_trait'].indexOf(cmd.type)>-1&&!DEPTS[cmd.classKey])w.push('Class could not be resolved.');
-  if(['record_scores','check_missing','clear_scores'].indexOf(cmd.type)>-1){
-    if(!cmd.subjectName||cmd.subjectIndex<0)w.push('Subject could not be resolved for the selected class.');
-    if(!cmd.term)w.push('Term is required.');
-    if(!cmd.assessment)w.push('Assessment is required.');
-    if(cmd.type==='record_scores'&&(isNaN(cmd.score)||cmd.score<0))w.push('Score must be a valid number.');
-  }
-  if(['add_student','archive_student','transfer_student'].indexOf(cmd.type)>-1&&!cmd.name)w.push('Student name is required.');
-  if(cmd.type==='transfer_student'&&!DEPTS[cmd.toClassKey])w.push('Destination class could not be resolved.');
-  if(cmd.type==='bulk_trait'&&!cmd.traitName)w.push('Trait name is required.');
-  cmd.warnings=w;return cmd;
-}
-function ccLoadClassStudents(classKey){return dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(classKey))+'&order=created_at.asc');}
-function ccLoadScoreRows(cmd){return dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(cmd.classKey))+'&term=eq.'+encodeURIComponent(cmd.term)+'&subject_index=eq.'+cmd.subjectIndex);}
-function ccBuildPayload(cmd,students,extra){
-  var payload=Object.assign({
-    action:cmd.type,class_key:dbClassKey(cmd.classKey),class_code:cmd.classKey,class_label:ccClassLabel(cmd.classKey),
-    to_class_key:cmd.toClassKey?dbClassKey(cmd.toClassKey):undefined,to_class_code:cmd.toClassKey||undefined,to_class_label:cmd.toClassKey?ccClassLabel(cmd.toClassKey):undefined,
-    subject_name:cmd.subjectName,subject_index:cmd.subjectIndex,term:cmd.term||ccContext().term,assessment:cmd.assessment,score:cmd.score,
-    student_name:cmd.name,gender:cmd.gender,trait_name:cmd.traitName,rating:cmd.rating,all:!!cmd.all,
-    student_ids:(students||[]).map(function(s){return s.id;}),students:(students||[]).map(function(s){return {id:s.id,name:s.name,gender:s.gender,admno:s.admno};}),
-    actor_email:CURRENT_USER?CURRENT_USER.email:'',actor_name:CURRENT_USER?CURRENT_USER.full_name:'',academic_session:getActiveSession(),created_from:'command_center'
-  },extra||{});
-  Object.keys(payload).forEach(function(k){if(payload[k]===undefined)delete payload[k];});
-  return payload;
-}
-function ccPrefixArgs(payload){var out={};Object.keys(payload||{}).forEach(function(k){out['p_'+k]=payload[k];});return out;}
-function ccIsRpcError(res){return res&&typeof res==='object'&&!Array.isArray(res)&&(res.code||res.message&&res.details!==undefined);}
-function ccRpc(fn,payload){
-  var enriched=Object.assign({},payload||{});
-  return dbRpc(fn,enriched).then(function(res){
-    if(!ccIsRpcError(res))return res;
-    return dbRpc(fn,ccPrefixArgs(enriched)).then(function(res2){
-      if(!ccIsRpcError(res2))return res2;
-      return dbRpc(fn,{payload:enriched}).then(function(res3){
-        if(!ccIsRpcError(res3))return res3;
-        return dbRpc(fn,{p_payload:enriched}).then(function(res4){
-          if(ccIsRpcError(res4))throw new Error(res4.message||res3.message||res2.message||res.message||'RPC failed');
-          return res4;
-        });
-      });
-    });
-  });
-}
-function ccChatEl(){return document.getElementById('cc-chat');}
-function ccScrollChat(){var el=ccChatEl();if(el)el.scrollTop=el.scrollHeight;}
-function ccAddMessage(role,html){
-  var el=ccChatEl();if(!el)return;
-  var msg=document.createElement('div');
-  msg.className='cc-msg '+(role==='admin'?'cc-msg-admin':'cc-msg-assistant');
-  msg.innerHTML='<div class="cc-bubble">'+html+'</div>';
-  el.appendChild(msg);ccScrollChat();
-}
-function ccSetComposer(text){
-  var el=document.getElementById('cc-chat-input');if(el){el.value=text||'';el.focus();}
-}
-function ccWelcome(){
-  var el=ccChatEl();if(!el)return;
-  if(el.getAttribute('data-ready')==='1')return;
-  el.setAttribute('data-ready','1');
-  el.innerHTML='';
-  ccAddMessage('assistant','Tell me what to do in plain English, paste score rows, or upload a score-sheet image. I will prepare a preview first; Supabase is updated only after you approve.');
-}
-function ccPreviewHtml(data){
-  var cmd=data.command;
-  var warnings=(cmd.warnings||[]).concat(data.warnings||[]);
-  var html='<div>I found:</div><div class="cc-card">';
-  function row(k,v){html+='<div class="cc-card-row"><strong>'+escapeHtml(k)+'</strong><div>'+v+'</div></div>';}
-  row('Action',escapeHtml(cmd.label||cmd.type));
-  if(cmd.classKey)row('Class',escapeHtml(ccClassLabel(cmd.classKey)));
-  if(cmd.toClassKey)row('To Class',escapeHtml(ccClassLabel(cmd.toClassKey)));
-  if(cmd.subjectName)row('Subject',escapeHtml(cmd.subjectName));
-  if(cmd.term)row('Term',escapeHtml(cmd.term));
-  if(cmd.assessment)row('Assessment',escapeHtml(String(cmd.assessment).toUpperCase()));
-  if(cmd.score!==undefined)row('Score',escapeHtml(cmd.score));
-  if(cmd.name)row('Student',escapeHtml(cmd.name));
-  if(cmd.traitName)row('Trait',escapeHtml(cmd.traitName)+' rating '+escapeHtml(cmd.rating));
-  row('Affected students',(data.students||[]).length?data.students.slice(0,18).map(function(s){return'<span class="command-pill">'+escapeHtml(s.name)+'</span>';}).join('')+((data.students||[]).length>18?'<span class="command-pill">+'+((data.students||[]).length-18)+' more</span>':''):'None');
-  if(data.missing)row('Missing students',escapeHtml(data.missing.length));
-  if(data.rawRows)row('Clear scores',escapeHtml((data.students||[]).length));
-  if(data.rawRows)row('Unclear names',escapeHtml(Math.max(0,data.rawRows.length-(data.students||[]).length)));
-  warnings.forEach(function(w){html+='<div class="cc-warning">'+escapeHtml(w)+'</div>';});
-  if(cmd.destructive)html+='<div class="cc-danger-note">This is destructive and will ask for one more confirmation.</div>';
-  html+='<div class="cc-card-actions">';
-  if(!warnings.some(function(w){return /could not|required|valid|not recognized/.test(String(w).toLowerCase());})){
-    var label=cmd.type==='raw_submission'?'Approve Visible Scores':(cmd.type==='check_missing'?'Run Missing Check':'Approve and Record');
-    html+='<button class="btn btn-primary btn-sm" onclick="approveAndRunCommand()">'+label+'</button>';
-  }
-  if(data.rawRows&&data.rawRows.length!==(data.students||[]).length)html+='<button class="btn btn-outline btn-sm" onclick="openAdvancedTools()">Review Unclear Names</button>';
-  html+='<button class="btn btn-outline btn-sm" onclick="cancelCommandPreview()">Cancel</button>';
-  html+='</div></div>';
-  return html;
-}
-function ccPreviewInvalid(cmd){
-  CC_LAST_PREVIEW={command:cmd,students:[],warnings:cmd.warnings||[]};
-  ccAddMessage('assistant','I could not build a safe preview yet.<div class="cc-card">'+(cmd.warnings||[]).map(function(w){return'<div class="cc-warning">'+escapeHtml(w)+'</div>';}).join('')+'</div>');
-}
-function ccRenderPreview(data){
-  var cmd=data.command;
-  var warnings=(cmd.warnings||[]).concat(data.warnings||[]);
-  var html='';
-  function row(k,v){html+='<div class="command-preview-row"><strong>'+escapeHtml(k)+'</strong><div>'+v+'</div></div>';}
-  row('Action',escapeHtml(cmd.label||cmd.type));
-  if(cmd.classKey)row('Class',escapeHtml(ccClassLabel(cmd.classKey)));
-  if(cmd.toClassKey)row('To Class',escapeHtml(ccClassLabel(cmd.toClassKey)));
-  if(cmd.subjectName)row('Subject',escapeHtml(cmd.subjectName));
-  if(cmd.term)row('Term',escapeHtml(cmd.term));
-  if(cmd.assessment)row('Assessment',escapeHtml(String(cmd.assessment).toUpperCase()));
-  if(cmd.score!==undefined)row('Score',escapeHtml(cmd.score));
-  if(cmd.name)row('Student',escapeHtml(cmd.name));
-  if(cmd.traitName)row('Trait',escapeHtml(cmd.traitName)+' rating '+escapeHtml(cmd.rating));
-  row('Affected Students',(data.students||[]).length?data.students.slice(0,30).map(function(s){return'<span class="command-pill">'+escapeHtml(s.name)+'</span>';}).join('')+((data.students||[]).length>30?'<span class="command-pill">+'+((data.students||[]).length-30)+' more</span>':''):'None');
-  if(data.missing&&data.missing.length)row('Missing Scores',data.missing.map(function(s){return'<span class="command-pill">'+escapeHtml(s.name)+'</span>';}).join(''));
-  if(data.rawRows)row('Raw Rows',escapeHtml(data.rawRows.length+' pasted rows, '+(data.students||[]).length+' matched'));
-  warnings.forEach(function(w){html+='<div class="command-warning">'+escapeHtml(w)+'</div>';});
-  if(cmd.destructive)html+='<div class="command-danger-note">Destructive command: approval requires an extra browser confirmation.</div>';
-  document.getElementById('cc-preview').innerHTML=html;
-  document.getElementById('cc-preview-state').textContent=warnings.length?'Warnings':'Ready';
-  document.getElementById('cc-preview-state').className='badge '+(warnings.length?'badge-gold':'badge-green');
-  document.getElementById('cc-run-btn').disabled=warnings.some(function(w){return /could not|required|valid|not recognized/.test(String(w).toLowerCase());});
-  ccAddMessage('assistant',ccPreviewHtml(data));
-}
-function previewCommand(){
-  if(!requireAdminCommand())return;
-  var cmd=ccValidateCommand(parseCommand(document.getElementById('cc-command').value));
-  if(cmd.type==='unknown'){
-    ccPreviewInvalid(cmd);
-    document.getElementById('cc-run-btn').disabled=true;
-    return;
-  }
-  showLoad('Building preview...');
-  (cmd.classKey?ccLoadClassStudents(cmd.classKey):Promise.resolve([])).then(function(students){
-    var affected=students||[];
-    if(['archive_student','transfer_student'].indexOf(cmd.type)>-1){
-      var n=ccNorm(cmd.name);
-      affected=affected.filter(function(s){return ccNorm(s.name)===n||ccNorm(s.name).indexOf(n)>-1;});
-      if(!affected.length)cmd.warnings.push('No matching student found in '+ccClassLabel(cmd.classKey)+'.');
-    }
-    if(cmd.type==='add_student'){
-      if((students||[]).some(function(s){return ccNorm(s.name)===ccNorm(cmd.name);}))cmd.warnings.push('A student with this name already exists in '+ccClassLabel(cmd.classKey)+'.');
-      affected=[{name:cmd.name,gender:cmd.gender}];
-    }
-    var scorePromise=(['check_missing','record_scores','clear_scores'].indexOf(cmd.type)>-1)?ccLoadScoreRows(cmd):Promise.resolve([]);
-    return scorePromise.then(function(scoreRows){
-      var missing=[];
-      if(cmd.type==='check_missing'){
-        var scoreMap={};(scoreRows||[]).forEach(function(r){scoreMap[r.student_id]=r;});
-        missing=(students||[]).filter(function(s){var r=scoreMap[s.id]||{};return r[cmd.assessment]===undefined||r[cmd.assessment]===null||r[cmd.assessment]==='';});
-        var ms=document.getElementById('cc-missing-summary');
-        if(ms)ms.innerHTML=missing.length?missing.map(function(s){return'<span class="command-pill">'+escapeHtml(s.name)+'</span>';}).join(''):'No missing scores for this assessment.';
-      }
-      CC_LAST_PREVIEW={command:cmd,students:affected,warnings:[],missing:missing,payload:ccBuildPayload(cmd,affected,{missing_students:missing})};
-      hideLoad();ccRenderPreview(CC_LAST_PREVIEW);addCommandAudit('Previewed '+cmd.label,cmd.type,'ready');
-    });
-  }).catch(function(e){hideLoad();showToast('Preview failed: '+e.message,'error');});
-}
-function approveAndRunCommand(){
-  if(!requireAdminCommand())return;
-  if(!CC_LAST_PREVIEW){showToast('Preview the command first','error');return;}
-  var cmd=CC_LAST_PREVIEW.command;
-  if(cmd.destructive&&!confirm('Approve this destructive command?'))return;
-  var fn={record_scores:'record_bulk_scores_command',check_missing:'check_missing_scores_command',clear_scores:'record_bulk_scores_command',add_student:'add_student_command',archive_student:'archive_student_command',transfer_student:'transfer_student_command',bulk_trait:'bulk_record_trait_command',raw_submission:'create_teacher_score_submission_command'}[cmd.type];
-  if(!fn){showToast('No runner configured for this command','error');return;}
-  showLoad('Running command...');
-  var runPayload=Object.assign({},CC_LAST_PREVIEW.payload||ccBuildPayload(cmd,CC_LAST_PREVIEW.students));
-  if(cmd.type==='clear_scores')runPayload.clear=true;
-  var runner=ccRpc(fn,runPayload);
-  if(cmd.type==='raw_submission'){
-    runner=runner.then(function(created){
-      var subId=(Array.isArray(created)?created[0]:created||{}).id||runPayload.submission_id;
-      return ccRpc('approve_teacher_score_submission_command',Object.assign({},runPayload,{submission_id:subId,submission:created}));
-    });
-  }
-  runner.then(function(){
-    hideLoad();addCommandAudit('Ran '+(cmd.label||cmd.type),fn,'success');showToast('Command approved and run');
-    ccAddMessage('assistant','Done. I recorded the approved command successfully.');
-    if(cmd.classKey&&CLS===cmd.classKey)loadClass(CLS,function(){});
-    CC_LAST_PREVIEW=null;document.getElementById('cc-run-btn').disabled=true;
-  }).catch(function(e){hideLoad();addCommandAudit('Failed '+(cmd.label||cmd.type),fn,e.message);showToast('Command failed: '+e.message,'error');ccAddMessage('assistant','I could not record that command.<div class="cc-warning">'+escapeHtml(e.message)+'</div>');});
-}
-function parseRawScoreRows(raw){
-  return String(raw||'').split(/\r?\n/).map(function(line){
-    var parts=line.split(/\t|,/).map(function(x){return x.trim();}).filter(function(x){return x!=='';});
-    if(parts.length<2)parts=line.trim().split(/\s{2,}/).map(function(x){return x.trim();}).filter(Boolean);
-    if(parts.length<2)return null;
-    var nums=parts.slice(1).map(function(v){return v===''?null:Number(v);});
-    return {name:parts[0],ca1:nums[0],ca2:nums[1],ca3:nums[2],exam:nums[3]};
-  }).filter(Boolean);
-}
-function previewRawScores(){
-  if(!requireAdminCommand())return;
-  var rows=parseRawScoreRows(document.getElementById('cc-raw-scores').value);
-  if(!rows.length){showToast('Paste score rows first','error');return;}
-  previewRawScoresFromRows(rows,document.getElementById('cc-raw-scores').value);
-}
-function previewRawScoresFromRows(rows,rawText){
-  var ctx=ccContext();
-  showLoad('Matching pasted scores...');
-  ccLoadClassStudents(ctx.classKey).then(function(students){
-    var matched=[];
-    rows.forEach(function(r){
-      var best=null,top=0;
-      students.forEach(function(s){var sc=nameScore(r.name,s.name);if(sc>top){top=sc;best=s;}});
-      if(best&&top>=0.35)matched.push(Object.assign({},best,{pasted_name:r.name,ca1:r.ca1,ca2:r.ca2,ca3:r.ca3,exam:r.exam,confidence:top}));
-    });
-    var cmd={type:'raw_submission',label:'Raw teacher score submission',classKey:ctx.classKey,term:ctx.term,subjectName:ctx.subjectName,subjectIndex:ccSubjectIndex(ctx.classKey,ctx.subjectName),assessment:'all',warnings:[]};
-    if(!ctx.subjectName)cmd.warnings.push('Select a subject before approving pasted scores.');
-    CC_LAST_PREVIEW={command:cmd,students:matched,warnings:matched.length!==rows.length?['Some pasted rows were not confidently matched. Review before approval.']:[],rawRows:rows,payload:ccBuildPayload(cmd,matched,{raw_rows:rows,matched_scores:matched,status:'pending'})};
-    hideLoad();ccRenderPreview(CC_LAST_PREVIEW);addCommandAudit('Previewed raw score paste','raw_submission','ready');
-  }).catch(function(e){hideLoad();showToast('Raw preview failed: '+e.message,'error');});
-}
-function sendCommandMessage(){
-  if(!requireAdminCommand())return;
-  var input=document.getElementById('cc-chat-input');
-  var text=input?input.value.trim():'';
-  if(!text)return;
-  if(input)input.value='';
-  ccAddMessage('admin',escapeHtml(text).replace(/\n/g,'<br>'));
-  ccProcessCommandText(text);
-}
-function handleCommandComposerKey(e){
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCommandMessage();}
-}
-function ccProcessCommandText(text){
-  ccAddMessage('assistant','Interpreting your request...');
-  var key=getGeminiKey();
-  if(key){
-    ccInterpretTextWithGemini(text).then(function(ai){
-      if(ai&&ai.command){
-        document.getElementById('cc-command').value=ai.command;
-        previewCommand();
-        return;
-      }
-      if(ai&&ai.rows&&ai.rows.length){
-        document.getElementById('cc-raw-scores').value=text;
-        previewRawScoresFromRows(ai.rows,text);
-        return;
-      }
-      ccFallbackPreviewText(text);
-    }).catch(function(){
-      ccFallbackPreviewText(text);
-    });
-  }else{
-    ccFallbackPreviewText(text);
-  }
-}
-function ccFallbackPreviewText(text){
-  var cmd=ccValidateCommand(parseCommand(text));
-  if(cmd.type!=='unknown'){
-    document.getElementById('cc-command').value=text;
-    previewCommand();
-    return;
-  }
-  var rows=parseRawScoreRows(text);
-  if(rows.length){
-    document.getElementById('cc-raw-scores').value=text;
-    previewRawScoresFromRows(rows,text);
-    return;
-  }
-  ccPreviewInvalid(cmd);
-}
-function ccInterpretTextWithGemini(text){
-  var key=getGeminiKey();
-  var prompt='You are a school result command interpreter. Return JSON only. Do not write to any database. '
-    +'If the text is an admin command, return {"command":"one fixed command string"}. '
-    +'If the text is pasted score rows, return {"rows":[{"name":"Student Name","ca1":number_or_null,"ca2":number_or_null,"ca3":number_or_null,"exam":number_or_null}]}. '
-    +'Use these fixed command formats only when creating command: Record [class] [subject] [term] [assessment] all [score]; Check missing [class] [subject] [term] [assessment]; Clear [class] [subject] [term] [assessment]; Add student [name] [gender] to [class]; Archive student [name] from [class]; Transfer student [name] from [class] to [class]; Record trait [class] [trait name] all [rating]. '
-    +'Text: '+text;
-  return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key='+key,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:2048}})
-  }).then(function(r){return r.json();}).then(function(data){
-    var txt=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:'';
-    txt=String(txt||'').replace(/```json|```/g,'').trim();
-    return JSON.parse(txt);
-  });
-}
-function handleCommandUpload(evt){
-  if(!requireAdminCommand())return;
-  var file=evt.target.files&&evt.target.files[0];
-  if(!file)return;
-  var key=getGeminiKey();
-  if(!key){showToast('Add Gemini API key in Settings first','error');evt.target.value='';return;}
-  ccAddMessage('admin','Uploaded score sheet: '+escapeHtml(file.name));
-  showLoad('Reading score sheet...');
-  ccImageToBase64(file).then(function(img){
-    return ccInterpretImageWithGemini(img.data,img.mime);
-  }).then(function(ai){
-    hideLoad();
-    if(ai&&ai.command){
-      document.getElementById('cc-command').value=ai.command;
-      previewCommand();
-    }else if(ai&&ai.rows&&ai.rows.length){
-      previewRawScoresFromRows(ai.rows,'Uploaded image: '+file.name);
-    }else{
-      ccAddMessage('assistant','I could not find clear scores in that image. Try a sharper photo or paste the scores as text.');
-    }
-    evt.target.value='';
-  }).catch(function(e){
-    hideLoad();evt.target.value='';
-    ccAddMessage('assistant','I could not read that image.<div class="cc-warning">'+escapeHtml(e.message)+'</div>');
-  });
-}
-function ccImageToBase64(file){
-  return new Promise(function(resolve,reject){
-    var reader=new FileReader();
-    reader.onerror=function(){reject(new Error('Unable to read image.'));};
-    reader.onload=function(e){
-      var img=new Image();
-      img.onload=function(){
-        var max=1200,w=img.width,h=img.height;
-        if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}
-        var canvas=document.createElement('canvas');
-        canvas.width=w;canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        var dataUrl=canvas.toDataURL('image/jpeg',0.85);
-        resolve({mime:'image/jpeg',data:dataUrl.split(',')[1]});
-      };
-      img.onerror=function(){reject(new Error('Invalid image file.'));};
-      img.src=e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-function ccInterpretImageWithGemini(b64,mime){
-  var key=getGeminiKey();
-  var ctx=ccContext();
-  var names=(DB_STUDENTS[ctx.classKey]||[]).map(function(s){return s.name;}).join(', ');
-  var prompt='Read this school score sheet image. Return JSON only. Do not write to any database. '
-    +'If it has score rows, return {"rows":[{"name":"Student Name","ca1":number_or_null,"ca2":number_or_null,"ca3":number_or_null,"exam":number_or_null}]}. '
-    +'If it clearly states a command, return {"command":"fixed command string"}. '
-    +'Current helper context: class '+ccClassLabel(ctx.classKey)+', subject '+ctx.subjectName+', term '+ctx.term+'. Registered names: '+names+'.';
-  return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key='+key,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0.1,maxOutputTokens:4096}})
-  }).then(function(r){return r.json();}).then(function(data){
-    var txt=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:'';
-    txt=String(txt||'').replace(/```json|```/g,'').trim();
-    return JSON.parse(txt);
-  });
-}
-function cancelCommandPreview(){
-  CC_LAST_PREVIEW=null;
-  var btn=document.getElementById('cc-run-btn');if(btn)btn.disabled=true;
-  ccAddMessage('assistant','Cancelled. Nothing was recorded.');
-}
-function openAdvancedTools(){
-  var d=document.querySelector('#page-command .command-drawer');
-  if(d)d.open=true;
-  ccAddMessage('assistant','Open Advanced Tools to adjust helper selectors or review unmatched rows before approving.');
-}
-function buildMissingCommand(){var ctx=ccContext();document.getElementById('cc-command').value='Check missing '+ccClassLabel(ctx.classKey)+' '+ctx.subjectName+' '+ctx.term+' '+ctx.assessment;previewCommand();}
-function buildStudentCommand(kind){
-  var name=ccInputVal('cc-stu-name').trim(),gender=ccInputVal('cc-stu-gender'),from=ccInputVal('cc-stu-from'),to=ccInputVal('cc-stu-to'),text='';
-  if(kind==='add')text='Add student '+name+' '+gender+' to '+ccClassLabel(to||from);
-  if(kind==='archive')text='Archive student '+name+' from '+ccClassLabel(from);
-  if(kind==='transfer')text='Transfer student '+name+' from '+ccClassLabel(from)+' to '+ccClassLabel(to);
-  document.getElementById('cc-command').value=text;previewCommand();
-}
-function buildTraitCommand(){var ctx=ccContext();document.getElementById('cc-command').value='Record trait '+ccClassLabel(ctx.classKey)+' '+ccInputVal('cc-trait-name').trim()+' all '+ccInputVal('cc-trait-rating');previewCommand();}
-function recordSingleTrait(){
-  if(!requireAdminCommand())return;
-  var ctx=ccContext(),sid=ccInputVal('cc-student-select'),trait=ccInputVal('cc-trait-name').trim(),rating=Number(ccInputVal('cc-trait-rating'));
-  if(!sid||!trait||!rating){showToast('Select student, trait, and rating','error');return;}
-  showLoad('Recording trait...');
-  ccRpc('record_trait_command',{student_id:sid,class_key:dbClassKey(ctx.classKey),class_code:ctx.classKey,term:ctx.term,trait_name:trait,rating:rating,actor_email:CURRENT_USER.email})
-    .then(function(){hideLoad();addCommandAudit('Recorded trait','record_trait_command','success');showToast('Trait recorded');})
-    .catch(function(e){hideLoad();showToast('Trait failed: '+e.message,'error');});
-}
-function recordFeeCommand(){
-  if(!requireAdminCommand())return;
-  var ctx=ccContext(),sid=ccInputVal('cc-student-select'),paid=Number(ccInputVal('cc-fee-paid')||0);
-  if(!sid){showToast('Select a student','error');return;}
-  showLoad('Recording fee...');
-  ccRpc('record_fee_command',{student_id:sid,class_key:dbClassKey(ctx.classKey),class_code:ctx.classKey,term:ctx.term,paid:paid,actor_email:CURRENT_USER.email})
-    .then(function(){hideLoad();addCommandAudit('Recorded fee','record_fee_command','success');showToast('Fee recorded');})
-    .catch(function(e){hideLoad();showToast('Fee failed: '+e.message,'error');});
-}
-function recordRemarksCommand(){
-  if(!requireAdminCommand())return;
-  var ctx=ccContext(),sid=ccInputVal('cc-student-select'),remark=ccInputVal('cc-remark-text').trim();
-  if(!sid||!remark){showToast('Select student and enter a remark','error');return;}
-  showLoad('Recording remark...');
-  ccRpc('record_remarks_command',{student_id:sid,class_key:dbClassKey(ctx.classKey),class_code:ctx.classKey,term:ctx.term,remark:remark,teacher_remark:remark,actor_email:CURRENT_USER.email})
-    .then(function(){hideLoad();addCommandAudit('Recorded remark','record_remarks_command','success');showToast('Remark recorded');})
-    .catch(function(e){hideLoad();showToast('Remark failed: '+e.message,'error');});
-}
-function loadTeacherSubmissions(){
-  if(!requireAdminCommand())return;
-  var ctx=ccContext();
-  showLoad('Loading submissions...');
-  ccRpc('list_teacher_score_submissions_command',{class_key:dbClassKey(ctx.classKey),class_code:ctx.classKey,term:ctx.term,actor_email:CURRENT_USER.email})
-    .then(function(rows){
-      hideLoad();rows=Array.isArray(rows)?rows:(rows&&rows.data?rows.data:[]);
-      var el=document.getElementById('cc-submissions');
-      if(!rows.length){el.innerHTML='No pending submissions found.';return;}
-      el.innerHTML='<table class="data-table" style="font-size:.76rem"><thead><tr><th>Teacher</th><th>Subject</th><th>Status</th><th>Action</th></tr></thead><tbody>'+rows.map(function(r){
-        var id=r.id||r.submission_id||'';
-        return'<tr><td>'+escapeHtml(r.teacher_name||r.teacher_email||'Teacher')+'</td><td>'+escapeHtml(r.subject_name||r.subject||'--')+'</td><td>'+escapeHtml(r.status||'pending')+'</td><td><button class="btn btn-primary btn-xs" onclick="approveTeacherSubmission(\''+escapeHtml(String(id))+'\')">Approve</button></td></tr>';
-      }).join('')+'</tbody></table>';
-      addCommandAudit('Loaded teacher submissions','list_teacher_score_submissions_command','success');
-    }).catch(function(e){hideLoad();showToast('Submissions failed: '+e.message,'error');});
-}
-function approveTeacherSubmission(id){
-  if(!requireAdminCommand())return;
-  if(!id){showToast('Submission id missing','error');return;}
-  if(!confirm('Approve this teacher score submission?'))return;
-  showLoad('Approving submission...');
-  ccRpc('approve_teacher_score_submission_command',{submission_id:id,actor_email:CURRENT_USER.email,actor_name:CURRENT_USER.full_name})
-    .then(function(){hideLoad();addCommandAudit('Approved teacher submission','approve_teacher_score_submission_command','success');showToast('Submission approved');loadTeacherSubmissions();})
-    .catch(function(e){hideLoad();showToast('Approval failed: '+e.message,'error');});
-}
-function aiInterpretCommand(){
-  if(!requireAdminCommand())return;
-  var key=getGeminiKey();
-  if(!key){showToast('Add Gemini API key in Settings first','error');return;}
-  var raw=document.getElementById('cc-command').value.trim()||document.getElementById('cc-raw-scores').value.trim();
-  if(!raw){showToast('Enter command text or paste OCR text first','error');return;}
-  showLoad('Interpreting with AI...');
-  var prompt='Convert this school admin instruction into JSON only. Do not execute anything. Return keys: type, class, subject, term, assessment, score, student_name, gender, to_class, trait_name, rating, command. Use command to provide one fixed command when possible. Text: '+raw;
-  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1024}})})
-    .then(function(r){return r.json();}).then(function(data){
-      hideLoad();
-      var txt=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:'';
-      txt=String(txt||'').replace(/```json|```/g,'').trim();
-      try{var obj=JSON.parse(txt);window._ccAiJson=obj;if(obj.command){document.getElementById('cc-command').value=obj.command;window._ccAiCommand=obj.command;}addCommandAudit('AI interpreted command','gemini','preview only');showToast('AI interpretation ready. Preview before approval.');}
-      catch(e){showToast('AI returned text that was not valid JSON','error');}
-    }).catch(function(e){hideLoad();showToast('AI failed: '+e.message,'error');});
-}
-function populateCommandSubjects(){
-  var cls=ccInputVal('cc-class')||CLS;
-  var sel=document.getElementById('cc-subject');
-  if(sel)sel.innerHTML=(DEPTS[cls]?DEPTS[cls].subjects:[]).map(function(s){return'<option value="'+escapeHtml(s)+'">'+escapeHtml(s)+'</option>';}).join('');
-}
-function populateCommandStudents(){
-  var cls=ccInputVal('cc-class')||CLS;
-  var sel=document.getElementById('cc-student-select');if(!sel)return;
-  sel.innerHTML='<option value="">Loading...</option>';
-  ccLoadClassStudents(cls).then(function(students){sel.innerHTML='<option value="">Select student</option>'+(students||[]).map(function(s){return'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>';}).join('');})
-    .catch(function(){sel.innerHTML='<option value="">Unable to load students</option>';});
-}
-function initCommandCenter(){
-  var cls=ccInputVal('cc-class')||CLS||ALL_CLASSES[0];
-  ['cc-class','cc-stu-from','cc-stu-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=ccClassOptions(cls);});
-  var termEl=document.getElementById('cc-term');if(termEl)termEl.value=TERM||DEFAULT_TERM;
-  populateCommandSubjects();populateCommandStudents();loadCommandAudit();renderCommandAudit();ccWelcome();
-}
-function resetCommandCenter(){
-  ['cc-command','cc-raw-scores','cc-stu-name','cc-trait-name','cc-trait-rating','cc-fee-paid','cc-remark-text','cc-chat-input'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  CC_LAST_PREVIEW=null;
-  var p=document.getElementById('cc-preview');if(p)p.textContent='';
-  var st=document.getElementById('cc-preview-state');if(st)st.textContent='No preview';
-  var btn=document.getElementById('cc-run-btn');if(btn)btn.disabled=true;
-  var chat=ccChatEl();if(chat){chat.removeAttribute('data-ready');ccWelcome();}
-}
-function loadCommandAudit(){try{CC_AUDIT=JSON.parse(localStorage.getItem('wts_command_audit_preview')||'[]')||[];}catch(e){CC_AUDIT=[];}}
-function saveCommandAudit(){localStorage.setItem('wts_command_audit_preview',JSON.stringify(CC_AUDIT.slice(0,30)));}
-function addCommandAudit(action,rpc,status){loadCommandAudit();CC_AUDIT.unshift({time:new Date().toLocaleString(),user:CURRENT_USER?CURRENT_USER.full_name:'',action:action,rpc:rpc,status:status});CC_AUDIT=CC_AUDIT.slice(0,30);saveCommandAudit();renderCommandAudit();}
-function renderCommandAudit(){
-  var el=document.getElementById('cc-audit-log');if(!el)return;
-  if(!CC_AUDIT.length){el.innerHTML='<div style="font-size:.82rem;color:var(--gray)">No command activity yet.</div>';return;}
-  el.innerHTML=CC_AUDIT.map(function(a){return'<div class="audit-item"><strong>'+escapeHtml(a.action)+'</strong><div>'+escapeHtml(a.rpc||'')+'</div><div style="color:var(--gray)">'+escapeHtml(a.status||'')+' - '+escapeHtml(a.time||'')+'</div></div>';}).join('');
-}
-function clearCommandAudit(){CC_AUDIT=[];saveCommandAudit();renderCommandAudit();}
 
 function showLoad(msg){
   var o=document.getElementById('loading-overlay');
@@ -2766,56 +2074,69 @@ function showSaved(){
   if(el){el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2000);}
 }
 
-function loadClass(key,cb){
-  showLoad('Loading '+DEPTS[key].label+'...');
+function loadClass(key,cb,silent){
+  if(!silent)showLoad('Loading '+DEPTS[key].label+'...');
   var ck=dbClassKey(key);
-  // Load students first
-  dbGet('students?class_key=eq.'+encodeURIComponent(ck)+'&order=created_at.asc')
+  var promise=dbGet('students?class_key=eq.'+encodeURIComponent(ck)+'&order=created_at.asc')
     .then(function(rows){
-      DB_STUDENTS[key]=rows||[];
-      if(!rows||!rows.length){hideLoad();if(cb)cb();return;}
-      // Preload ALL scores for this class (needed for broadsheet, analytics, cards)
-      showLoad('Loading scores...');
-      dbGet('scores?class_key=eq.'+encodeURIComponent(ck)+'&term=eq.'+encodeURIComponent(TERM))
-        .then(function(scoreRows){
-          // Clear scores for this class before loading new term
-          (DB_STUDENTS[key]||[]).forEach(function(st){delete DB_SCORES[st.id];});
-          (scoreRows||[]).forEach(function(s){
-            if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};
-            DB_SCORES[s.student_id][s.subject_index]={
-              ca1:s.ca1||'',ca2:s.ca2||'',ca3:s.ca3||'',exam:s.exam||''
-            };
-          });
-          // Load published subjects
-          dbGet('published_subjects?class_key=eq.'+encodeURIComponent(ck)+'&term=eq.'+encodeURIComponent(TERM))
-            .then(function(prows){
-              (prows||[]).forEach(function(r){
-                PUB_CACHE[pubKey(key,r.term,r.subject_index)]=true;
-              });
-            }).catch(function(){});
-          hideLoad();
-          if(cb)cb();
-        })
-        .catch(function(){
-          // Scores failed - still proceed
-          hideLoad();
-          if(cb)cb();
-        });
+      DB_STUDENTS[key]=Array.isArray(rows)?rows:[];
+      return Promise.all([
+        dbGet('scores?class_key=eq.'+encodeURIComponent(ck)+'&term=eq.'+encodeURIComponent(TERM)),
+        dbGet('traits?class_key=eq.'+encodeURIComponent(ck)+'&term=eq.'+encodeURIComponent(TERM)),
+        dbGet('fees?class_key=eq.'+encodeURIComponent(ck)+'&term=eq.'+encodeURIComponent(TERM)),
+        dbGet('remarks?class_key=eq.'+encodeURIComponent(ck)+'&term=eq.'+encodeURIComponent(TERM)),
+        dbGet('published_subjects?class_key=eq.'+encodeURIComponent(ck)+'&term=eq.'+encodeURIComponent(TERM))
+      ]);
     })
-    .catch(function(){
-      hideLoad();
-      DB_STUDENTS[key]=DB_STUDENTS[key]||[];
-      showToast('Connection error - check your internet','error');
+    .then(function(res){
+      (DB_STUDENTS[key]||[]).forEach(function(student){
+        delete DB_SCORES[student.id];
+        delete DB_TRAITS[student.id];
+        delete DB_FEES[student.id];
+        delete DB_REMARKS[student.id];
+      });
+      (Array.isArray(res[0])?res[0]:[]).forEach(function(score){
+        if(!DB_SCORES[score.student_id])DB_SCORES[score.student_id]={};
+        DB_SCORES[score.student_id][score.subject_index]={
+          ca1:score.ca1||'',ca2:score.ca2||'',ca3:score.ca3||'',exam:score.exam||''
+        };
+      });
+      (Array.isArray(res[1])?res[1]:[]).forEach(function(trait){
+        if(!DB_TRAITS[trait.student_id])DB_TRAITS[trait.student_id]={affective:{},psychomotor:{}};
+        var type=trait.trait_type==='affective'?'affective':'psychomotor';
+        DB_TRAITS[trait.student_id][type][trait.trait_name]=trait.rating;
+      });
+      (Array.isArray(res[2])?res[2]:[]).forEach(function(fee){DB_FEES[fee.student_id]=fee;});
+      (Array.isArray(res[3])?res[3]:[]).forEach(function(remark){DB_REMARKS[remark.student_id]=remark;});
+      Object.keys(PUB_CACHE).forEach(function(cacheKey){
+        if(cacheKey.indexOf(key+'|'+TERM+'|')===0)delete PUB_CACHE[cacheKey];
+      });
+      (Array.isArray(res[4])?res[4]:[]).forEach(function(row){
+        PUB_CACHE[pubKey(key,row.term,row.subject_index)]=true;
+      });
+      if(!silent)hideLoad();
       if(cb)cb();
+      return true;
+    })
+    .catch(function(error){
+      if(!silent){
+        hideLoad();
+        showToast('Connection error - check your internet','error');
+      }
+      console.error('Class refresh failed:',error);
+      DB_STUDENTS[key]=DB_STUDENTS[key]||[];
+      if(cb)cb();
+      return false;
     });
+  return promise;
 }
 
 function loadStudentData(sid,cb){
   Promise.all([
-    dbGet('scores?student_id=eq.'+sid),
-    dbGet('traits?student_id=eq.'+sid),
-    dbGet('fees?student_id=eq.'+sid),
-    dbGet('remarks?student_id=eq.'+sid)
+    dbGet('scores?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
+    dbGet('traits?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
+    dbGet('fees?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM)),
+    dbGet('remarks?student_id=eq.'+sid+'&term=eq.'+encodeURIComponent(TERM))
   ]).then(function(res){
     var scoreMap={};
     (res[0]||[]).forEach(function(s){
@@ -2895,7 +2216,7 @@ function setMode(inClass){
 
 function navTo(id,el){
   // Block restricted pages for teachers
-  var restricted=['card','analytics','settings','progress','admin','command'];
+  var restricted=['card','settings','progress','admin'];
   if(CURRENT_USER&&CURRENT_USER.role!=='admin'&&restricted.indexOf(id)>-1){
     showToast('Access restricted to Admin only','error');return;
   }
@@ -2911,12 +2232,11 @@ function navTo(id,el){
   var titles={
     home:'Home', dashboard:'Dashboard', students:'Student Roster',
     scores:'Score Entry', broadsheet:'Class Broadsheet', progress:'Class Progress',
-    card:'Result Cards', analytics:'Analytics', settings:'Settings', admin:'Admin Panel', command:'Command Center'
+    card:'Result Cards', analytics:'Analytics', settings:'Settings', admin:'Admin Panel'
   };
   document.getElementById('tb-title').textContent=titles[id]||id;
   var sub=id==='home'?'Way To Success Standard Schools':
           id==='settings'?'System Configuration':
-          id==='command'?'Admin command workflow':
           DEPTS[CLS]?DEPTS[CLS].label+' - '+titles[id]:'';
   document.getElementById('tb-sub').textContent=sub;
   if(id==='home'){setMode(false);renderHome();}
@@ -2938,7 +2258,6 @@ function navTo(id,el){
   }
   if(id==='settings')renderSettings();
   if(id==='admin'){if(CURRENT_USER&&CURRENT_USER.role==='admin')loadAdminPanel();}
-  if(id==='command'){if(CURRENT_USER&&CURRENT_USER.role==='admin')initCommandCenter();}
   closeSidebar();
 }
 
@@ -4753,6 +4072,13 @@ function applyResponsive(){
 window.addEventListener('DOMContentLoaded',function(){
   applyResponsive();
   window.addEventListener('resize',applyResponsive);
+  window.addEventListener('focus',function(){refreshPortalState();});
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden)refreshPortalState();
+  });
+  setInterval(function(){
+    if(CURRENT_USER&&!document.hidden)refreshPortalState();
+  },60000);
   // Test Supabase connection on startup
   dbGet('students?limit=1')
     .then(function(){console.log('Supabase connected OK');})
