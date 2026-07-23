@@ -1550,7 +1550,14 @@ function sbFetch(path,opts){
   if(opts&&opts.headers)Object.assign(headers,opts.headers);
   return fetch(url,Object.assign({cache:'no-store'},opts||{},{headers:headers}));
 }
-function dbGet(path){return sbFetch(path).then(function(r){return r.json();});}
+function dbGet(path){
+  // Active class views and report-card lists must never include archived students.
+  if(typeof path==='string'&&path.indexOf('students?')===0&&path.indexOf('class_key=eq.')>-1&&path.indexOf('archived=')===-1){
+    if(path.indexOf('&order=')>-1)path=path.replace('&order=','&archived=eq.false&order=');
+    else path+='&archived=eq.false';
+  }
+  return sbFetch(path).then(function(r){return r.json();});
+}
 function dbPost(path,body){return sbFetch(path,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();});}
 function dbRpc(fn,body){return sbFetch('rpc/'+fn,{method:'POST',body:JSON.stringify(body||{})}).then(function(r){return r.json();});}
 function dbPatch(path,body){return sbFetch(path,{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(body)}).then(function(r){return r.json();});}
@@ -2018,7 +2025,7 @@ var CARD_SECTIONS=[
   {key:'showAffective',label:'Affective Traits'},
   {key:'showPsycho',   label:'Psychomotor Skills'},
   {key:'showFees',     label:'School Fees Status'},
-  {key:'showNextTerm', label:'Next Term Begins & Fees'},
+  {key:'showNextTerm', label:'Next Term Begins'},
   {key:'showAttendance',label:'Time School Opened / Attendance'},
   {key:'showSignature',label:'Proprietor Signature'}
 ];
@@ -2037,11 +2044,15 @@ function getGrade(t){
 function gc(t){return getGrade(t).c;}
 function computeTotal(sc){
   if(!sc)return'';
-  var v=[sc.ca1,sc.ca2,sc.ca3,sc.exam];
-  var hasVal=false;
-  for(var i=0;i<v.length;i++)if(v[i]!==''&&v[i]!==null&&v[i]!==undefined)hasVal=true;
-  if(!hasVal)return'';
-  return v.reduce(function(a,x){return a+Number(x||0);},0);
+  var caVals=[sc.ca1,sc.ca2,sc.ca3];
+  var examVal=sc.exam;
+  var hasCa=false;
+  for(var i=0;i<caVals.length;i++)if(caVals[i]!==''&&caVals[i]!==null&&caVals[i]!==undefined)hasCa=true;
+  var hasExam=examVal!==''&&examVal!==null&&examVal!==undefined;
+  if(!hasCa&&!hasExam)return'';
+  var caTotal=hasCa?Math.min(30,caVals.reduce(function(a,x){return a+Number(x||0);},0)):0;
+  var examTotal=hasExam?Number(examVal||0):0;
+  return caTotal+examTotal;
 }
 function getSections(){
   var cfg=getCfg();
@@ -3355,7 +3366,8 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
     return{hi:hi,ca:ca,pos:pos};
   });
 
-  var resumeDate=fees.resume_date?new Date(fees.resume_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):fees.resume?new Date(fees.resume).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
+  var rdCfg=getResumptionDate();
+  var resumeDate=fees.resume_date?new Date(fees.resume_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):fees.resume?new Date(fees.resume).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):rdCfg?new Date(rdCfg).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'--';
   var feeBal=Number(fees.total||0)+Number(fees.debt||0)-Number(fees.paid||0);
   var dept=DEPTS[CLS]?DEPTS[CLS].label:CLS;
   var overallPerf=avg!==''?getGrade(avg).r:'--';
@@ -3433,13 +3445,10 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
       +'<table style="width:100%;border-collapse:collapse;font-size:8pt">'
       +'<thead><tr style="background:'+NAVY+';color:'+WHITE+';'+P+'">'
       +'<th style="padding:5px 6px;text-align:left;border:1px solid '+BORDER+'">SUBJECT</th>'
-      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 1<br/><small>(10%)</small></th>'
-      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 2<br/><small>(10%)</small></th>'
-      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TEST 3<br/><small>(10%)</small></th>'
+      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">C.A.<br/><small>(30%)</small></th>'
       +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">EXAM<br/><small>(70%)</small></th>'
       +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">TOTAL<br/><small>(100%)</small></th>'
       +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">GRADE</th>'
-      +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">POS.</th>'
       +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">CLASS AVG</th>'
       +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">HIGHEST</th>'
       +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">REMARK</th>'
@@ -3448,15 +3457,14 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
         var rb=i%2===0?WHITE:MINT;
         if(!isPublished(CLS,i)){return'';}
         var r2=sc[i]||{};var t=tots[i];var gd=getGrade(t);var ss=subjStats[i];
+        var hasCa=(r2.ca1!==undefined&&r2.ca1!==''&&r2.ca1!==null)||(r2.ca2!==undefined&&r2.ca2!==''&&r2.ca2!==null)||(r2.ca3!==undefined&&r2.ca3!==''&&r2.ca3!==null);
+        var caTotal=hasCa?Math.min(30,Number(r2.ca1||0)+Number(r2.ca2||0)+Number(r2.ca3||0)):'';
         return'<tr style="background:'+rb+';'+P+'">'
           +'<td style="padding:4px 6px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+subj+'</td>'
-          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca1!==undefined&&r2.ca1!==''?r2.ca1:'')+'</td>'
-          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca2!==undefined&&r2.ca2!==''?r2.ca2:'')+'</td>'
-          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.ca3!==undefined&&r2.ca3!==''?r2.ca3:'')+'</td>'
+          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(caTotal!==''?caTotal:'')+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.exam!==undefined&&r2.exam!==''?r2.exam:'')+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';font-weight:700;background:'+rb+'">'+(t!==''?t:'')+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(t!==''?gd.c:'#999')+'">'+(gd.g||'')+'</td>'
-          +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(ss.pos!=='--'?ss.pos:'')+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+ss.ca+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';color:#065f46;font-weight:600">'+ss.hi+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';color:'+(t!==''?gd.c:'#999')+'">'+( gd.r||'')+'</td>'
@@ -3500,14 +3508,12 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
       +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+(feeBal>0?'#c0392b':'#065f46')+'">'+(fees.total?'N'+feeBal.toLocaleString():'--')+'</td>'
       +'</tr></table>';
   }
-  // NEXT TERM SECTION (separate toggle)
-  if(sec.showNextTerm!==false&&(getNextTermFee(CLS)||getResumptionDate())){
+  // NEXT TERM SECTION (resumption date only)
+  if(sec.showNextTerm!==false&&getResumptionDate()){
     h+='<table style="width:100%;border-collapse:collapse;border-top:1px solid '+BORDER+'">'
       +'<tr>'
-      +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Next Term Fees</th>'
       +'<th style="background:'+MINT+';padding:5px 8px;text-align:center;border:1px solid '+BORDER+';font-size:8pt;'+P+'">Next Term Begins</th>'
       +'</tr><tr>'
-      +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700">'+(getNextTermFee(CLS)?'₦'+Number(getNextTermFee(CLS)).toLocaleString():'--')+'</td>'
       +'<td style="padding:6px 8px;text-align:center;border:1px solid '+BORDER+';font-weight:700;color:'+TEAL+'">'+resumeDate+'</td>'
       +'</tr></table>';
   }
