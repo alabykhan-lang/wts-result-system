@@ -4,90 +4,17 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>WTS Result Management System</title>
+<meta http-equiv="refresh" content="0;url=portal_core.html?v=20260723_core_fix"/>
+<script>
+window.location.replace('portal_core.html?v=20260723_core_fix');
+</script>
 <style>
-  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f0f7f4;font-family:Arial,sans-serif;color:#1a2a4a}
-  #portal-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f0f7f4}
-  #safe-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;background:#f0f7f4;z-index:5;transition:opacity .2s ease}
-  .box{background:#fff;border-radius:14px;padding:22px 26px;box-shadow:0 8px 30px rgba(26,42,74,.18);max-width:390px}
-  .box h1{font-size:1rem;margin:0 0 8px}.box p{font-size:.82rem;margin:0;color:#4a5568;line-height:1.45}
-  .box a{display:inline-block;margin-top:12px;background:#1a2a4a;color:#fff;text-decoration:none;border-radius:9px;padding:10px 15px;font-weight:700;font-size:.82rem}
+  html,body{margin:0;min-height:100%;background:#f0f7f4;font-family:Arial,sans-serif;color:#1a2a4a}
+  main{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
+  a{display:inline-block;background:#1a2a4a;color:#fff;text-decoration:none;border-radius:9px;padding:11px 16px;font-weight:700}
 </style>
 </head>
 <body>
-<iframe id="portal-frame" src="portal_core.html?v=20260723_direct_fix" title="WTS Result Portal"></iframe>
-<div id="safe-loader"><div class="box"><h1>Opening WTS Result Portal...</h1><p>If it does not open automatically, tap the button below.</p><a href="portal_core.html?v=20260723_direct_fix">Open Portal Now</a></div></div>
-<script>
-(function(){
-  var frame=document.getElementById('portal-frame');
-  var loader=document.getElementById('safe-loader');
-  function hideLoader(){
-    if(!loader)return;
-    loader.style.opacity='0';
-    setTimeout(function(){if(loader)loader.style.display='none';},250);
-  }
-  function patchPortal(){
-    var w;
-    try{w=frame.contentWindow;}catch(e){hideLoader();return;}
-    if(!w){hideLoader();return;}
-
-    // Ensure archived students stay hidden from rosters, selectors and report-card printing.
-    if(w.dbGet&&!w.__wtsDbGetPatched){
-      var oldDbGet=w.dbGet;
-      w.dbGet=function(path){
-        if(typeof path==='string'&&path.indexOf('students?')===0&&path.indexOf('class_key=eq.')>-1&&path.indexOf('archived=')===-1){
-          if(path.indexOf('&order=')>-1)path=path.replace('&order=','&archived=eq.false&order=');
-          else path+='&archived=eq.false';
-        }
-        return oldDbGet.call(this,path);
-      };
-      w.__wtsDbGetPatched=true;
-    }
-
-    // Approved CA benchmark: CA total must never exceed 30.
-    if(!w.__wtsComputeTotalPatched){
-      w.computeTotal=function(sc){
-        if(!sc)return'';
-        var caVals=[sc.ca1,sc.ca2,sc.ca3];
-        var examVal=sc.exam;
-        var hasCa=false;
-        for(var i=0;i<caVals.length;i++)if(caVals[i]!==''&&caVals[i]!==null&&caVals[i]!==undefined)hasCa=true;
-        var hasExam=examVal!==''&&examVal!==null&&examVal!==undefined;
-        if(!hasCa&&!hasExam)return'';
-        var caTotal=hasCa?Math.min(30,caVals.reduce(function(a,x){return a+Number(x||0);},0)):0;
-        var examTotal=hasExam?Number(examVal||0):0;
-        return caTotal+examTotal;
-      };
-      w.__wtsComputeTotalPatched=true;
-    }
-
-    // Remove Next Term Fees from generated cards while keeping Next Term Begins.
-    if(w.buildCard&&!w.__wtsBuildCardWrapped){
-      var oldBuildCard=w.buildCard;
-      w.buildCard=function(){
-        var html=oldBuildCard.apply(this,arguments)||'';
-        try{
-          var rd=w.getResumptionDate?w.getResumptionDate():'';
-          if(rd){
-            var resumeDate=new Date(rd).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-            var table='<table style="width:100%;border-collapse:collapse;border-top:1px solid #b8edd8"><tr><th style="background:#edf8f4;padding:5px 8px;text-align:center;border:1px solid #b8edd8;font-size:8pt;-webkit-print-color-adjust:exact;print-color-adjust:exact">Next Term Begins</th></tr><tr><td style="padding:6px 8px;text-align:center;border:1px solid #b8edd8;font-weight:700;color:#7dd4b0">'+resumeDate+'</td></tr></table>';
-            html=html.replace(/<table style="width:100%;border-collapse:collapse;border-top:1px solid [^"]+">[\s\S]*?Next Term Fees[\s\S]*?<\/table>/,table);
-          }
-        }catch(e){}
-        return html;
-      };
-      w.__wtsBuildCardWrapped=true;
-    }
-
-    // If a class was already loaded before the patch, force fresh active-student reload.
-    try{
-      if(w.clearSessionCaches)w.clearSessionCaches();
-      if(w.refreshPortalState)w.refreshPortalState({force:true});
-    }catch(e){}
-    hideLoader();
-  }
-  frame.addEventListener('load',function(){setTimeout(patchPortal,300);});
-  setTimeout(hideLoader,5000);
-})();
-</script>
+<main><a href="portal_core.html?v=20260723_core_fix">Open WTS Result Portal</a></main>
 </body>
 </html>
