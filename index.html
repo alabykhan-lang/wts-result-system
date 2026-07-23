@@ -7,21 +7,37 @@
 <style>
   html,body{margin:0;min-height:100%;background:#f0f7f4;font-family:Arial,sans-serif;color:#1a2a4a}
   .loader{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
-  .box{background:#fff;border-radius:14px;padding:22px 26px;box-shadow:0 8px 30px rgba(26,42,74,.18);max-width:360px}
-  .box h1{font-size:1rem;margin:0 0 8px}.box p{font-size:.82rem;margin:0;color:#4a5568}
+  .box{background:#fff;border-radius:14px;padding:22px 26px;box-shadow:0 8px 30px rgba(26,42,74,.18);max-width:390px}
+  .box h1{font-size:1rem;margin:0 0 8px}.box p{font-size:.82rem;margin:0;color:#4a5568;line-height:1.45}
+  .box a,.box button{display:inline-block;margin-top:12px;background:#1a2a4a;color:#fff;text-decoration:none;border:0;border-radius:9px;padding:10px 15px;font-weight:700;font-size:.82rem;cursor:pointer}
+  .muted{font-size:.74rem!important;margin-top:8px!important;color:#6b7280!important}
 </style>
 </head>
 <body>
-<div class="loader"><div class="box"><h1>Loading WTS Result Portal...</h1><p>Please wait while the latest report-card layout is applied.</p></div></div>
+<div class="loader"><div class="box"><h1>Loading WTS Result Portal...</h1><p id="load-msg">Please wait while the latest report-card layout is applied.</p><p class="muted" id="load-sub">This should only take a few seconds.</p><a id="fallback-link" href="portal_core.html?fallback=1" style="display:none">Open Portal Now</a></div></div>
 <script>
 (function(){
+  var done=false;
+  var msg=document.getElementById('load-msg');
+  var sub=document.getElementById('load-sub');
+  var link=document.getElementById('fallback-link');
   function replaceAllText(source,search,replacement,label){
     if(source.indexOf(search)===-1){console.warn('Portal layout patch not found:',label);return source;}
     return source.split(search).join(replacement);
   }
-  fetch('portal_core.html?layout_v=20260723_ca30_no_position',{cache:'no-store'})
-    .then(function(r){return r.text();})
+  function showFallback(reason){
+    if(done)return;
+    if(msg)msg.textContent='The portal is taking longer than expected on this browser.';
+    if(sub)sub.textContent='Opening the main portal now. You can also tap the button below.';
+    if(link)link.style.display='inline-block';
+    setTimeout(function(){ if(!done) window.location.replace('portal_core.html?fallback=1'); },2500);
+  }
+  var safety=setTimeout(function(){showFallback('timeout');},10000);
+  fetch('portal_core.html?layout_v=20260723_ca30_no_position_2',{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
     .then(function(html){
+      if(done)return;
+      clearTimeout(safety);
       html=replaceAllText(html,
 `function computeTotal(sc){
   if(!sc)return'';
@@ -123,13 +139,14 @@
       +'</tr></table>';
   }`,'next term resumption only');
 
+      done=true;
       document.open();
       document.write(html);
       document.close();
     })
     .catch(function(err){
       console.error(err);
-      document.body.innerHTML='<div class="loader"><div class="box"><h1>Portal failed to load</h1><p>Please refresh the page or check your internet connection.</p></div></div>';
+      showFallback('fetch error');
     });
 })();
 </script>
