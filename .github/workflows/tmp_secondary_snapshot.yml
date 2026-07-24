@@ -1,0 +1,17 @@
+name: Temporary Secondary Snapshot Transfer
+on:
+  pull_request:
+    branches: [ main ]
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download snapshot
+        run: |
+          curl -L --fail --retry 3 'https://wuftzyeajmsxdrbwaawl.supabase.co/storage/v1/object/sign/generated-data/secondary-reportcards/de50a2b0-4c4a-4c1f-b035-3ca46621e1eb-snapshot.json?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8yNTRjYTFmOC0zNmE3LTQ1MDQtOGE4ZS0zN2Q3ODU3ZDY2MjMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJnZW5lcmF0ZWQtZGF0YS9zZWNvbmRhcnktcmVwb3J0Y2FyZHMvZGU1MGEyYjAtNGM0YS00YzFmLWIwMzUtM2NhNDY2MjFlMWViLXNuYXBzaG90Lmpzb24iLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzg0OTAzNjQ3LCJleHAiOjE3ODQ5MDQ1NDd9.cr67BiZVAq-Yx5HCyz0GqSlQJ62vIqym7SZM7EvHcWs&download=secondary-reportcards-snapshot.json' -o secondary-reportcards-snapshot.json
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: secondary-reportcards-snapshot
+          path: secondary-reportcards-snapshot.json
+          retention-days: 1
