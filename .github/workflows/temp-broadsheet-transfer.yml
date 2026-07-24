@@ -1,0 +1,26 @@
+name: Temporary Broadsheet Transfer
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download generated broadsheet
+        run: |
+          curl --fail --location --retry 3 \
+            'https://wuftzyeajmsxdrbwaawl.supabase.co/storage/v1/object/public/generated-reports/secondary-broadsheets/07a445df-2c04-441f-b039-54dcbffbe10f-JSS1_JSS2_SS1_Detailed_CA1_CA2_CA3_Exam_Broadsheet.pdf' \
+            --output JSS1_JSS2_SS1_Detailed_CA1_CA2_CA3_Exam_Broadsheet.pdf
+          test -s JSS1_JSS2_SS1_Detailed_CA1_CA2_CA3_Exam_Broadsheet.pdf
+      - name: Upload broadsheet artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: detailed-secondary-broadsheet
+          path: JSS1_JSS2_SS1_Detailed_CA1_CA2_CA3_Exam_Broadsheet.pdf
+          retention-days: 1
+          if-no-files-found: error
