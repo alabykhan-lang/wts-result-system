@@ -1,0 +1,29 @@
+name: Temporary Nursery 2 Regeneration
+on:
+  pull_request:
+    branches: [ main ]
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch live Nursery 2 data
+        env:
+          SB_URL: https://wuftzyeajmsxdrbwaawl.supabase.co
+          SB_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Ind1ZnR6eWVham1zeGRyYndhYXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjczNTgsImV4cCI6MjA4OTQ0MzM1OH0.QUeDRP1IpHCjvecqAOEZAqmMalEFlCLXylZP5D5iLog
+        run: |
+          set -euo pipefail
+          H1="apikey: $SB_KEY"
+          H2="Authorization: Bearer $SB_KEY"
+          curl -sS --fail "$SB_URL/rest/v1/students?select=id,admno,name,gender,age,photo&class_key=eq.nursery2&archived=eq.false&order=name.asc" -H "$H1" -H "$H2" -o students.json
+          curl -sS --fail "$SB_URL/rest/v1/result_subject_catalog?select=subject_index,subject_name&class_key=eq.nursery2&active=eq.true&order=subject_index.asc" -H "$H1" -H "$H2" -o subjects.json
+          curl -sS --fail "$SB_URL/rest/v1/scores?select=student_id,subject_index,ca1,ca2,ca3,exam&class_key=eq.nursery2&term=eq.3rd%20Term" -H "$H1" -H "$H2" -o scores.json
+          curl -sS --fail "$SB_URL/rest/v1/traits?select=student_id,trait_type,trait_name,rating&class_key=eq.nursery2&term=eq.3rd%20Term" -H "$H1" -H "$H2" -o traits.json
+          curl -sS --fail "$SB_URL/rest/v1/settings?select=key,value&key=eq.app_config" -H "$H1" -H "$H2" -o settings.json
+          jq -n --slurpfile students students.json --slurpfile subjects subjects.json --slurpfile scores scores.json --slurpfile traits traits.json --slurpfile settings settings.json '{generated_at:(now|todate),term:"3rd Term",session:"2025/2026",students:$students[0],subjects:$subjects[0],scores:$scores[0],traits:$traits[0],settings:$settings[0]}' > nursery2-live-data.json
+          jq '{students:(.students|length),subjects:(.subjects|length),scores:(.scores|length),traits:(.traits|length)}' nursery2-live-data.json
+      - name: Upload live data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nursery2-live-data
+          path: nursery2-live-data.json
+          retention-days: 1
