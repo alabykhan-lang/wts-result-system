@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "WTSResultSystem"
 include ":android-app"
+include ":attendance-app"
