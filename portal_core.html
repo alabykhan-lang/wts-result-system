@@ -1721,7 +1721,8 @@ function checkSession(){
     if(!payload||!payload.result_user)throw {code:'RESULT_SESSION_NOT_ACTIVE'};
     loginSuccess(centralUserFromPayload(payload),'central');
   }).catch(function(){
-    if(new URLSearchParams(window.location.search).get('code')){
+    var callbackParams=new URLSearchParams(window.location.search);
+    if(callbackParams.get('code')||callbackParams.get('error')){
       completeResultSso();
     }else{
       startResultSso();
