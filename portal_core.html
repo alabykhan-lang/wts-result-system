@@ -542,7 +542,7 @@ body.result-context-read-only .results-history-readable{display:flex}
       <div id="form-central">
         <div id="central-err" class="auth-err show">Opening the official WTS sign-in…</div>
         <p style="font-size:.82rem;color:var(--gray);line-height:1.6;text-align:center;margin-top:14px">
-          Results uses the central WTS Workspace sign-in. No separate Result Portal password is accepted.
+          Results uses the School Portal sign-in. No separate Result Portal password is accepted.
         </p>
       </div>
     </div>
@@ -1570,6 +1570,25 @@ function ssoClearTransientState(){
   }catch(e){}
 }
 
+function restartResultSso(){
+  try{
+    if(sessionStorage.getItem('wts_pkce_recovery_attempt')==='1'){
+      ssoClearTransientState();
+      ssoStatus('The secure sign-in response could not be verified. Please return to the School Portal and try again.');
+      return;
+    }
+    sessionStorage.setItem('wts_pkce_recovery_attempt','1');
+  }catch(e){
+    ssoClearTransientState();
+    ssoStatus('The secure sign-in response could not be verified. Please return to the School Portal and try again.');
+    return;
+  }
+  ssoClearTransientState();
+  try{history.replaceState({},document.title,window.location.pathname);}catch(e){}
+  ssoStatus('Restarting secure School Portal sign-in…');
+  startResultSso(true);
+}
+
 function ssoBytesToBase64Url(bytes){
   var binary='';
   for(var i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);
@@ -1625,8 +1644,7 @@ function completeResultSso(){
     expectedNonce=sessionStorage.getItem('wts_pkce_nonce')||'';
   }catch(e){}
   if(!code||!verifier||!expectedState||!expectedNonce||state!==expectedState||nonce!==expectedNonce){
-    ssoClearTransientState();
-    ssoStatus('The secure sign-in response could not be verified. Please start again.');
+    restartResultSso();
     return;
   }
   ssoStatus('Completing secure WTS sign-in…');
@@ -1640,18 +1658,26 @@ function completeResultSso(){
     nonce:nonce
   }).then(function(payload){
     ssoClearTransientState();
+    try{sessionStorage.removeItem('wts_pkce_recovery_attempt');}catch(e){}
     loginSuccess(centralUserFromPayload(payload),'central');
   }).catch(function(payload){
     ssoClearTransientState();
+    if(payload&&(
+      payload.code==='SSO_PKCE_INVALID'
+      || payload.code==='SSO_STATE_OR_NONCE_INVALID'
+    )){
+      restartResultSso();
+      return;
+    }
     if(payload&&payload.code==='RESULT_ACCESS_NOT_GRANTED'){
       ssoStatus('This account does not have an active Results grant.');
     }else{
-      ssoStatus('Secure WTS sign-in was rejected. Please return to the WTS Workspace and try again.');
+      ssoStatus('School Portal sign-in was rejected. Please return to the School Portal and try again.');
     }
   });
 }
 
-function startResultSso(){
+function startResultSso(isRecovery){
   if(!window.crypto||!window.crypto.subtle||!window.crypto.getRandomValues){
     ssoStatus('This browser cannot perform secure sign-in. Please use an updated browser.');
     return;
@@ -1660,6 +1686,7 @@ function startResultSso(){
   var state='';
   var nonce='';
   try{
+    if(!isRecovery)sessionStorage.removeItem('wts_pkce_recovery_attempt');
     verifier=ssoRandomToken(64);
     state=ssoRandomToken(24);
     nonce=ssoRandomToken(24);
