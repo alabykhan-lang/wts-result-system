@@ -7,8 +7,10 @@ const SUPABASE_KEY = process.env.WTS_SUPABASE_PUBLISHABLE_KEY
   || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1ZnR6eWVham1zeGRyYndhYXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjczNTgsImV4cCI6MjA4OTQ0MzM1OH0.QUeDRP1IpHCjvecqAOEZAqmMalEFlCLXylZP5D5iLog';
 const COOKIE_NAME = 'wts_result_session';
 const SESSION_MAX_AGE = 8 * 60 * 60;
-const RESULT_ORIGIN = process.env.WTS_RESULT_ORIGIN || 'https://wts-result-system.vercel.app';
+const PRODUCTION_RESULT_ORIGIN = 'https://wts-result-system.vercel.app';
+const RESULT_ORIGIN = process.env.WTS_RESULT_ORIGIN || PRODUCTION_RESULT_ORIGIN;
 const DEFAULT_ALLOWED_ORIGINS = new Set([
+  PRODUCTION_RESULT_ORIGIN,
   RESULT_ORIGIN.replace(/\/$/, ''),
 ]);
 
