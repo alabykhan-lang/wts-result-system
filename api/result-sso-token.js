@@ -10,8 +10,10 @@ const {
 } = require('./_lib');
 
 const CLIENT_ID = 'result_portal';
-const RESULT_ORIGIN = process.env.WTS_RESULT_ORIGIN || 'https://wts-result-system.vercel.app';
-const REDIRECT_URI = `${RESULT_ORIGIN.replace(/\/$/, '')}/portal_core.html`;
+// The active Supabase client registration is the production callback below.
+// Keep exchange validation pinned to that exact URI; future origins must be
+// registered explicitly before they can be used.
+const REDIRECT_URI = 'https://wts-result-system.vercel.app/portal_core.html';
 
 function isUrlSafe(value, min, max) {
   return typeof value === 'string'
