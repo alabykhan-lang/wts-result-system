@@ -71,8 +71,10 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:50;gap:10px}
 .tb-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.tb-heading{min-width:0;flex:0 1 auto}
 .tb-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--g1)}
 .tb-sub{font-size:.72rem;color:var(--gray);margin-top:1px}
+.tb-meta{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
 .tb-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .class-chip{display:none;align-items:center;gap:4px;background:var(--g1);color:var(--gold2);
   font-size:.72rem;font-weight:700;padding:3px 10px 3px 8px;border-radius:20px;
@@ -293,6 +295,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 .subj-tag{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;
   border:1px solid var(--g3);color:var(--g1);padding:4px 10px;border-radius:20px;
   font-size:.78rem;font-weight:500}
+.subj-config-note{margin:0 0 12px;padding:9px 11px;border-left:3px solid var(--g3);border-radius:7px;background:#f0fdf4;color:var(--gray);font-size:.72rem;line-height:1.45}
 .subj-tag button{background:none;border:none;cursor:pointer;color:var(--gray);
   font-size:.9rem;line-height:1;padding:0 2px}
 .remarks-cfg .remark-range{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
@@ -409,7 +412,17 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .content{padding:14px}
   #bottom-nav{display:block}
   .content{padding-bottom:74px}
-  .topbar{padding:10px 14px}
+  .topbar{display:block;padding:11px 14px}
+  .tb-left{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"menu heading" "menu meta";align-items:start;gap:4px 8px;width:100%}
+  #hamburger{grid-area:menu;margin-top:3px}
+  .tb-heading{grid-area:heading;min-width:0}
+  .tb-title{font-size:1.12rem;line-height:1.08;white-space:normal}
+  .tb-sub{font-size:.72rem;line-height:1.4;white-space:normal}
+  .tb-meta{grid-area:meta;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;margin-top:7px}
+  .tb-meta .class-chip,.tb-meta #context-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .tb-meta .official-context-label{max-width:100%;white-space:normal;line-height:1.2}
+  .tb-right{justify-content:flex-start;flex-wrap:wrap;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid var(--border)}
+  .tb-right .btn{flex:0 1 auto}
   .stats-row{grid-template-columns:1fr 1fr;gap:10px}
   .modal{max-width:100%;border-radius:16px 16px 0 0;
     position:fixed;bottom:0;left:0;right:0;height:90vh;max-height:90vh;margin:0;
@@ -497,6 +510,13 @@ body.result-context-read-only .result-read-only-note{display:block}
 .archive-term-button strong{font-size:.8rem}
 .archive-term-button small{display:block;margin-top:2px;color:var(--gray);font-size:.67rem}
 .archive-term-arrow{font-size:1rem;color:var(--g3);font-weight:800}
+.department-modal{max-width:420px}
+.department-modal-body{padding:24px 20px 28px}
+.department-prompt{font-size:.88rem;color:var(--gray);margin-bottom:20px;text-align:left}
+.department-options{display:grid;gap:12px}
+.department-option{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border:1px solid #edf5f0;border-radius:14px;background:linear-gradient(135deg,#f7fdf9,#fff);color:#145c46;font:inherit;font-size:.9rem;font-weight:700;text-align:left;cursor:pointer;box-shadow:0 6px 18px rgba(26,42,74,.08);transition:.18s}
+.department-option:hover,.department-option:focus-visible{border-color:var(--g3);background:#f0fdf4;outline:none;transform:translateY(-1px)}
+.department-option::after{content:'›';font-size:1.25rem;color:var(--g3);line-height:1}
 .archive-class-browser{display:grid;gap:20px;padding:16px}
 .archive-class-group{display:grid;gap:10px}
 .archive-class-group-title{display:flex;align-items:center;gap:9px;color:var(--gray);font-family:'Playfair Display',serif;font-size:.86rem;text-transform:uppercase;letter-spacing:.06em}
@@ -519,6 +539,8 @@ body.result-context-read-only .results-history-readable{display:flex}
 @media(max-width:600px){
   .archive-session-terms{grid-template-columns:1fr}
   .archive-class-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .department-modal{max-width:100%}
+  .department-option{padding:17px 18px}
 }
 
 </style>
@@ -678,16 +700,18 @@ body.result-context-read-only .results-history-readable{display:flex}
       <button id="hamburger" onclick="toggleSidebar()">
         <span></span><span></span><span></span>
       </button>
-      <div>
+      <div class="tb-heading">
         <div class="tb-title" id="tb-title">Home</div>
         <div class="tb-sub" id="tb-sub">Way to Success Standard Schools</div>
       </div>
-      <div class="class-chip" id="class-chip" onclick="goHome()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        <span id="class-chip-name"></span>
+      <div class="tb-meta">
+        <div class="class-chip" id="class-chip" onclick="goHome()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          <span id="class-chip-name"></span>
+        </div>
+        <span id="context-chip" style="display:none;align-items:center;background:var(--mint);color:var(--g1);font-size:.68rem;font-weight:700;padding:4px 9px;border-radius:12px;white-space:nowrap"></span>
+        <span id="official-context-label" class="official-context-label">Official context loading…</span>
       </div>
-      <span id="context-chip" style="display:none;align-items:center;background:var(--mint);color:var(--g1);font-size:.68rem;font-weight:700;padding:4px 9px;border-radius:12px;white-space:nowrap"></span>
-      <span id="official-context-label" class="official-context-label">Official context loading…</span>
     </div>
     <div class="tb-right">
             <span class="saved-msg" id="saved-msg">Saved</span>
@@ -1010,7 +1034,7 @@ body.result-context-read-only .results-history-readable{display:flex}
         <div class="tbl-head"><h3>Promotion thresholds</h3></div>
         <div style="padding:16px">
           <div class="promotion-note">
-            Central Registry is the only service that carries students into a new session. Results stores the three configured secondary thresholds below; students who meet their class minimum average are promoted, while students below it are detained/retained. Early years, primary classes and the remaining secondary transitions follow the approved class progression map.
+            Central Registry is the only service that carries students into a new session. Results stores the configured secondary thresholds below; SS1 departmental placement remains pending until Central Registry defines the transition. SS2 Science, Arts and Business continue to their matching SS3 departments.
           </div>
           <div style="overflow-x:auto">
             <table class="data-table promotion-table" style="font-size:.78rem;min-width:560px">
@@ -1081,13 +1105,16 @@ body.result-context-read-only .results-history-readable{display:flex}
                 <option value="jss3">JSS 3</option>
               </optgroup>
               <optgroup label="Senior Secondary">
-                <option value="ss1-general">SS1 General</option>
-                <option value="ss2-science">SS2 Science</option><option value="ss2-arts">SS2 Arts</option>
-                <option value="ss2-business">SS2 Business</option>
-                <option value="ss3-science">SS3 Science</option><option value="ss3-arts">SS3 Arts</option>
+                <option value="ss1-general">SS1 - General</option><option value="ss1-science">SS1 - Science</option>
+                <option value="ss1-arts">SS1 - Arts</option><option value="ss1-commercial">SS1 - Commercial</option>
+                <option value="ss2-science">SS2 - Science</option><option value="ss2-arts">SS2 - Arts</option>
+                <option value="ss2-business">SS2 - Business</option>
+                <option value="ss3-science">SS3 - Science</option><option value="ss3-arts">SS3 - Arts</option>
+                <option value="ss3-business">SS3 - Business</option>
               </optgroup>
             </select>
           </div>
+          <div id="subj-cfg-note" class="subj-config-note" style="display:none"></div>
           <div id="subj-cfg-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <input class="inp" id="new-subj-inp" placeholder="Add new subject..." style="max-width:250px"/>
@@ -1133,6 +1160,21 @@ body.result-context-read-only .results-history-readable{display:flex}
         <small>History is never overwritten. Any selected previous context opens read-only.</small>
         <button class="btn btn-outline" id="open-history-btn" style="width:100%;margin-top:10px;justify-content:center" onclick="confirmHistoricalContext()">Open read-only history</button>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SENIOR SECONDARY DEPARTMENT PICKER -->
+<div class="overlay" id="modal-department" style="display:none">
+  <div class="modal department-modal">
+    <div class="modal-hdr">
+      <h3 id="department-modal-title">SS1 department</h3>
+      <button class="modal-x" onclick="closeModal('modal-department')">&#215;</button>
+    </div>
+    <div class="modal-body department-modal-body">
+      <p class="department-prompt">Choose the department for this class to continue.</p>
+      <div id="department-options" class="department-options"></div>
     </div>
   </div>
 </div>
@@ -1309,9 +1351,9 @@ var FEE_CATS={
   primary1:'primary',primary2:'primary',primary3:'primary',
   primary4:'primary',primary5:'primary',
   jss1:'junior_secondary',jss2:'junior_secondary',jss3:'junior_secondary',
-  'ss1-general':'senior_secondary',
+  'ss1-general':'senior_secondary','ss1-science':'senior_secondary','ss1-arts':'senior_secondary','ss1-commercial':'senior_secondary',
   'ss2-science':'senior_secondary','ss2-arts':'senior_secondary','ss2-business':'senior_secondary',
-  'ss3-science':'senior_secondary','ss3-arts':'senior_secondary'
+  'ss3-science':'senior_secondary','ss3-arts':'senior_secondary','ss3-business':'senior_secondary'
 };
 function getSessionCfg(){
   var cfg=getCfg();
@@ -2189,22 +2231,27 @@ var DEPTS={
   'jss2':        {label:'JSS 2',         subjects:JSS_CORE.slice()},
   'jss3':        {label:'JSS 3',         subjects:JSS_CORE.slice()},
   'ss1-general': {label:'SS1 - General', subjects:CORE.concat(['Biology','Physics','Chemistry','Literature','Government','I.R.S','Financial Accounting','Commerce','Geography','Agricultural Science'])},
+  'ss1-science': {label:'SS1 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
+  'ss1-arts':    {label:'SS1 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
+  'ss1-commercial':{label:'SS1 - Commercial',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])},
   'ss2-science': {label:'SS2 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
   'ss2-arts':    {label:'SS2 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
   'ss2-business':{label:'SS2 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])},
   'ss3-science': {label:'SS3 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss3-arts':    {label:'SS3 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])}
+  'ss3-arts':    {label:'SS3 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba'])},
+  'ss3-business':{label:'SS3 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government'])}
 };
-var ALL_CLASSES=['creche','kg1','kg2','nursery1','nursery2','primary1','primary2','primary3','primary4','primary5','jss1','jss2','jss3','ss1-general','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts'];
-var SECONDARY_CLASSES=['jss1','jss2','jss3','ss1-general','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts'];
+var ALL_CLASSES=['creche','kg1','kg2','nursery1','nursery2','primary1','primary2','primary3','primary4','primary5','jss1','jss2','jss3','ss1-general','ss1-science','ss1-arts','ss1-commercial','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts','ss3-business'];
+var SECONDARY_CLASSES=['jss1','jss2','jss3','ss1-general','ss1-science','ss1-arts','ss1-commercial','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts','ss3-business'];
+var PENDING_DEPARTMENT_CLASSES=['ss1-general','ss1-science','ss1-arts','ss1-commercial'];
 var PROMOTION_THRESHOLD_CLASSES=['jss1','jss2','ss1-general'];
 var DEFAULT_PROMOTION_TARGETS={
   creche:'kg1',kg1:'kg2',kg2:'nursery1',nursery1:'nursery2',nursery2:'primary1',
   primary1:'primary2',primary2:'primary3',primary3:'primary4',primary4:'primary5',primary5:'jss1',
   jss1:'jss2',jss2:'jss3',jss3:'ss1-general',
-  'ss1-general':'ss2-science',
-  'ss2-science':'ss3-science','ss2-arts':'ss3-arts','ss2-business':'ss3-arts',
-  'ss3-science':'','ss3-arts':''
+  'ss1-general':'','ss1-science':'','ss1-arts':'','ss1-commercial':'',
+  'ss2-science':'ss3-science','ss2-arts':'ss3-arts','ss2-business':'ss3-business',
+  'ss3-science':'','ss3-arts':'','ss3-business':''
 };
 function escapeHtml(v){
   return String(v==null?'':v).replace(/[&<>"']/g,function(c){
@@ -2223,6 +2270,9 @@ function getPromotionCfg(){
   var out={};
   ALL_CLASSES.forEach(function(key){
     out[key]=Object.assign(defaultPromotionRule(key),pc[key]||{});
+    // Department placement from SS1 into SS2 is intentionally deferred to
+    // Central Registry. Ignore any legacy one-target mapping in old config.
+    if(PENDING_DEPARTMENT_CLASSES.indexOf(key)>-1)out[key].target='';
     out[key].repeatPct=Number(out[key].repeatPct||0);
     out[key].minimumPct=Number(out[key].minimumPct||out[key].repeatPct||0);
     out[key].probationPct=Number(out[key].probationPct||0);
@@ -2240,7 +2290,7 @@ function promotionTargetOptions(selected){
   }).join('');
 }
 function calcPromotionAverage(studentId,classKey,scores,published){
-  var subjs=DEPTS[classKey]?DEPTS[classKey].subjects:[];
+  var subjs=configuredSubjects(classKey,getCfg());
   var publishedMap={};
   (published||[]).forEach(function(r){publishedMap[r.subject_index]=true;});
   var hasPublished=Object.keys(publishedMap).length>0;
@@ -2255,6 +2305,9 @@ function calcPromotionAverage(studentId,classKey,scores,published){
   return Math.round((total/count)*10)/10;
 }
 function classifyPromotion(avg,rule){
+  if(PENDING_DEPARTMENT_CLASSES.indexOf(rule.classKey)>-1){
+    return{action:'hold',label:avg===''?'No result data':'Department placement pending'};
+  }
   if(!isSecondaryClass(rule.classKey))return{action:rule.target?'promote':'hold',label:rule.target?'Automatic carry forward':'Final class'};
   if(avg==='')return{action:'hold',label:'No result data'};
   if(PROMOTION_THRESHOLD_CLASSES.indexOf(rule.classKey)>-1&&avg<Number(rule.minimumPct||rule.repeatPct||0))return{action:'repeat',label:'Detained / retained'};
@@ -2359,11 +2412,18 @@ var CARD_SECTIONS=[
   {key:'showSignature',label:'Proprietor Signature'}
 ];
 
-function subjects(){
-  var cfg=getCfg();
-  if(cfg.depts&&cfg.depts[CLS])return cfg.depts[CLS].subjects;
-  return DEPTS[CLS]?DEPTS[CLS].subjects:[];
+function configuredSubjects(classKey,cfg){
+  cfg=cfg||getCfg();
+  var cfgDepts=cfg.depts||{};
+  if(cfgDepts[classKey]&&Array.isArray(cfgDepts[classKey].subjects))return cfgDepts[classKey].subjects.slice();
+  // SS3 Business inherits the configured SS2 Business subjects until
+  // Central Registry performs the next-session departmental placement.
+  if(classKey==='ss3-business'&&cfgDepts['ss2-business']&&Array.isArray(cfgDepts['ss2-business'].subjects)){
+    return cfgDepts['ss2-business'].subjects.slice();
+  }
+  return DEPTS[classKey]&&Array.isArray(DEPTS[classKey].subjects)?DEPTS[classKey].subjects.slice():[];
 }
+function subjects(){return configuredSubjects(CLS,getCfg());}
 function getGrade(t){
   if(t===''||t===null||t===undefined)return{g:'',r:'',c:'#aaa',bg:'#f9f9f9'};
   t=Math.floor(Number(t)); // Floor so 74.4 = 74 = B2, not between grades
@@ -2415,6 +2475,7 @@ var CHARTS={};
 var SCORE_DRAFTS={};          // key -> values entered but not confirmed by server
 var SCORE_SAVE_TIMERS={};     // key -> debounce timer
 var SCORE_SAVE_VERSIONS={};   // key -> latest local draft version
+var SCORE_EDIT_UNLOCKS={};    // key -> user confirmed editing an already-saved subject row
 
 function scoreCellValue(value){
   return value===null||value===undefined?'':value;
@@ -2427,6 +2488,7 @@ function clearScoreDrafts(){
   SCORE_DRAFTS={};
   SCORE_SAVE_TIMERS={};
   SCORE_SAVE_VERSIONS={};
+  SCORE_EDIT_UNLOCKS={};
 }
 
 
@@ -2665,6 +2727,35 @@ function goHome(){
   navTo('home',document.getElementById('ni-home'));
 }
 
+var SENIOR_LEVELS=[
+  {key:'ss1',label:'SS1',options:['ss1-general','ss1-science','ss1-arts','ss1-commercial']},
+  {key:'ss2',label:'SS2',options:['ss2-science','ss2-arts','ss2-business']},
+  {key:'ss3',label:'SS3',options:['ss3-science','ss3-arts','ss3-business']}
+];
+var SENIOR_LEVEL_BY_KEY={ss1:SENIOR_LEVELS[0],ss2:SENIOR_LEVELS[1],ss3:SENIOR_LEVELS[2]};
+
+function openDepartmentPicker(level){
+  var config=SENIOR_LEVEL_BY_KEY[level];
+  if(!config){showToast('Unknown senior-secondary class','error');return;}
+  var title=document.getElementById('department-modal-title');
+  var options=document.getElementById('department-options');
+  var modal=document.getElementById('modal-department');
+  if(title)title.textContent=config.label+' department';
+  if(options){
+    options.innerHTML=config.options.map(function(key){
+      return'<button type="button" class="department-option" data-department-key="'+escapeHtml(key)+'">'+escapeHtml(DEPTS[key].label)+'</button>';
+    }).join('');
+    options.querySelectorAll('[data-department-key]').forEach(function(button){
+      button.onclick=function(){chooseDepartment(button.getAttribute('data-department-key'));};
+    });
+  }
+  if(modal)modal.style.display='flex';
+}
+function chooseDepartment(key){
+  closeModal('modal-department');
+  enterClass(key);
+}
+
 function renderAcademicContextModal(){
   var official=officialAcademicContext();
   var label=document.getElementById('modal-official-context');
@@ -2694,6 +2785,7 @@ function renderAcademicContextModal(){
 }
 
 function enterClass(key){
+  if(SENIOR_LEVEL_BY_KEY[key]){openDepartmentPicker(key);return;}
   if(!DEPTS[key]){showToast('Unknown class','error');return;}
   var official=officialAcademicContext();
   applyClassContext(
@@ -2777,7 +2869,7 @@ var HOME_GROUPS=[
   {grid:'hg-early',keys:['creche','kg1','kg2','nursery1','nursery2']},
   {grid:'hg-primary',keys:['primary1','primary2','primary3','primary4','primary5']},
   {grid:'hg-jss',keys:['jss1','jss2','jss3']},
-  {grid:'hg-ss',keys:['ss1-general','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts']}
+  {grid:'hg-ss',keys:['ss1-general','ss1-science','ss1-arts','ss1-commercial','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts','ss3-business']}
 ];
 
 function renderHome(){
@@ -2787,6 +2879,19 @@ function renderHome(){
   HOME_GROUPS.forEach(function(group){
     var el=document.getElementById(group.grid);
     if(!el)return;
+    if(group.grid==='hg-ss'){
+      el.innerHTML=SENIOR_LEVELS.map(function(level){
+        return'<div class="class-card" id="cc-'+level.key+'">'
+          +'<div class="cc-name">'+escapeHtml(level.label)+'</div>'
+          +'<div class="cc-count">Choose department</div>'
+          +'</div>';
+      }).join('');
+      SENIOR_LEVELS.forEach(function(level){
+        var card=document.getElementById('cc-'+level.key);
+        if(card)card.onclick=function(){openDepartmentPicker(level.key);};
+      });
+      return;
+    }
     var html='';
     group.keys.forEach(function(key){
       var d=DEPTS[key];if(!d)return;
@@ -3223,6 +3328,31 @@ function scoreNumber(value){
   var number=Number(value);
   return isFinite(number)?number:null;
 }
+function scoreHasSavedValues(score){
+  if(!score)return false;
+  return ['ca1','ca2','ca3','exam'].some(function(field){return scoreCellValue(score[field])!=='';});
+}
+function scoreEditKey(studentId,subjectIdx){return scoreDraftKey(studentId,subjectIdx);}
+function confirmSavedScoreEdit(studentId,subjectIdx,input){
+  var persisted=scorePersisted(studentId,subjectIdx);
+  if(!scoreHasSavedValues(persisted))return true;
+  var key=scoreEditKey(studentId,subjectIdx);
+  if(SCORE_EDIT_UNLOCKS[key])return true;
+  var accepted=window.confirm('This score is already saved. Do you want to edit it?');
+  if(accepted){
+    SCORE_EDIT_UNLOCKS[key]=true;
+    return true;
+  }
+  var draft=scoreDraft(studentId,subjectIdx);
+  if(input){
+    input.value=scoreCellValue(draft[input.getAttribute('data-field')]);
+    input.blur();
+  }
+  syncScoreInputs(studentId,draft);
+  updateScoreDisplay(studentId,subjectIdx,draft);
+  scoreStatus(studentId,subjectIdx,'Saved','var(--g1)');
+  return false;
+}
 function scoreStatus(studentId,subjectIdx,text,color){
   var el=document.getElementById('ss-'+studentId+'-'+subjectIdx);
   if(!el)return;
@@ -3304,6 +3434,7 @@ function openSheet(idx){
   var subjs=subjects();
   currentSheetIdx=idx;
   var isPub=isPublished(CLS,idx);
+  var scoreInputLock=CONTEXT_READ_ONLY?' readonly':'';
   document.getElementById('scores-grid-view').style.display='none';
   document.getElementById('scores-sheet-view').style.display='block';
   document.getElementById('sheet-title').textContent=(idx+1)+'. '+subjs[idx];
@@ -3319,10 +3450,10 @@ function openSheet(idx){
     html+='<div class="sheet-row" style="background:'+(rowIdx%2===0?'#fff':'#fafafa')+'">'
       +'<span style="font-size:.75rem;color:var(--gray)">'+(rowIdx+1)+'</span>'
       +'<span style="font-size:.82rem;font-weight:600;color:var(--g1)">'+s.name+'<small id="ss-'+s.id+'-'+idx+'" style="display:block;font-size:.66rem;font-weight:600;color:var(--g1)">Saved</small></span>'
-      +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca1)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca1"/>'
-      +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca2)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca2"/>'
-      +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca3)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca3"/>'
-      +'<input class="sc-inp" type="number" min="0" max="70" value="'+scoreCellValue(sc.exam)+'" placeholder="-" data-sid="'+s.id+'" data-field="exam"/>'
+      +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca1)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca1"'+scoreInputLock+'/>'
+      +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca2)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca2"'+scoreInputLock+'/>'
+      +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca3)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca3"'+scoreInputLock+'/>'
+      +'<input class="sc-inp" type="number" min="0" max="70" value="'+scoreCellValue(sc.exam)+'" placeholder="-" data-sid="'+s.id+'" data-field="exam"'+scoreInputLock+'/>'
       +'<span id="st-'+s.id+'" style="text-align:center;font-weight:700;font-size:.82rem;color:var(--g1)">'+(total!==''?total:'--')+'</span>'
       +'<span id="sg-'+s.id+'" style="text-align:center;font-weight:700;font-size:.78rem;color:'+(total!==''?grade.c:'#aaa')+'">'+(grade.g||'--')+'</span>'
       +'<span id="sr-'+s.id+'" style="text-align:center;font-size:.75rem;color:'+(total!==''?grade.c:'#aaa')+'">'+(grade.r||'--')+'</span>'
@@ -3330,18 +3461,23 @@ function openSheet(idx){
   });
   document.getElementById('sheet-rows').innerHTML=html;
   document.querySelectorAll('#sheet-rows .sc-inp').forEach(function(inp){
+    inp.addEventListener('focus',function(){
+      var sid=inp.getAttribute('data-sid');
+      confirmSavedScoreEdit(sid,idx,inp);
+    });
     inp.addEventListener('input',function(){
       var sid=inp.getAttribute('data-sid');
       var field=inp.getAttribute('data-field');
       var max=field==='exam'?70:10;
+      if(!confirmSavedScoreEdit(sid,idx,inp))return;
       var raw=inp.value.trim()===''?null:Number(inp.value);
       if(raw!==null&&!isFinite(raw)){
         scoreStatus(sid,idx,'Save failed — not recorded','#991b1b');
         return;
       }
-      if(raw!==null&&raw>max){
+      if(raw!==null&&(raw<0||raw>max)){
         inp.classList.add('over-limit');
-        showToast('Max '+(field==='exam'?'Exam':'CA')+' is '+max,'error');
+        showToast((raw<0?'Minimum':'Maximum')+' '+(field==='exam'?'Exam':'CA')+' is '+(raw<0?'0':max),'error');
         return;
       }
       inp.classList.remove('over-limit');
@@ -3360,6 +3496,7 @@ function openSheet(idx){
 function closeSheet(){
 
   currentSheetIdx=-1;
+  SCORE_EDIT_UNLOCKS={};
   document.getElementById('scores-sheet-view').style.display='none';
   document.getElementById('scores-grid-view').style.display='block';
   renderScoreGrid();
@@ -4574,8 +4711,19 @@ function renderThemePicker(){
 }
 function renderSubjCfg(){
   var dept=document.getElementById('dept-sel').value;
-  var cfg=getCfg();var cfgDepts=cfg.depts||{};
-  var list=cfgDepts[dept]?cfgDepts[dept].subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[];
+  var cfg=getCfg();
+  var list=configuredSubjects(dept,cfg);
+  var note=document.getElementById('subj-cfg-note');
+  var hasExplicitConfig=Boolean(cfg.depts&&cfg.depts[dept]);
+  if(note){
+    if(dept==='ss3-business'&&!hasExplicitConfig){
+      note.textContent='SS3 Business is currently inheriting the SS2 Business subject configuration. Central Registry will determine departmental placement for the next session.';
+      note.style.display='block';
+    }else{
+      note.textContent='';
+      note.style.display='none';
+    }
+  }
   document.getElementById('subj-cfg-list').innerHTML=list.map(function(s,i){
     return'<div class="subj-tag">'+s+'<button data-dept="'+dept+'" data-idx="'+i+'" title="Remove">x</button></div>';
   }).join('');
@@ -4589,9 +4737,11 @@ function renderPromotionCfg(){
   var pc=getPromotionCfg();
   tbody.innerHTML=PROMOTION_THRESHOLD_CLASSES.map(function(key){
     var rule=pc[key];
+    var targetLabel=PENDING_DEPARTMENT_CLASSES.indexOf(key)>-1?'Department placement pending':(DEPTS[rule.target]?DEPTS[rule.target].label:rule.target||'Final class');
+    var targetBadge=PENDING_DEPARTMENT_CLASSES.indexOf(key)>-1?'badge-gold':'badge-green';
     return'<tr>'
       +'<td><strong>'+DEPTS[key].label+'</strong></td>'
-      +'<td><span class="badge badge-green">'+escapeHtml(DEPTS[rule.target]?DEPTS[rule.target].label:rule.target||'Final class')+'</span></td>'
+      +'<td><span class="badge '+targetBadge+'">'+escapeHtml(targetLabel)+'</span></td>'
       +'<td><input class="inp" type="number" min="0" max="100" id="promo-min-pct-'+key+'" value="'+Number(rule.minimumPct||rule.repeatPct||0)+'" style="width:110px"/></td>'
       +'<td><span class="badge badge-red">Detained / retained</span></td>'
       +'</tr>';
@@ -4601,6 +4751,7 @@ function readPromotionCfgFromForm(){
   var existing=Object.assign({},getCfg().promotionCfg||{});
   PROMOTION_THRESHOLD_CLASSES.forEach(function(key){
     var current=Object.assign(defaultPromotionRule(key),existing[key]||{});
+    if(PENDING_DEPARTMENT_CLASSES.indexOf(key)>-1)current.target='';
     var minimum=document.getElementById('promo-min-pct-'+key);
     var value=minimum?Math.max(0,Math.min(100,Number(minimum.value||0))):Number(current.minimumPct||current.repeatPct||0);
     existing[key]=Object.assign({},current,{minimumPct:value,repeatOn:true,repeatPct:value});
@@ -4610,7 +4761,7 @@ function readPromotionCfgFromForm(){
 function removeSubject(dept,idx){
   if(!confirm('Remove this subject?'))return;
   var cfg=getCfg();if(!cfg.depts)cfg.depts={};
-  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[]};
+  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:configuredSubjects(dept,cfg)};
   cfg.depts[dept].subjects.splice(idx,1);saveCfg(cfg);renderSubjCfg();
   showToast('Subject removed — synced to all devices');
 }
@@ -4618,7 +4769,7 @@ function addSubject(){
   var val=document.getElementById('new-subj-inp').value.trim();if(!val)return;
   var dept=document.getElementById('dept-sel').value;
   var cfg=getCfg();if(!cfg.depts)cfg.depts={};
-  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:DEPTS[dept]?DEPTS[dept].subjects.slice():[]};
+  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:configuredSubjects(dept,cfg)};
   cfg.depts[dept].subjects.push(val);saveCfg(cfg);
   document.getElementById('new-subj-inp').value='';renderSubjCfg();
   showToast('Subject added — synced to all devices');
