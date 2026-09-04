@@ -23,16 +23,25 @@ function parseSheetCode(raw) {
   return match ? { id: match[1].toLowerCase(), page: Number(match[2] || 0) } : null;
 }
 
+function sheetList(sheet) {
+  return Array.isArray(sheet.group_sheets) && sheet.group_sheets.length ? sheet.group_sheets : [sheet];
+}
+
 function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
   const source = providerRows(providerPayload);
-  const config = sheet.assessment_config || {};
   const roster = (sheet.roster || []).filter((student) => Number(student.page_index || 0) === Number(pageIndex));
   const cells = [];
 
   roster.forEach((student) => {
     const detectedRow = source.get(Number(student.row_index)) || {};
-    const detectedScores = detectedRow.scores && typeof detectedRow.scores === 'object' ? detectedRow.scores : {};
-    COMPONENTS.forEach((component) => {
+    const detectedSubjects = detectedRow.subjects && typeof detectedRow.subjects === 'object' ? detectedRow.subjects : {};
+    sheetList(sheet).forEach((subjectSheet) => {
+      const config = subjectSheet.assessment_config || {};
+      const subjectKey = String(subjectSheet.subject_index);
+      const detectedScores = (detectedSubjects[subjectKey] && typeof detectedSubjects[subjectKey] === 'object')
+        ? detectedSubjects[subjectKey]
+        : (detectedRow.scores && typeof detectedRow.scores === 'object' ? detectedRow.scores : {});
+      COMPONENTS.forEach((component) => {
       const raw = detectedScores[component] && typeof detectedScores[component] === 'object'
         ? detectedScores[component]
         : { value: detectedScores[component] };
@@ -56,6 +65,9 @@ function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
       }
 
       cells.push({
+        sheet_id: subjectSheet.id,
+        subject_index: Number(subjectSheet.subject_index),
+        subject_name: subjectSheet.subject_name,
         student_id: student.student_id,
         student_name: student.name,
         row_index: Number(student.row_index),
@@ -67,6 +79,7 @@ function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
         confidence,
         status,
         reason,
+      });
       });
     });
   });
@@ -87,19 +100,25 @@ function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
 function buildExtractionPrompt(sheet, pageIndex = 0) {
   const rows = (sheet.roster || [])
     .filter((student) => Number(student.page_index || 0) === Number(pageIndex))
-    .map((student) => ({ row_index: student.row_index, page_row: student.page_row }));
+    .map((student) => ({ row_index: student.row_index, page_row: student.page_row, printed_name: student.name, admission_number: student.admno || '' }));
+  const subjectSheets = sheetList(sheet);
+  const subjectInstructions = subjectSheets.map((subject) => ({
+    subject_index: subject.subject_index,
+    subject_name: subject.subject_name,
+    maximums: subject.assessment_config || {},
+  }));
   return [
     'Read handwritten numeric scores from this WTS controlled score sheet.',
-    'Use the printed row number and the known four score columns. Do not OCR or match student names.',
-    'Return every listed row and every component: ca1, ca2, ca3, exam.',
+    'Use the printed row number as the main identity. Read the printed student name and admission number only as secondary evidence if a row is unclear.',
+    'Return every listed row, every listed subject, and every component: ca1, ca2, ca3, exam.',
     'For a genuinely empty cell use state "blank", value null, confidence 1.',
     'For handwriting that is present but unclear use state "uncertain", your best numeric value or null, and confidence below 0.82.',
     'For a readable number use state "read", numeric value, and confidence from 0 to 1.',
     'Never invent a score. Preserve multi-digit numbers.',
-    `Assessment maximums: ${JSON.stringify(sheet.assessment_config || {})}`,
+    `Subjects and assessment maximums: ${JSON.stringify(subjectInstructions)}`,
     `Expected rows: ${JSON.stringify(rows)}`,
     `Template geometry: ${JSON.stringify(sheet.geometry || {})}`,
-    'Respond as JSON only: {"rows":[{"row_index":1,"scores":{"ca1":{"value":8,"confidence":0.98,"state":"read"},"ca2":{},"ca3":{},"exam":{}}}]}',
+    'Respond as JSON only: {"rows":[{"row_index":1,"subjects":{"0":{"ca1":{"value":8,"confidence":0.98,"state":"read"},"ca2":{},"ca3":{},"exam":{}}}}]}',
   ].join('\n');
 }
 

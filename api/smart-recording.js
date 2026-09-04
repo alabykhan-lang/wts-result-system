@@ -71,18 +71,24 @@ module.exports = async function smartRecording(req, res) {
     sendJson(res, 401, { ok: false, code: 'RESULT_SESSION_REQUIRED' }); return;
   }
   const body = await readJsonBody(req);
-  if (!body || body.action !== 'extract' || !body.sheet_id) {
+  const sheetIds = Array.isArray(body?.sheet_ids) ? body.sheet_ids.filter(Boolean).slice(0, 4) : (body?.sheet_id ? [body.sheet_id] : []);
+  if (!body || body.action !== 'extract' || !sheetIds.length) {
     sendJson(res, 400, { ok: false, code: 'SMART_EXTRACTION_PAYLOAD_INVALID' }); return;
   }
   const image = imageParts(body.image_data_url);
   if (!image) {
     sendJson(res, 400, { ok: false, code: 'SMART_IMAGE_INVALID' }); return;
   }
-  const sheetPayload = await readSheet(session, body.sheet_id);
-  if (!sheetPayload?.ok) {
-    sendJson(res, authStatus(sheetPayload?.code), sheetPayload || { ok: false, code: 'SMART_SHEET_NOT_FOUND' }); return;
+  const sheetPayloads = [];
+  for (const sheetId of sheetIds) {
+    const payload = await readSheet(session, sheetId);
+    if (!payload?.ok) {
+      sendJson(res, authStatus(payload?.code), payload || { ok: false, code: 'SMART_SHEET_NOT_FOUND' }); return;
+    }
+    sheetPayloads.push(payload);
   }
-  const sheet = sheetPayload.sheet;
+  const sheet = { ...sheetPayloads[0].sheet };
+  sheet.group_sheets = sheetPayloads.map((payload) => payload.sheet);
   const pageIndex = Math.max(0, Number(body.page_index) || 0);
   const extracted = await extractWithGemini(sheet, pageIndex, image);
   if (!extracted.ok) {
@@ -93,7 +99,7 @@ module.exports = async function smartRecording(req, res) {
     ok: true,
     code: 'SMART_SCORES_EXTRACTED',
     sheet,
-    existing_scores: sheetPayload.existing_scores || [],
+    existing_scores: sheetPayloads.flatMap((payload) => (payload.existing_scores || []).map((row) => ({ ...row, subject_index: payload.sheet.subject_index }))),
     extraction: normalized,
     image_fingerprint: crypto.createHash('sha256').update(image.bytes).digest('hex'),
   });
