@@ -33,7 +33,7 @@ function setSecurityHeaders(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
 }
 
 function parseCookies(req) {
@@ -113,8 +113,8 @@ function sendJson(res, status, payload) {
 function authStatus(code) {
   if (['RESULT_SESSION_REQUIRED', 'RESULT_SESSION_NOT_ACTIVE', 'RESULT_SESSION_AUDIENCE_MISMATCH', 'IDENTITY_CREDENTIAL_NOT_ACTIVE', 'IDENTITY_ACCOUNT_NOT_ACTIVE', 'IDENTITY_PERSON_NOT_ACTIVE', 'IDENTITY_NOT_ACTIVE', 'RESULT_IDENTITY_INACTIVE', 'RESULT_EMPLOYMENT_NOT_ACTIVE', 'WTS_SESSION_NOT_ACTIVE', 'SSO_CENTRAL_SESSION_NOT_ACTIVE'].includes(code)) return 401;
   if (['RESULT_PERMISSION_DENIED', 'RESULT_CLASS_SCOPE_REQUIRED', 'RESULT_CLASS_SCOPE_DENIED', 'RESULT_SUBJECT_SCOPE_REQUIRED', 'RESULT_SUBJECT_SCOPE_DENIED', 'RESULT_ACCESS_NOT_GRANTED', 'RESULT_SCOPE_CONTEXT_REQUIRED', 'RESULT_ACADEMIC_CONTEXT_REQUIRED', 'RESULT_ACADEMIC_SESSION_NOT_ACTIVE', 'RESULT_TERM_NOT_ACTIVE', 'RESULT_TERM_INVALID', 'RESULT_CONTEXT_INVALID', 'RESULT_CONTEXT_MISMATCH', 'RESULT_CLASS_NOT_ASSIGNED', 'RESULT_SUBJECT_NOT_ASSIGNED', 'RESULT_CORRECTION_SOURCE_NOT_ALLOWED'].includes(code)) return 403;
-  if (code === 'RESULT_OLD_VALUE_MISMATCH') return 409;
-  if (code === 'RESULT_SCORE_RECORD_NOT_FOUND') return 404;
+  if (['RESULT_OLD_VALUE_MISMATCH', 'SMART_EXISTING_SCORE_CHANGED', 'SMART_CONFLICT_DECISION_REQUIRED'].includes(code)) return 409;
+  if (['RESULT_SCORE_RECORD_NOT_FOUND', 'SMART_SHEET_NOT_FOUND'].includes(code)) return 404;
   return 400;
 }
 

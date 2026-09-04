@@ -34,7 +34,42 @@ module.exports = async function resultData(req, res) {
 
   const action = body.action.trim();
   const requestPayload = body.payload && typeof body.payload === 'object' ? body.payload : {};
-  const payload = action.startsWith('read.')
+  const payload = action === 'smart.sheet.create'
+    ? await supabaseRpc('school_result_smart_sheet_create', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+        p_class_key: requestPayload.class_key || null,
+        p_subject_index: requestPayload.subject_index === '' || requestPayload.subject_index === undefined ? null : requestPayload.subject_index,
+        p_term: requestPayload.term || null,
+        p_academic_session: requestPayload.academic_session || null,
+        p_assessment_config: requestPayload.assessment_config || { ca1: 10, ca2: 10, ca3: 10, exam: 70 },
+      })
+    : action === 'smart.sheet.read'
+      ? await supabaseRpc('school_result_smart_sheet_read', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+          p_sheet_id: requestPayload.sheet_id || null,
+          p_class_key: requestPayload.class_key || null,
+          p_subject_index: requestPayload.subject_index === '' || requestPayload.subject_index === undefined ? null : requestPayload.subject_index,
+          p_term: requestPayload.term || null,
+          p_academic_session: requestPayload.academic_session || null,
+        })
+    : action === 'smart.history.read'
+      ? await supabaseRpc('school_result_smart_history_read', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+          p_limit: Number.isInteger(requestPayload.limit) ? requestPayload.limit : 30,
+        })
+    : action === 'smart.scores.commit'
+      ? await supabaseRpc('school_result_smart_recording_commit', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+          p_sheet_id: requestPayload.sheet_id || null,
+          p_rows: Array.isArray(requestPayload.rows) ? requestPayload.rows : [],
+          p_summary: requestPayload.summary && typeof requestPayload.summary === 'object' ? requestPayload.summary : {},
+          p_image_fingerprint: requestPayload.image_fingerprint || null,
+        })
+    : action.startsWith('read.')
     ? await supabaseRpc('school_result_read_api', {
         p_session_id: session.sessionId,
         p_session_secret: session.sessionSecret,

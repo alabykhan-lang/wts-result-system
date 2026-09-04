@@ -1,5 +1,7 @@
 # Result Server Authorization Contract
 
+Smart Recording uses the same Result session and permission boundary. `smart.sheet.create`, `smart.sheet.read`, `smart.history.read`, and `smart.scores.commit` are routed by `/api/result-data`; score commits call the existing `school_result_score_update` RPC after batch conflict validation. Image extraction is handled by `/api/smart-recording` and never receives a browser-side provider key.
+
 **Status:** Phase 2 central-auth data boundary, no cross-origin SSO redirects
 
 This contract is the server-side boundary for the Result Portal. The browser may
