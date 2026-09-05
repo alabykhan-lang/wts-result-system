@@ -147,6 +147,17 @@ module.exports = async function resultData(req, res) {
         p_session_secret: session.sessionSecret,
         p_config: requestPayload.config && typeof requestPayload.config === 'object' ? requestPayload.config : {},
       })
+    : action === 'settings.provider_key.update'
+      ? await supabaseRpc('school_result_provider_key_update', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+        p_provider_key: typeof requestPayload.provider_key === 'string' ? requestPayload.provider_key : '',
+      })
+    : action === 'settings.provider_key.status'
+      ? await supabaseRpc('school_result_provider_key_status', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+      })
     : action === 'settings.read'
     ? await supabaseRpc('school_result_settings_read', {
         p_session_id: session.sessionId,

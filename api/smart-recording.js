@@ -21,6 +21,61 @@ function imageParts(dataUrl) {
   return { mimeType: match[1], base64: match[2], bytes };
 }
 
+async function readStoredProviderKey(session, scope) {
+  const payload = await supabaseRpc('school_result_smart_provider_key_read', {
+    p_session_id: session.sessionId,
+    p_session_secret: session.sessionSecret,
+    p_class_key: scope?.class_key || null,
+    p_subject_index: Number.isInteger(scope?.subject_index) ? scope.subject_index : null,
+    p_academic_session: scope?.academic_session || null,
+    p_term: scope?.term || null,
+  });
+  return payload?.ok && typeof payload.provider_key === 'string'
+    ? payload.provider_key.trim()
+    : '';
+}
+
+async function resolveProviderKey(session, scope) {
+  try {
+    const stored = await readStoredProviderKey(session, scope);
+    if (stored) return stored;
+  } catch {}
+  return String(process.env.WTS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
+}
+
+async function callGemini(apiKey, prompt, image) {
+  if (!apiKey) return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
+  const model = process.env.WTS_SMART_RECORDING_MODEL || 'gemini-2.5-flash';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [
+        { text: prompt },
+        { inline_data: { mime_type: image.mimeType, data: image.base64 } },
+      ] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0 },
+    }),
+  });
+  let payload = {};
+  try { payload = await response.json(); } catch {}
+  if (!response.ok) {
+    return {
+      ok: false,
+      code: 'SMART_EXTRACTION_PROVIDER_FAILED',
+      provider_status: response.status,
+      provider_message: String(payload?.error?.message || '').slice(0, 240),
+    };
+  }
+  const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
+  try {
+    return { ok: true, payload: JSON.parse(raw) };
+  } catch {
+    return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
+  }
+}
+
 async function readSheet(session, sheetId) {
   return supabaseRpc('school_result_smart_sheet_read', {
     p_session_id: session.sessionId,
@@ -33,29 +88,121 @@ async function readSheet(session, sheetId) {
   });
 }
 
-async function extractWithGemini(sheet, pageIndex, image) {
-  const apiKey = process.env.WTS_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-  if (!apiKey) return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
-  const model = process.env.WTS_SMART_RECORDING_MODEL || 'gemini-2.5-flash';
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [
-        { text: buildExtractionPrompt(sheet, pageIndex) },
-        { inline_data: { mime_type: image.mimeType, data: image.base64 } },
-      ] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0 },
-    }),
+function isLandscapeClass(classKey) {
+  return /^(creche|kg1|kg2|nursery1|nursery2|primary[1-5])$/.test(String(classKey || ''));
+}
+
+function templateGeometry(subjectSheets, baseGeometry, landscape) {
+  const count = Math.max(1, subjectSheets.length);
+  const width = landscape ? 1754 : 1240;
+  const height = landscape ? 1240 : 1754;
+  const tableX = landscape ? 34 : 54;
+  const tableY = landscape ? 130 : 292;
+  const tableWidth = landscape ? 1686 : 1132;
+  const numberWidth = landscape ? 45 : 45;
+  const studentWidth = landscape ? 335 : 611;
+  const scoreWidth = Math.max(1, tableWidth - numberWidth - studentWidth);
+  const rowHeight = landscape ? 22 : 33;
+  const columns = {};
+  subjectSheets.forEach((subject, subjectPosition) => {
+    const subjectKey = String(subject.group_index === undefined ? subjectPosition : subject.group_index);
+    const componentWidth = scoreWidth / (count * 4);
+    ['ca1', 'ca2', 'ca3', 'exam'].forEach((component, componentPosition) => {
+      columns[subjectKey + '_' + component] = {
+        x: Math.round(tableX + numberWidth + studentWidth + (subjectPosition * 4 + componentPosition) * componentWidth),
+        width: Math.round(componentWidth),
+      };
+    });
   });
-  let payload = {};
-  try { payload = await response.json(); } catch {}
-  if (!response.ok) return { ok: false, code: 'SMART_EXTRACTION_PROVIDER_FAILED', provider_status: response.status };
-  const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-  try { return { ok: true, payload: JSON.parse(raw) }; } catch {
-    return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
-  }
+  return {
+    ...(baseGeometry && typeof baseGeometry === 'object' ? baseGeometry : {}),
+    canonical_width: width,
+    canonical_height: height,
+    layout: landscape ? 'landscape' : 'portrait',
+    subject_count: count,
+    rows_per_page: 40,
+    table: { x: tableX, y: tableY, width: tableWidth, row_height: rowHeight },
+    student_column: { x: tableX + numberWidth, width: studentWidth },
+    columns,
+  };
+}
+
+function groupedSheet(sheetPayloads) {
+  const sheets = sheetPayloads.map((payload, index) => ({
+    ...payload.sheet,
+    group_index: index,
+  }));
+  const first = { ...sheets[0], group_sheets: sheets };
+  const classKeys = [...new Set(sheets.map((sheet) => String(sheet.class_key || '')))].filter(Boolean);
+  first.geometry = templateGeometry(classKeys.length > 1 ? [sheets[0]] : sheets, first.geometry, isLandscapeClass(first.class_key));
+  if (classKeys.length <= 1) return first;
+
+  const seen = new Set();
+  const combined = [];
+  sheets.forEach((sheet) => {
+    (sheet.roster || []).forEach((student) => {
+      const id = String(student.student_id || '');
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      combined.push({
+        ...student,
+        source_sheet_id: sheet.id,
+        source_class_key: sheet.class_key,
+        source_row_index: student.row_index,
+      });
+    });
+  });
+  combined.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')) || String(a.student_id).localeCompare(String(b.student_id)));
+  first.roster = combined.map((student, index) => ({
+    ...student,
+    row_index: index + 1,
+    page_index: Math.floor(index / 40),
+    page_row: (index % 40) + 1,
+  }));
+  first.grouped_across_classes = true;
+  first.class_keys = classKeys;
+  return first;
+}
+
+async function extractSmart(session, sheet, pageIndex, image) {
+  const apiKey = await resolveProviderKey(session, {
+    class_key: sheet.class_key,
+    subject_index: Number(sheet.subject_index),
+    academic_session: sheet.academic_session,
+    term: sheet.term,
+  });
+  return callGemini(apiKey, buildExtractionPrompt(sheet, pageIndex), image);
+}
+
+function genericPrompt(body) {
+  const students = Array.isArray(body.roster) ? body.roster.slice(0, 300).map((student) => ({
+    name: String(student?.name || '').slice(0, 120),
+    admission_number: String(student?.admno || student?.admission_number || '').slice(0, 80),
+  })) : [];
+  return [
+    'Read a handwritten Nigerian school score record page.',
+    'Read each visible row and return the student name, CA1 out of 10, CA2 out of 10, CA3 out of 10, and Exam out of 70.',
+    'Use null for an empty or unreadable score. Do not invent values.',
+    'Return a JSON array only with objects shaped as {"name":"...","ca1":number_or_null,"ca2":number_or_null,"ca3":number_or_null,"exam":number_or_null}.',
+    `Registered students for secondary name matching: ${JSON.stringify(students)}`,
+  ].join('\n');
+}
+
+async function extractRecordBook(session, body, image) {
+  const apiKey = await resolveProviderKey(session, {
+    class_key: body.class_key,
+    subject_index: Number.isInteger(Number(body.subject_index)) ? Number(body.subject_index) : null,
+    academic_session: body.academic_session,
+    term: body.term,
+  });
+  const result = await callGemini(apiKey, genericPrompt(body), image);
+  if (!result.ok) return result;
+  const rows = Array.isArray(result.payload) ? result.payload : result.payload?.rows;
+  return Array.isArray(rows) ? { ok: true, rows } : { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
+}
+
+function extractionStatus(code) {
+  return code === 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' || code === 'SMART_EXTRACTION_PROVIDER_FAILED' ? 503 : 422;
 }
 
 module.exports = async function smartRecording(req, res) {
@@ -71,14 +218,28 @@ module.exports = async function smartRecording(req, res) {
     sendJson(res, 401, { ok: false, code: 'RESULT_SESSION_REQUIRED' }); return;
   }
   const body = await readJsonBody(req);
-  const sheetIds = Array.isArray(body?.sheet_ids) ? body.sheet_ids.filter(Boolean).slice(0, 4) : (body?.sheet_id ? [body.sheet_id] : []);
-  if (!body || body.action !== 'extract' || !sheetIds.length) {
+  if (!body || typeof body.action !== 'string') {
     sendJson(res, 400, { ok: false, code: 'SMART_EXTRACTION_PAYLOAD_INVALID' }); return;
   }
   const image = imageParts(body.image_data_url);
   if (!image) {
     sendJson(res, 400, { ok: false, code: 'SMART_IMAGE_INVALID' }); return;
   }
+
+  if (body.action === 'record_book_extract') {
+    const extracted = await extractRecordBook(session, body, image);
+    if (!extracted.ok) { sendJson(res, extractionStatus(extracted.code), extracted); return; }
+    sendJson(res, 200, { ok: true, code: 'SMART_RECORD_BOOK_EXTRACTED', rows: extracted.rows });
+    return;
+  }
+
+  const sheetIds = Array.isArray(body.sheet_ids)
+    ? body.sheet_ids.filter(Boolean).slice(0, 4)
+    : (body.sheet_id ? [body.sheet_id] : []);
+  if (body.action !== 'extract' || !sheetIds.length) {
+    sendJson(res, 400, { ok: false, code: 'SMART_EXTRACTION_PAYLOAD_INVALID' }); return;
+  }
+
   const sheetPayloads = [];
   for (const sheetId of sheetIds) {
     const payload = await readSheet(session, sheetId);
@@ -87,19 +248,21 @@ module.exports = async function smartRecording(req, res) {
     }
     sheetPayloads.push(payload);
   }
-  const sheet = { ...sheetPayloads[0].sheet };
-  sheet.group_sheets = sheetPayloads.map((payload) => payload.sheet);
+  const sheet = groupedSheet(sheetPayloads);
   const pageIndex = Math.max(0, Number(body.page_index) || 0);
-  const extracted = await extractWithGemini(sheet, pageIndex, image);
-  if (!extracted.ok) {
-    sendJson(res, extracted.code === 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' ? 503 : 422, extracted); return;
-  }
+  const extracted = await extractSmart(session, sheet, pageIndex, image);
+  if (!extracted.ok) { sendJson(res, extractionStatus(extracted.code), extracted); return; }
   const normalized = normalizeExtraction(sheet, extracted.payload, pageIndex);
   sendJson(res, 200, {
     ok: true,
     code: 'SMART_SCORES_EXTRACTED',
     sheet,
-    existing_scores: sheetPayloads.flatMap((payload) => (payload.existing_scores || []).map((row) => ({ ...row, subject_index: payload.sheet.subject_index }))),
+    existing_scores: sheetPayloads.flatMap((payload) => (payload.existing_scores || []).map((row) => ({
+      ...row,
+      sheet_id: payload.sheet.id,
+      class_key: payload.sheet.class_key,
+      subject_index: payload.sheet.subject_index,
+    }))),
     extraction: normalized,
     image_fingerprint: crypto.createHash('sha256').update(image.bytes).digest('hex'),
   });

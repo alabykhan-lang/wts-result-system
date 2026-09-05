@@ -27,6 +27,14 @@ function sheetList(sheet) {
   return Array.isArray(sheet.group_sheets) && sheet.group_sheets.length ? sheet.group_sheets : [sheet];
 }
 
+function sheetSubjectKey(subjectSheet, fallbackIndex) {
+  return String(subjectSheet.group_index === undefined || subjectSheet.group_index === null
+    ? (subjectSheet.subject_index === undefined || subjectSheet.subject_index === null
+      ? fallbackIndex
+      : subjectSheet.subject_index)
+    : subjectSheet.group_index);
+}
+
 function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
   const source = providerRows(providerPayload);
   const roster = (sheet.roster || []).filter((student) => Number(student.page_index || 0) === Number(pageIndex));
@@ -35,9 +43,14 @@ function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
   roster.forEach((student) => {
     const detectedRow = source.get(Number(student.row_index)) || {};
     const detectedSubjects = detectedRow.subjects && typeof detectedRow.subjects === 'object' ? detectedRow.subjects : {};
-    sheetList(sheet).forEach((subjectSheet) => {
+    sheetList(sheet).forEach((subjectSheet, subjectPosition) => {
+      // A merged SS2/SS3 sheet has one shared row list but each student comes
+      // from exactly one department sheet. Only create score cells for that
+      // student's actual subject record.
+      if (sheet.grouped_across_classes === true
+        && String(student.source_sheet_id || '') !== String(subjectSheet.id || '')) return;
       const config = subjectSheet.assessment_config || {};
-      const subjectKey = String(subjectSheet.subject_index);
+      const subjectKey = sheetSubjectKey(subjectSheet, subjectPosition);
       const detectedScores = (detectedSubjects[subjectKey] && typeof detectedSubjects[subjectKey] === 'object')
         ? detectedSubjects[subjectKey]
         : (detectedRow.scores && typeof detectedRow.scores === 'object' ? detectedRow.scores : {});
@@ -70,6 +83,8 @@ function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
         subject_name: subjectSheet.subject_name,
         student_id: student.student_id,
         student_name: student.name,
+        source_class_key: student.source_class_key || subjectSheet.class_key,
+        group_index: subjectSheet.group_index,
         row_index: Number(student.row_index),
         page_row: Number(student.page_row),
         component,
@@ -103,7 +118,7 @@ function buildExtractionPrompt(sheet, pageIndex = 0) {
     .map((student) => ({ row_index: student.row_index, page_row: student.page_row, printed_name: student.name, admission_number: student.admno || '' }));
   const subjectSheets = sheetList(sheet);
   const subjectInstructions = subjectSheets.map((subject) => ({
-    subject_index: subject.subject_index,
+    group_index: sheetSubjectKey(subject, subjectSheets.indexOf(subject)),
     subject_name: subject.subject_name,
     maximums: subject.assessment_config || {},
   }));
@@ -115,6 +130,9 @@ function buildExtractionPrompt(sheet, pageIndex = 0) {
     'For handwriting that is present but unclear use state "uncertain", your best numeric value or null, and confidence below 0.82.',
     'For a readable number use state "read", numeric value, and confidence from 0 to 1.',
     'Never invent a score. Preserve multi-digit numbers.',
+    sheet.grouped_across_classes === true
+      ? 'This is a merged departmental sheet. The rows already combine every department that has this configured subject; read every row in the shared order.'
+      : '',
     `Subjects and assessment maximums: ${JSON.stringify(subjectInstructions)}`,
     `Expected rows: ${JSON.stringify(rows)}`,
     `Template geometry: ${JSON.stringify(sheet.geometry || {})}`,

@@ -746,7 +746,6 @@ body.result-context-read-only .results-history-readable{display:flex}
         <div id="home-session" style="display:inline-block;background:var(--gold);color:var(--g1);font-size:.72rem;font-weight:700;padding:3px 14px;border-radius:20px;margin-top:10px">2026/2027 Session</div>
       </div>
       <p style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--g1);text-align:center;margin-bottom:20px;font-weight:700">Select a Class to Continue</p>
-      <button type="button" class="smart-home-cta" onclick="navTo('smart',document.getElementById('ni-smart'))"><span class="smart-home-icon">▣</span><span><strong>SMART RECORDING</strong><small>Scan a generated score sheet · Review · Save</small></span><span aria-hidden="true">→</span></button>
       <div class="home-level">
         <div class="home-level-title">Early Years</div>
         <div class="home-grid" id="hg-early"></div>
@@ -1015,9 +1014,10 @@ body.result-context-read-only .results-history-readable{display:flex}
       <div class="tbl-wrap" style="margin-bottom:0">
         <div class="tbl-head"><h3>AI Score Scanner (OCR)</h3></div>
         <div style="padding:16px">
-          <div class="fg"><label>Gemini API Key</label><input class="inp" type="password" id="gemini-key-input" placeholder="AIza..."/></div>
-          <div style="font-size:.75rem;color:var(--gray);margin-top:4px">Required for scanning record books. Get free key at aistudio.google.com</div>
-          <button class="btn btn-primary btn-sm" onclick="saveGeminiKey()" style="margin-top:10px">Save API Key</button>
+          <div class="fg"><label>Gemini API Key</label><input class="inp" type="password" id="gemini-key-input" autocomplete="new-password" placeholder="Enter a new key to save or replace"/></div>
+          <div id="gemini-key-status" style="font-size:.75rem;color:var(--gray);margin-top:4px">Checking provider configuration…</div>
+          <div style="font-size:.75rem;color:var(--gray);margin-top:4px">Used by the record-book scanner and Smart Recording. The key is stored on the server and is never shown back here. Get a key at aistudio.google.com</div>
+          <button class="btn btn-primary btn-sm" onclick="saveGeminiKey()" style="margin-top:10px">Save / Replace API Key</button>
         </div>
       </div>
       <div class="tbl-wrap" style="margin-bottom:0">
@@ -1456,7 +1456,7 @@ var CONTEXT_READ_ONLY=false;
 window._academicContext=null;
 window._academicHistory=[];
 window._activeTermStatus='open';
-var RESULT_MUTATING_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish','students.upsert','students.archive','settings.app_config.update'];
+var RESULT_MUTATING_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish','students.upsert','students.archive','settings.app_config.update','settings.provider_key.update'];
 
 function isResultMutationAction(action){return RESULT_MUTATING_ACTIONS.indexOf(String(action||'').toLowerCase())>-1;}
 
@@ -4684,7 +4684,8 @@ function renderAnalytics(){
 // SETTINGS
 // ============================================================
 function renderSettings(){
-  var ki=document.getElementById('gemini-key-input');if(ki){var gk=getGeminiKey();if(gk)ki.value=gk;}
+  var ki=document.getElementById('gemini-key-input');if(ki)ki.value='';
+  loadProviderStatus();
   var sc=getSessionCfg();
   var el=function(id){return document.getElementById(id);};
   if(el('cfg-resumption'))el('cfg-resumption').value=sc.resumption||'';
@@ -4990,16 +4991,52 @@ function forceSyncSettings(){
       showToast('Sync failed - check connection','error');
     });
 }
+function loadProviderStatus(){
+  var status=document.getElementById('gemini-key-status');
+  if(!status)return;
+  if(!isCentralAuth()){
+    status.textContent='Sign in through WTS Staff Login to manage the provider key.';
+    return;
+  }
+  status.textContent='Checking provider configuration…';
+  resultDataRequest('settings.provider_key.status',{})
+    .then(function(data){
+      if(data.configured){
+        status.textContent='Provider key saved securely'+(data.key_hint?' · ending in '+data.key_hint:'')+'. Enter a new key below to replace it.';
+        status.style.color='#16634c';
+      }else{
+        status.textContent='No provider key saved yet. Enter one below.';
+        status.style.color='var(--gray)';
+      }
+    })
+    .catch(function(){
+      status.textContent='Provider status unavailable.';
+      status.style.color='#991b1b';
+    });
+}
 function saveGeminiKey(){
-  showToast('Provider key changes require server-side configuration.','error');
+  var input=document.getElementById('gemini-key-input');
+  var key=input&&String(input.value||'').trim();
+  if(!key){showToast('Enter a Gemini API key first.','error');return;}
+  if(!isCentralAuth()){showToast('Use WTS Staff Login before saving the provider key.','error');return;}
+  showLoad('Saving provider key…');
+  resultDataRequest('settings.provider_key.update',{provider_key:key})
+    .then(function(){
+      hideLoad();
+      if(input){input.value='';input.placeholder='Enter a new key to replace';}
+      showToast('Provider key saved securely ✓');
+      loadProviderStatus();
+    })
+    .catch(function(e){
+      hideLoad();
+      showToast(e&&e.code==='RESULT_PROVIDER_KEY_INVALID'?'That provider key is not valid.':'Provider key could not be saved.','error');
+    });
 }
 function getGeminiKey(){
   return '';
 }
 
 function openOCRScanner(){
-  var key=getGeminiKey();
-  if(!key){showToast('Add Gemini API key in Settings first','error');return;}
   OCR_IDX=currentSheetIdx;
   var subjs=subjects();
   var el=document.getElementById('ocr-subject-name');
@@ -5053,80 +5090,50 @@ function handleOCRImage(evt){
 }
 
 function runOCR(){
-  var key=getGeminiKey();
-  if(!key||!OCR_IMG_B64)return;
+  if(!OCR_IMG_B64)return;
   document.getElementById('ocr-preview-wrap').style.display='none';
   document.getElementById('ocr-loading').style.display='block';
   var students=DB_STUDENTS[CLS]||[];
-  var names=students.map(function(s){return s.name;}).join(', ');
-  var prompt='You are reading a handwritten Nigerian school record book. '
-    +'The page has columns: Serial Number, Student Name, CA1 (out of 10), CA2 (out of 10), CA3 (out of 10), Exam (out of 70). '
-    +'Read every row carefully including handwritten names and numbers. '
-    +'These are the registered student names to help you decode handwriting: '+names+'. '
-    +'Return a JSON array only - no other text, no markdown, no code fences. '
-    +'Each item must be: {"name":"STUDENT FULL NAME AS WRITTEN","ca1":number_or_null,"ca2":number_or_null,"ca3":number_or_null,"exam":number_or_null} '
-    +'If a score cell is empty, crossed out, or unreadable use null. '
-    +'Include every student row visible. Start your response with [ and end with ].';
-  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key='+key,{
+  fetch('/api/smart-recording',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    credentials:'same-origin',
+    headers:{'Content-Type':'application/json','Accept':'application/json'},
     body:JSON.stringify({
-      contents:[{parts:[{text:prompt},{inline_data:{mime_type:OCR_IMG_MIME,data:OCR_IMG_B64}}]}],
-      generationConfig:{temperature:0.1,maxOutputTokens:2048}
+      action:'record_book_extract',
+      image_data_url:'data:'+OCR_IMG_MIME+';base64,'+OCR_IMG_B64,
+      class_key:CLS,
+      subject_index:OCR_IDX,
+      academic_session:getActiveSession(),
+      term:TERM,
+      roster:students.map(function(s){return{name:s.name,admno:s.admno||''};})
     })
   })
   .then(function(r){
-    if(!r.ok){return r.json().then(function(e){throw new Error(e.error?e.error.message:'HTTP '+r.status);});}
-    return r.json();
+    return r.text().then(function(raw){
+      var data={};
+      try{data=raw?JSON.parse(raw):{};}catch(e){data={};}
+      if(!r.ok||data.ok===false){data.http_status=r.status;throw data;}
+      return data;
+    });
   })
   .then(function(data){
     document.getElementById('ocr-loading').style.display='none';
-    if(data.error){
-      showToast('Gemini error: '+data.error.message,'error');
-      document.getElementById('ocr-preview-wrap').style.display='block';
-      return;
-    }
-    var txt='';
-    try{txt=data.candidates[0].content.parts[0].text;}
-    catch(e){
-      showToast('No response from Gemini. Check API key.','error');
-      document.getElementById('ocr-preview-wrap').style.display='block';
-      return;
-    }
-    // Try to extract JSON array from response - multiple strategies
-    var jsonStr=null;
-    // Strategy 1: code fence with json
-    var m1=txt.match(/```json([\s\S]*?)```/);
-    if(m1)jsonStr=m1[1].trim();
-    // Strategy 2: any code fence
-    if(!jsonStr){var m2=txt.match(/```([\s\S]*?)```/);if(m2)jsonStr=m2[1].trim();}
-    // Strategy 3: raw JSON array
-    if(!jsonStr){var m3=txt.match(/\[[\s\S]*?\]/);if(m3)jsonStr=m3[0];}
-    // Strategy 4: entire response if it starts with [
-    if(!jsonStr&&txt.trim().startsWith('['))jsonStr=txt.trim();
-    if(!jsonStr){
-      showToast('AI responded but could not find scores in image. Ensure photo shows names and score columns clearly.','error');
-      document.getElementById('ocr-preview-wrap').style.display='block';
-      return;
-    }
-    var rows;
-    try{rows=JSON.parse(jsonStr);}
-    catch(e){
-      showToast('Could not read the data. Try a clearer photo.','error');
-      document.getElementById('ocr-preview-wrap').style.display='block';
-      return;
-    }
-    if(!rows.length){
+    if(!Array.isArray(data.rows)||!data.rows.length){
       showToast('No scores found in image. Try a clearer photo.','error');
       document.getElementById('ocr-preview-wrap').style.display='block';
       return;
     }
-    buildOCRPreview(rows,students);
+    buildOCRPreview(data.rows,students);
   })
   .catch(function(err){
     document.getElementById('ocr-loading').style.display='none';
     document.getElementById('ocr-preview-wrap').style.display='block';
-    showToast('Error: '+(err.message||'Network error. Check connection.'),'error');
+    var msg=err&&err.code==='SMART_RECORDING_PROVIDER_NOT_CONFIGURED'
+      ?'Add a Gemini API key in Settings first.'
+      :err&&err.code==='SMART_EXTRACTION_PROVIDER_FAILED'
+        ?'The Gemini API key was rejected. Replace it in Settings.'
+        :(err&&err.message)||'Network error. Check connection.';
+    showToast(msg,'error');
   });
 }
 
