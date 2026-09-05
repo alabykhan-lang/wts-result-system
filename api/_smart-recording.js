@@ -50,7 +50,12 @@ function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
       if (sheet.grouped_across_classes === true
         && String(student.source_sheet_id || '') !== String(subjectSheet.id || '')) return;
       const config = subjectSheet.assessment_config || {};
-      const subjectKey = sheetSubjectKey(subjectSheet, subjectPosition);
+      // A merged departmental sheet has one visible subject column. The
+      // source sheet id still decides which department receives the value,
+      // but the extractor must read the visible column as subject 0.
+      const subjectKey = sheet.grouped_across_classes === true
+        ? '0'
+        : sheetSubjectKey(subjectSheet, subjectPosition);
       const detectedScores = (detectedSubjects[subjectKey] && typeof detectedSubjects[subjectKey] === 'object')
         ? detectedSubjects[subjectKey]
         : (detectedRow.scores && typeof detectedRow.scores === 'object' ? detectedRow.scores : {});
@@ -117,8 +122,13 @@ function buildExtractionPrompt(sheet, pageIndex = 0) {
     .filter((student) => Number(student.page_index || 0) === Number(pageIndex))
     .map((student) => ({ row_index: student.row_index, page_row: student.page_row, printed_name: student.name, admission_number: student.admno || '' }));
   const subjectSheets = sheetList(sheet);
-  const subjectInstructions = subjectSheets.map((subject) => ({
-    group_index: sheetSubjectKey(subject, subjectSheets.indexOf(subject)),
+  const visibleSubjectSheets = sheet.grouped_across_classes === true
+    ? [subjectSheets[0]]
+    : subjectSheets;
+  const subjectInstructions = visibleSubjectSheets.map((subject, subjectPosition) => ({
+    group_index: sheet.grouped_across_classes === true
+      ? '0'
+      : sheetSubjectKey(subject, subjectPosition),
     subject_name: subject.subject_name,
     maximums: subject.assessment_config || {},
   }));

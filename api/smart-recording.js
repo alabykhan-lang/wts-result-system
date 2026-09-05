@@ -188,6 +188,32 @@ function genericPrompt(body) {
   ].join('\n');
 }
 
+function smartGenericPrompt(body) {
+  const students = Array.isArray(body.roster) ? body.roster.slice(0, 300).map((student, index) => ({
+    row_index: Number(student?.row_index) || index + 1,
+    name: String(student?.name || '').slice(0, 120),
+    admission_number: String(student?.admno || student?.admission_number || '').slice(0, 80),
+  })) : [];
+  const subjects = Array.isArray(body.subject_specs) && body.subject_specs.length
+    ? body.subject_specs.slice(0, 4).map((subject, index) => ({
+        subject_index: Number.isInteger(Number(subject?.subject_index)) ? Number(subject.subject_index) : index,
+        subject_name: String(subject?.subject_name || '').slice(0, 120),
+        maximums: subject?.assessment_config && typeof subject.assessment_config === 'object'
+          ? subject.assessment_config : { ca1: 10, ca2: 10, ca3: 10, exam: 70 },
+      }))
+    : [{ subject_index: Number(body.subject_index) || 0, subject_name: 'Selected subject', maximums: { ca1: 10, ca2: 10, ca3: 10, exam: 70 } }];
+  return [
+    'Read handwritten numeric scores from this uploaded school score sheet.',
+    'This is a generic scan. A generated Smart Score Sheet and QR code are not required.',
+    'Use the printed row number and the supplied roster order for student identity. Do not require a QR code and do not invent a student.',
+    'Return every visible row. For a genuinely empty score cell use state "blank" and value null. For present but unclear handwriting use state "uncertain", your best value or null, and confidence below 0.82. For a readable score use state "read" and confidence from 0 to 1.',
+    'Preserve multi-digit scores and never infer a value from a neighbouring cell.',
+    `Subjects and assessment maximums: ${JSON.stringify(subjects)}`,
+    `Expected roster in printed row order: ${JSON.stringify(students)}`,
+    'Respond as JSON only in this shape: {"rows":[{"row_index":1,"subjects":{"0":{"ca1":{"value":8,"confidence":0.98,"state":"read"},"ca2":{"value":null,"confidence":1,"state":"blank"},"ca3":{"value":null,"confidence":0,"state":"uncertain"},"exam":{"value":52,"confidence":0.94,"state":"read"}}}}]}. For one selected subject, the subjects object must still use its supplied subject_index as the key.',
+  ].join('\n');
+}
+
 async function extractRecordBook(session, body, image) {
   const apiKey = await resolveProviderKey(session, {
     class_key: body.class_key,
@@ -196,6 +222,20 @@ async function extractRecordBook(session, body, image) {
     term: body.term,
   });
   const result = await callGemini(apiKey, genericPrompt(body), image);
+  if (!result.ok) return result;
+  const rows = Array.isArray(result.payload) ? result.payload : result.payload?.rows;
+  return Array.isArray(rows) ? { ok: true, rows } : { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
+}
+
+async function extractGeneric(session, body, image) {
+  const subjectIndex = Number.isInteger(Number(body.subject_index)) ? Number(body.subject_index) : null;
+  const apiKey = await resolveProviderKey(session, {
+    class_key: body.class_key,
+    subject_index: subjectIndex,
+    academic_session: body.academic_session,
+    term: body.term,
+  });
+  const result = await callGemini(apiKey, smartGenericPrompt(body), image);
   if (!result.ok) return result;
   const rows = Array.isArray(result.payload) ? result.payload : result.payload?.rows;
   return Array.isArray(rows) ? { ok: true, rows } : { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
@@ -230,6 +270,18 @@ module.exports = async function smartRecording(req, res) {
     const extracted = await extractRecordBook(session, body, image);
     if (!extracted.ok) { sendJson(res, extractionStatus(extracted.code), extracted); return; }
     sendJson(res, 200, { ok: true, code: 'SMART_RECORD_BOOK_EXTRACTED', rows: extracted.rows });
+    return;
+  }
+
+  if (body.action === 'generic_extract') {
+    const extracted = await extractGeneric(session, body, image);
+    if (!extracted.ok) { sendJson(res, extractionStatus(extracted.code), extracted); return; }
+    sendJson(res, 200, {
+      ok: true,
+      code: 'SMART_GENERIC_SCORES_EXTRACTED',
+      rows: extracted.rows,
+      image_fingerprint: crypto.createHash('sha256').update(image.bytes).digest('hex'),
+    });
     return;
   }
 

@@ -4,7 +4,7 @@
 var ROWS_PER_PAGE=40;
 var PARTS=['ca1','ca2','ca3','exam'];
 var LABELS={ca1:'CA1',ca2:'CA2',ca3:'CA3',exam:'Exam'};
-var S={image:'',canvas:null,sheet:null,sheets:[],page:0,cells:[],existing:{},fingerprint:'',corrections:0,stream:null,timer:null,stable:0,bounds:null};
+var S={image:'',canvas:null,sheet:null,sheets:[],page:0,cells:[],existing:{},fingerprint:'',corrections:0,generic:false,stream:null,timer:null,stable:0,bounds:null,batch:[]};
 
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function clsLabel(k){return window.DEPTS&&DEPTS[k]?DEPTS[k].label:k;}
@@ -15,14 +15,17 @@ function isSeniorDepartment(k){return /^ss[23]-/.test(String(k||''));}
 function opts(a){return a.map(function(x){return'<option value="'+esc(x)+'">'+esc(x)+'</option>';}).join('');}
 function api(a,p){return resultDataRequest(a,p||{});}
 function root(){return document.getElementById('smart-recording-root');}
-function resetRun(){S.image='';S.canvas=null;S.sheet=null;S.sheets=[];S.page=0;S.cells=[];S.existing={};S.fingerprint='';S.corrections=0;}
+function clearCurrent(){S.image='';S.canvas=null;S.sheet=null;S.sheets=[];S.page=0;S.cells=[];S.existing={};S.fingerprint='';S.corrections=0;S.generic=false;}
+function resetRun(){clearCurrent();S.batch=[];}
+function currentEntry(){return{image:S.image,canvas:S.canvas,sheet:S.sheet,sheets:S.sheets,page:S.page,cells:S.cells,existing:S.existing,fingerprint:S.fingerprint,corrections:S.corrections,generic:S.generic};}
+function queueCurrent(){if(!S.sheet&&!S.generic)return;S.batch.push(currentEntry());}
 
 window.renderSmartRecording=function(area){stopScanner();resetRun();var el=root();if(!el)return;el.innerHTML='<div class="smart-shell"><section class="smart-hero"><button class="smart-hero-back" id="smart-back" style="display:none">← Menu</button><h2>Smart Recording</h2><p>Scan, review and save generated score sheets.</p></section><div id="smart-work"></div></div>';openArea(area||'menu');};
 function openArea(area){var w=document.getElementById('smart-work'),back=document.getElementById('smart-back');if(!w)return;back.style.display=area==='menu'?'none':'inline-flex';back.onclick=function(){stopScanner();openArea('menu');};if(area==='scan')return renderScan();if(area==='generate')return renderGenerator();if(area==='history')return renderHistory();w.innerHTML='<div class="smart-menu">'+menu('scan','▣','Smart Record','Scan a completed score sheet, review and save.')+menu('generate','▤','Generate / Print Broadsheets','Create identified sheets for teachers to complete.')+menu('history','◷','Recording History','View previously saved recordings.')+'</div>';w.querySelectorAll('[data-area]').forEach(function(b){b.onclick=function(){openArea(b.dataset.area);};});}
 function menu(a,i,t,c){return'<button class="smart-menu-card" data-area="'+a+'"><span class="smart-menu-icon">'+i+'</span><span><strong>'+t+'</strong><small>'+c+'</small></span><b>→</b></button>';}
 window.openSmartSheetGenerator=function(){navTo('smart',document.getElementById('ni-smart'));setTimeout(function(){openArea('generate');},0);};
 
-function renderScan(){stopScanner();resetRun();document.getElementById('smart-work').innerHTML='<section class="smart-card smart-scan-start"><h3>Smart Record</h3><p>Scan the completed sheet. The document scanner finds the paper and captures it automatically when it is steady.</p><button class="smart-scan-button" id="smart-scan">OPEN DOCUMENT SCANNER</button><input class="smart-hidden" id="smart-file" type="file" accept="image/*" capture="environment"><button class="smart-secondary" id="smart-upload">Use an existing scan or photo</button></section>';document.getElementById('smart-scan').onclick=openScanner;var f=document.getElementById('smart-file');document.getElementById('smart-upload').onclick=function(){f.click();};f.onchange=function(){if(f.files&&f.files[0])prepareImage(f.files[0]);};}
+function renderScan(){stopScanner();clearCurrent();document.getElementById('smart-work').innerHTML='<section class="smart-card smart-scan-start"><h3>Smart Record</h3><p>Scan a completed sheet. The document scanner finds the paper and captures it automatically when it is steady.</p>'+(S.batch.length?'<div class="smart-batch-note">'+S.batch.length+' sheet'+(S.batch.length===1?'':'s')+' ready in this batch. Scan the next page or sheet.</div>':'')+'<button class="smart-scan-button" id="smart-scan">OPEN DOCUMENT SCANNER</button><input class="smart-hidden" id="smart-file" type="file" accept="image/*" capture="environment"><button class="smart-secondary" id="smart-upload">Use an existing scan or photo</button></section>';document.getElementById('smart-scan').onclick=openScanner;var f=document.getElementById('smart-file');document.getElementById('smart-upload').onclick=function(){f.click();};f.onchange=function(){if(f.files&&f.files[0])prepareImage(f.files[0]);};}
 function openScanner(){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showToast('Live document scanning is unavailable. Use an existing scan instead.','error');return;}var b=document.createElement('div');b.id='smart-scanner';b.className='smart-scanner';b.innerHTML='<video id="smart-camera" autoplay playsinline muted></video><div class="smart-scan-frame"><i></i><i></i><i></i><i></i></div><div class="smart-scan-status" id="smart-scan-status">Looking for the score sheet…</div><div class="smart-scanner-actions"><button id="smart-close">Cancel</button><button id="smart-capture">Capture now</button></div>';document.body.appendChild(b);document.getElementById('smart-close').onclick=stopScanner;document.getElementById('smart-capture').onclick=function(){capture(S.bounds);};navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false}).then(function(stream){S.stream=stream;var v=document.getElementById('smart-camera');if(!v)return;v.srcObject=stream;v.onloadedmetadata=function(){v.play();S.timer=setInterval(analyse,320);};}).catch(function(){stopScanner();showToast('Camera access was not available. Use an existing scan instead.','error');});}
 function stopScanner(){if(S.timer){clearInterval(S.timer);S.timer=null;}if(S.stream){S.stream.getTracks().forEach(function(t){t.stop();});S.stream=null;}var b=document.getElementById('smart-scanner');if(b)b.remove();S.stable=0;S.bounds=null;}
 function analyse(){var v=document.getElementById('smart-camera'),status=document.getElementById('smart-scan-status');if(!v||v.readyState<2)return;var c=document.createElement('canvas'),sc=260/v.videoWidth;c.width=260;c.height=Math.max(160,Math.round(v.videoHeight*sc));var x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,c.width,c.height);var d=x.getImageData(0,0,c.width,c.height).data,sum=0,i;for(i=0;i<d.length;i+=4)sum+=(d[i]+d[i+1]+d[i+2])/3;var avg=sum/(d.length/4),th=Math.max(145,avg+22),minX=c.width,maxX=0,minY=c.height,maxY=0,count=0;for(var y=2;y<c.height-2;y+=2)for(var z=2;z<c.width-2;z+=2){var p=(y*c.width+z)*4,l=(d[p]+d[p+1]+d[p+2])/3;if(l>th){minX=Math.min(minX,z);maxX=Math.max(maxX,z);minY=Math.min(minY,y);maxY=Math.max(maxY,y);count++;}}var q=count>800?{x:minX/c.width,y:minY/c.height,w:(maxX-minX)/c.width,h:(maxY-minY)/c.height}:null;if(!q||q.w*q.h<.30){S.stable=0;S.bounds=null;if(status)status.textContent='Move closer — fit the full sheet inside the frame';return;}var same=S.bounds&&Math.abs(q.x-S.bounds.x)<.025&&Math.abs(q.y-S.bounds.y)<.025&&Math.abs(q.w-S.bounds.w)<.035&&Math.abs(q.h-S.bounds.h)<.035;S.stable=same?S.stable+1:0;S.bounds=q;if(status)status.textContent=S.stable>1?'Hold steady…':'Sheet found — hold steady';if(S.stable>=5)capture(q);}
@@ -40,7 +43,9 @@ function extractionMessage(e){if(e&&e.code==='SMART_RECORDING_PROVIDER_NOT_CONFI
 function beginExtraction(ids,page){S.page=Number(page||0);showLoad('Reading handwritten scores…');fetch('/api/smart-recording',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action:'extract',sheet_ids:ids,page_index:S.page,image_data_url:S.image})}).then(responseJson).then(function(d){hideLoad();S.sheet=d.sheet;S.sheets=d.sheet.group_sheets||[d.sheet];S.cells=d.extraction.cells||[];S.fingerprint=d.image_fingerprint;S.corrections=0;indexExisting(d.existing_scores||[]);renderReview();}).catch(function(e){hideLoad();showToast(extractionMessage(e),'error');if(e&&e.code==='SMART_SHEET_NOT_FOUND')showIdentification();else renderCaptureReview();});}
 
 function normalizeSubject(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
-function subjectTargets(classKey,index){var base=String(classKey||''),list=subjects(base),name=list[Number(index)],out=[];if(name===undefined)return out;out.push({class_key:base,subject_index:Number(index),subject_name:name});if(!isSeniorDepartment(base))return out;var level=base.split('-')[0];classes().forEach(function(other){if(other===base||String(other).split('-')[0]!==level)return;var idx=subjects(other).findIndex(function(s){return normalizeSubject(s)===normalizeSubject(name);});if(idx<0)return;var exists=out.some(function(x){return x.class_key===other&&x.subject_index===idx;});if(!exists)out.push({class_key:other,subject_index:idx,subject_name:subjects(other)[idx]});});return out;}
+function canonicalSubject(v){var key=normalizeSubject(v);if(key==='livestock'||key==='livestockfarming')return'livestock';if(key==='civiceducation'||key==='citizenshipciviceducation'||key==='citizenshipheritagestudies'||key==='citizenshipeducation')return'citizenshipciviceducation';return key;}
+function isConfiguredSharedSubject(name){return['englishlanguage','mathematics','digitaltechnology','economics','livestock','citizenshipciviceducation','government'].indexOf(canonicalSubject(name))>-1;}
+function subjectTargets(classKey,index){var base=String(classKey||''),list=subjects(base),name=list[Number(index)],out=[];if(name===undefined)return out;out.push({class_key:base,subject_index:Number(index),subject_name:name});if(!isSeniorDepartment(base)||!isConfiguredSharedSubject(name))return out;var level=base.split('-')[0],canonical=canonicalSubject(name);classes().forEach(function(other){if(other===base||String(other).split('-')[0]!==level)return;if(canonical==='government'&&/science/.test(other))return;var idx=subjects(other).findIndex(function(s){return canonicalSubject(s)===canonical;});if(idx<0)return;var exists=out.some(function(x){return x.class_key===other&&x.subject_index===idx;});if(!exists)out.push({class_key:other,subject_index:idx,subject_name:subjects(other)[idx]});});return out;}
 function selectedTargets(classKey,ids){var out=[],seen={};ids.forEach(function(index){subjectTargets(classKey,index).forEach(function(target){var key=target.class_key+'|'+target.subject_index;if(!seen[key]){seen[key]=true;out.push(target);}});});return out;}
 function sharedTargetGroups(classKey,ids){return ids.map(function(index){return subjectTargets(classKey,index);}).filter(function(group){return group.length>1;});}
 function sharedHint(id,classKey,ids){var note=document.getElementById(id);if(!note)return;var groups=sharedTargetGroups(classKey,ids);if(!groups.length){note.style.display='none';note.textContent='';return;}var names=groups[0].map(function(x){return clsLabel(x.class_key);});note.textContent='This subject is configured in '+names.join(', ')+'. One merged broadsheet will include all of them.';note.style.display='block';}
@@ -79,4 +84,139 @@ function save(){if(unresolved()||unresolvedConflicts()){showToast('Review the hi
 function applyLocal(rows,sheet){if(!window.DB_SCORES)return;rows.forEach(function(row){var r=S.existing[row.student_id+'|'+sheet.id]||{},idx=Number(sheet.subject_index),f={ca1:r.ca1==null?'':r.ca1,ca2:r.ca2==null?'':r.ca2,ca3:r.ca3==null?'':r.ca3,exam:r.exam==null?'':r.exam};PARTS.forEach(function(p){if(Object.prototype.hasOwnProperty.call(row.scores,p)&&row.decisions[p]!=='keep_existing')f[p]=row.scores[p];});if(!DB_SCORES[row.student_id])DB_SCORES[row.student_id]={};DB_SCORES[row.student_id][idx]=f;});}
 function renderHistory(){document.getElementById('smart-work').innerHTML='<section class=\"smart-card\"><div class=\"smart-history-head\"><h3>Recording History</h3><button class=\"smart-secondary\" id=\"smart-refresh\">Refresh</button></div><div id=\"smart-history-list\"><div class=\"smart-empty\">Loading history…</div></div></section>';document.getElementById('smart-refresh').onclick=loadHistory;loadHistory();}
 function loadHistory(){var el=document.getElementById('smart-history-list');if(!el)return;api('smart.history.read',{limit:50}).then(function(d){var a=d.rows||[];if(!a.length){el.innerHTML='<div class=\"smart-empty\">No Smart Recording saves yet.</div>';return;}el.innerHTML=a.map(function(r){return'<div class=\"smart-history-row\"><strong>'+esc(clsLabel(r.class_key))+' · '+esc(r.subject_name)+'</strong><span>'+esc(r.term)+' · '+esc(r.academic_session)+'</span><span>'+new Date(r.scanned_at).toLocaleString()+'</span><span class=\"smart-pill\">'+r.scores_saved+' saved</span></div>';}).join('');}).catch(function(){el.innerHTML='<div class=\"smart-empty\">History is unavailable.</div>';});}
+function genericSubjectSpecs(classKey,ids){return ids.map(function(index){var name=subjects(classKey)[Number(index)];return{subject_index:Number(index),subject_name:name,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}};}).filter(function(s){return s.subject_name!==undefined;});}
+function genericTargets(classKey,ids){var out=[],seen={};ids.forEach(function(index){subjectTargets(classKey,index).forEach(function(target){var key=target.class_key+'|'+target.subject_index;if(!seen[key]){seen[key]=true;out.push(target);}});});return out;}
+function loadGenericContext(targets,session,term){
+  var seen={},unique=targets.filter(function(target){var key=target.class_key+'|'+target.subject_index;if(seen[key])return false;seen[key]=true;return true;});
+  return unique.reduce(function(chain,target){
+    return chain.then(function(parts){
+      return api('context.set',{class_key:target.class_key,academic_session:session,term:term}).then(function(){
+        return Promise.all([
+          api('read.students',{class_key:target.class_key,academic_session:session,term:term}),
+          api('read.scores',{class_key:target.class_key,subject_index:target.subject_index,academic_session:session,term:term})
+        ]);
+      }).then(function(result){parts.push({target:target,students:result[0].rows||[],scores:result[1].rows||[]});return parts;});
+    });
+  },Promise.resolve([])).then(function(parts){
+    var roster=[],seenStudents={};
+    parts.forEach(function(part){(part.students||[]).forEach(function(student){
+      var id=String(student.id||'');if(!id||seenStudents[id])return;seenStudents[id]=true;
+      roster.push({student_id:id,name:student.name||'',admno:student.admno||'',source_class_key:part.target.class_key,source_sheet_id:part.target.class_key+'|'+part.target.subject_index});
+    });});
+    roster.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''))||String(a.student_id).localeCompare(String(b.student_id));});
+    roster=roster.map(function(student,index){return Object.assign({},student,{row_index:index+1,page_index:0,page_row:index+1});});
+    var existing={};
+    parts.forEach(function(part){var key=part.target.class_key+'|'+part.target.subject_index;(part.scores||[]).forEach(function(score){existing[String(score.student_id)+'|'+key]=Object.assign({},score,{sheet_id:key,class_key:part.target.class_key,subject_index:part.target.subject_index});});});
+    api('context.set',{class_key:targets[0].class_key,academic_session:session,term:term});
+    return{roster:roster,existing:existing};
+  });
+}
+function requestGenericExtraction(body){return fetch('/api/smart-recording',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)}).then(responseJson);}
+function genericDescriptor(raw){
+  if(raw&&typeof raw==='object')return{value:raw.value===undefined?null:(raw.value===''?null:Number(raw.value)),confidence:Number(raw.confidence)||0,state:String(raw.state||'').toLowerCase()};
+  if(raw===undefined)return{value:null,confidence:0,state:'failure'};
+  if(raw===null||raw==='')return{value:null,confidence:1,state:'blank'};
+  return{value:Number(raw),confidence:.7,state:'uncertain'};
+}
+function genericCells(rows,context,specs,targets,grouped){
+  rows=Array.isArray(rows)?rows:[];var byRow={};rows.forEach(function(row,index){byRow[Number(row.row_index)||index+1]=row;});var cells=[];
+  context.roster.forEach(function(student,studentPosition){
+    var detected=byRow[student.row_index]||byRow[student.page_row]||rows[studentPosition]||{};
+    var detectedSubjects=detected.subjects&&typeof detected.subjects==='object'?detected.subjects:{};
+    var rowTargets=grouped?targets.filter(function(target){return target.class_key===student.source_class_key;}):specs.map(function(spec,index){return Object.assign({},spec,{id:'generic-'+index,class_key:student.source_class_key,subject_index:spec.subject_index});});
+    if(grouped)rowTargets=rowTargets.length?rowTargets:[targets[0]];
+    rowTargets.forEach(function(subject,subjectPosition){
+      var key=String(grouped?specs[0].subject_index:(subject.subject_index===undefined?subjectPosition:subject.subject_index)),bag=detectedSubjects[key]||detectedSubjects[String(subjectPosition)]||((subjectPosition===0||specs.length===1)&&detected.scores)||detected;
+      PARTS.forEach(function(component){
+        var raw=genericDescriptor(bag&&bag[component]),maximum=Number((subject.assessment_config||{ca1:10,ca2:10,ca3:10,exam:70})[component]||0),status='extraction_failure',reason='The score could not be read';
+        if(raw.state==='blank'){status='blank';reason='Empty score cell';}
+        else if(raw.value!==null&&(!isFinite(raw.value)||raw.value<0||raw.value>maximum)){status='out_of_range';reason='Value must be between 0 and '+maximum;}
+        else if(raw.value!==null&&raw.confidence>=.82&&raw.state!=='uncertain'&&raw.state!=='failure'){status='confirmed';reason='Ready to save';}
+        else if(raw.value!==null){status='needs_review';reason='Please check this handwriting';}
+        else if(raw.state==='uncertain'){status='needs_review';reason='Please enter the score';}
+        cells.push({sheet_id:String(subject.id||('generic-'+subjectPosition)),subject_index:Number(subject.subject_index),subject_name:subject.subject_name,student_id:student.student_id,student_name:student.name,source_class_key:student.source_class_key,row_index:student.row_index,page_row:student.page_row,component:component,maximum:maximum,value:raw.value,detected_value:raw.value,confidence:raw.confidence,status:status,reason:reason});
+      });
+    });
+  });
+  return cells;
+}
+function beginGenericExtraction(meta,rows,fingerprint){
+  var targets=meta.targets,specs=meta.specs,grouped=targets.length>1&&specs.length===1&&new Set(targets.map(function(target){return target.class_key;})).size>1;
+  var sheets=grouped?targets.map(function(target){return{id:target.class_key+'|'+target.subject_index,class_key:target.class_key,subject_index:target.subject_index,subject_name:target.subject_name,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70},term:meta.term,academic_session:meta.session};}):specs.map(function(spec,index){return{id:'generic-'+index,class_key:meta.classKey,subject_index:spec.subject_index,subject_name:spec.subject_name,assessment_config:spec.assessment_config,term:meta.term,academic_session:meta.session};});
+  S.generic=true;S.page=0;S.fingerprint=fingerprint||'';S.sheets=sheets;S.existing={};
+  Object.keys(meta.existing||{}).forEach(function(key){var r=meta.existing[key],parts=key.split('|'),studentId=parts.shift(),sheetKey=parts.join('|');var sheet=sheets.find(function(item){return item.class_key+'|'+item.subject_index===sheetKey||item.id===sheetKey;});if(sheet)S.existing[studentId+'|'+sheet.id]=Object.assign({},r,{sheet_id:sheet.id});});
+  S.sheet={id:'generic-run-'+Date.now(),class_key:meta.classKey,subject_index:specs[0].subject_index,subject_name:specs[0].subject_name,term:meta.term,academic_session:meta.session,assessment_config:specs[0].assessment_config,roster:meta.roster,group_sheets:sheets,grouped_across_classes:grouped};
+  S.cells=genericCells(rows,{roster:meta.roster},specs,sheets,grouped);S.corrections=0;renderReview();
+}
+function showIdentification(){
+  var w=document.getElementById('smart-work');
+  w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The code was not clear. Select the class and subject to continue. A generated Smart Score Sheet is optional.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label>Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label>Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">READ SCORES</button></div></section>';
+  var c=document.getElementById('sid-class'),wrap=document.getElementById('sid-wrap');
+  c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Subjects (choose up to four)':'Subject')+chooser('sid-subject',c.value,multi)+'<div class="smart-identify smart-hidden" id="sid-shared-note"></div></label>';wrap.onchange=function(){sharedHint('sid-shared-note',c.value,selected('sid-subject'));};};
+  document.getElementById('sid-term').value=window.TERM||'1st Term';
+  document.getElementById('sid-go').onclick=function(){
+    var ids=selected('sid-subject');if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}
+    var specs=genericSubjectSpecs(c.value,ids),targets=genericTargets(c.value,ids);if(!specs.length||!targets.length){showToast('No configured subject was found for that class.','error');return;}
+    var session=document.getElementById('sid-session').value,term=document.getElementById('sid-term').value;showLoad('Preparing score rows…');
+    api('context.set',{class_key:c.value,academic_session:session,term:term}).then(function(){return loadGenericContext(targets,session,term);}).then(function(context){return requestGenericExtraction({action:'generic_extract',class_key:c.value,subject_index:specs[0].subject_index,subject_specs:specs,academic_session:session,term:term,roster:context.roster,image_data_url:S.image}).then(function(result){return{context:context,result:result};});}).then(function(all){hideLoad();beginGenericExtraction({classKey:c.value,session:session,term:term,targets:targets,specs:specs,roster:all.context.roster,existing:all.context.existing},all.result.rows,all.result.image_fingerprint);}).catch(function(e){hideLoad();showToast(extractionMessage(e),'error');});
+  };
+}
+function entryOld(entry,cell){return entry.existing&&entry.existing[cell.student_id+'|'+cell.sheet_id];}
+function entryRows(entry,sheet){
+  var cells=(entry.cells||[]).filter(function(cell){return String(cell.sheet_id)===String(sheet.id)&&cell.status==='confirmed'&&cell.value!==null;}),groups={};
+  cells.forEach(function(cell){var row=groups[cell.student_id]||(groups[cell.student_id]={student_id:cell.student_id,subject_index:Number(cell.subject_index),class_key:cell.source_class_key,scores:{},existing:{},decisions:{}});row.scores[cell.component]=cell.value;var saved=entryOld(entry,cell);if(saved&&Object.prototype.hasOwnProperty.call(saved,cell.component))row.existing[cell.component]=saved[cell.component];if(cell.decision)row.decisions[cell.component]=cell.decision;});
+  return{cells:cells,rows:Object.keys(groups).map(function(key){return groups[key];})};
+}
+function applyEntryLocal(entry,rows,sheetId){
+  if(!window.DB_SCORES)return;
+  rows.forEach(function(row){var saved=entry.existing&&entry.existing[row.student_id+'|'+sheetId]||{};var idx=Number(row.subject_index);if(!DB_SCORES[row.student_id])DB_SCORES[row.student_id]={};var current=DB_SCORES[row.student_id][idx]||{ca1:'',ca2:'',ca3:'',exam:''};PARTS.forEach(function(part){if(Object.prototype.hasOwnProperty.call(row.scores,part)&&row.decisions[part]!=='keep_existing')current[part]=row.scores[part];else if(saved&&saved[part]!==undefined)current[part]=saved[part];});DB_SCORES[row.student_id][idx]=current;});
+}
+function commitTemplateEntry(entry){
+  var total=0;
+  return (entry.sheets||[]).reduce(function(chain,sheet){return chain.then(function(){var packed=entryRows(entry,sheet);if(!packed.rows.length)return true;return api('context.set',{class_key:sheet.class_key,academic_session:sheet.academic_session,term:sheet.term}).then(function(){return api('smart.scores.commit',{sheet_id:sheet.id,rows:packed.rows,image_fingerprint:entry.fingerprint,summary:{scores_extracted:packed.cells.length,corrections_made:entry.corrections||0,page_index:entry.page}});}).then(function(result){total+=Number(result.score_fields_saved||0);applyEntryLocal(entry,packed.rows,sheet.id);return true;});});},Promise.resolve()).then(function(){return total;});
+}
+function genericEntryRows(entry,sheet){
+  var cells=(entry.cells||[]).filter(function(cell){return String(cell.sheet_id)===String(sheet.id)&&cell.status==='confirmed'&&cell.value!==null;}),groups={};
+  cells.forEach(function(cell){var row=groups[cell.student_id]||(groups[cell.student_id]={student_id:cell.student_id,subject_index:Number(cell.subject_index),class_key:cell.source_class_key,scores:{ca1:null,ca2:null,ca3:null,exam:null},existing:{},decisions:{},fields:0});var saved=entryOld(entry,cell)||{};PARTS.forEach(function(part){if(saved[part]!==undefined&&saved[part]!==null)row.scores[part]=saved[part];});if(cell.decision!=='keep_existing'){row.scores[cell.component]=cell.value;row.fields++;}if(saved&&Object.prototype.hasOwnProperty.call(saved,cell.component))row.existing[cell.component]=saved[cell.component];if(cell.decision)row.decisions[cell.component]=cell.decision;});
+  return Object.keys(groups).map(function(key){return groups[key];});
+}
+function commitGenericEntry(entry){
+  var total=0;
+  return (entry.sheets||[]).reduce(function(chain,sheet){return chain.then(function(){var rows=genericEntryRows(entry,sheet);if(!rows.length)return true;return api('context.set',{class_key:sheet.class_key,academic_session:sheet.academic_session,term:sheet.term}).then(function(){return rows.reduce(function(next,row){return next.then(function(){if(!row.fields)return true;return api('scores.enter',{student_id:row.student_id,class_key:sheet.class_key,subject_index:sheet.subject_index,term:sheet.term,academic_session:sheet.academic_session,ca1:row.scores.ca1,ca2:row.scores.ca2,ca3:row.scores.ca3,exam:row.scores.exam}).then(function(){total+=row.fields;});});},Promise.resolve());}).then(function(){applyEntryLocal(entry,rows,sheet.id);return true;});});},Promise.resolve()).then(function(){return total;});
+}
+function saveCompletedEntries(entries){
+  showLoad('Saving scores…');var hasGeneric=entries.some(function(entry){return entry.generic;}),hasTemplate=entries.some(function(entry){return!entry.generic;});
+  if(hasGeneric&&hasTemplate){hideLoad();showToast('Save the scanned sheets separately.','error');return;}
+  var saveOne=hasGeneric?commitGenericEntry:commitTemplateEntry;
+  entries.reduce(function(chain,entry){return chain.then(function(total){return saveOne(entry).then(function(count){return total+Number(count||0);});});},Promise.resolve(0)).then(function(total){hideLoad();S.batch=[];document.getElementById('smart-work').innerHTML='<section class="smart-card smart-success"><div>✓</div><h3>Scores saved</h3><p>'+total+' score fields are now in the Result Portal.</p><button class="smart-scan-button" id="smart-again">SCAN ANOTHER SHEET</button></section>';document.getElementById('smart-again').onclick=renderScan;}).catch(function(e){hideLoad();showToast(e&&e.code==='SMART_CONFLICT_DECISION_REQUIRED'?'Choose how to handle each saved-score conflict first.':'Scores were not saved. Review and try again.','error');renderReview();});
+}
+function save(){
+  if(unresolved()||unresolvedConflicts()){showToast('Review the highlighted scores and conflicts first.','error');return;}
+  var entries=S.batch.slice();entries.push(currentEntry());saveCompletedEntries(entries);
+}
+function queueNextSheet(){if(unresolved()||unresolvedConflicts()){showToast('Review the highlighted scores and conflicts before scanning the next sheet.','error');return;}queueCurrent();renderScan();}
+function renderReview(){
+  var roster=(S.generic?S.sheet.roster:(S.sheet.roster||[]).filter(function(r){return Number(r.page_index||0)===S.page;})),columns=reviewSheets(),counts=S.cells.reduce(function(n,c){n[c.status==='confirmed'?'ready':c.status==='blank'?'blank':'review']++;return n;},{ready:0,review:0,blank:0}),title=reviewTitle(),batchNote=S.batch.length?'<small class="smart-batch-note">'+S.batch.length+' sheet'+(S.batch.length===1?'':'s')+' queued</small>':'';
+  var html='<section class="smart-stage"><div class="smart-stage-head"><div><h3>'+title+'</h3><small>'+esc(S.sheet.term)+' · '+esc(S.sheet.academic_session)+' · '+roster.length+' students</small>'+batchNote+'</div><div class="smart-summary"><span class="smart-pill">'+counts.ready+' ready</span><span class="smart-pill review">'+counts.review+' need review</span><span class="smart-pill blank">'+counts.blank+' blank</span></div></div><div class="smart-table-wrap"><table class="smart-table smart-review-table"><thead><tr><th>#</th><th>Student</th>'+columns.map(function(s){return'<th colspan="4">'+esc(s.subject_name)+'</th>';}).join('')+'</tr><tr><th></th><th></th>'+columns.map(function(s){return PARTS.map(function(p){return'<th>'+LABELS[p]+'<br><small>MAX '+esc(s.assessment_config[p])+'</small></th>';}).join('');}).join('')+'</tr></thead><tbody>';
+  roster.forEach(function(student){html+='<tr><td>'+student.row_index+'</td><td class="smart-student">'+esc(student.name)+'<small>'+esc(student.admno||'')+'</small>'+(S.sheet.grouped_across_classes?'<small class="smart-student-dept">'+esc(departmentName(student.source_class_key))+'</small>':'')+'</td>';columns.forEach(function(sheet){PARTS.forEach(function(part){html+='<td>'+cellButton(cellFor(student,sheet,part))+'</td>';});});html+='</tr>';});
+  html+='</tbody></table></div><div class="smart-footer"><button class="smart-secondary" id="smart-discard">START OVER</button><button class="smart-secondary" id="smart-next">SCAN NEXT SHEET</button><button class="smart-save" id="smart-save" '+((unresolved()||unresolvedConflicts())?'disabled':'')+'>SAVE '+(S.batch.length?'ALL ':'')+'SCORES</button></div></section>';
+  document.getElementById('smart-work').innerHTML=html;document.querySelectorAll('[data-cell]').forEach(function(button){button.onclick=function(){openCell(button.dataset.cell);};});document.getElementById('smart-discard').onclick=function(){resetRun();renderScan();};document.getElementById('smart-next').onclick=queueNextSheet;document.getElementById('smart-save').onclick=save;
+}
+function printSheets(a){
+  if(!a||!a.length){showToast('No generated sheet was returned.','error');return;}
+  var first=a[0],roster=buildPrintRoster(a),multi=isPrimary(first.class_key),pages=Math.max(1,Math.max.apply(null,roster.map(function(r){return Number(r.page_index||0);}))+1),jobs=[];
+  for(var p=0;p<pages;p++)jobs.push(qrData(a.length>1?groupCode(a,p):'WTS-SR1:'+first.id+':'+p));
+  Promise.all(jobs).then(function(qrs){
+    var body='',columns=printColumns(a);
+    for(var p=0;p<pages;p++){
+      var rows=roster.filter(function(r){return Number(r.page_index||0)===p;});
+      body+='<section class="smart-print-page '+(multi?'landscape':'portrait')+'"><header class="smart-print-header"><div class="smart-print-title"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(a))+' · '+esc(first.term)+' · '+esc(first.academic_session)+' · Page '+(p+1)+' of '+pages+'</p></div><div><img class="smart-print-qr" src="'+qrs[p]+'" alt="Sheet code"><div class="smart-print-code">'+esc(first.sheet_code)+(a.length>1?' · merged':'')+' · '+(p+1)+'</div></div></header>'+printTable(columns,rows,multi,uniqueClassKeys(a).length>1)+'</section>';
+    }
+    var win=window.open('','_blank');if(!win){showToast('Allow pop-ups to download or print the Smart Score Sheet.','error');return;}
+    var toolbar='<div class="smart-print-toolbar"><strong>Smart Score Sheet · A4</strong><span>All '+pages+' page'+(pages===1?'':'s')+' included</span><button onclick="window.print()">DOWNLOAD / SAVE AS PDF</button><button onclick="window.close()">CLOSE</button></div>';
+    var script='<script>(function(){function ready(){var imgs=Array.prototype.slice.call(document.images);Promise.all(imgs.map(function(img){return img.complete?Promise.resolve():new Promise(function(ok){img.onload=img.onerror=ok;});})).then(function(){setTimeout(function(){},250);});}window.addEventListener("load",ready);})();<\\/script>';
+    win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet · A4</title><link rel="stylesheet" href="'+location.origin+'/smart-recording.css"></head><body>'+toolbar+body+script+'</body></html>');
+    win.document.close();
+  }).catch(function(){showToast('The QR could not be generated.','error');});
+}
 })();
