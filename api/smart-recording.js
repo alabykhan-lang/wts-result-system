@@ -22,6 +22,16 @@ function imageParts(dataUrl) {
 }
 
 async function readStoredProviderKey(session, scope) {
+  if (scope?.class_key && scope?.academic_session && scope?.term) {
+    const context = await supabaseRpc('school_result_context_set', {
+      p_session_id: session.sessionId,
+      p_session_secret: session.sessionSecret,
+      p_class_key: scope.class_key,
+      p_academic_session: scope.academic_session,
+      p_term: scope.term,
+    });
+    if (!context?.ok) throw context || { ok: false, code: 'RESULT_CONTEXT_INVALID' };
+  }
   const payload = await supabaseRpc('school_result_smart_provider_key_read', {
     p_session_id: session.sessionId,
     p_session_secret: session.sessionSecret,
@@ -45,35 +55,61 @@ async function resolveProviderKey(session, scope) {
 
 async function callGemini(apiKey, prompt, image) {
   if (!apiKey) return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
-  const model = process.env.WTS_SMART_RECORDING_MODEL || 'gemini-2.5-flash';
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [
-        { text: prompt },
-        { inline_data: { mime_type: image.mimeType, data: image.base64 } },
-      ] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0 },
-    }),
-  });
-  let payload = {};
-  try { payload = await response.json(); } catch {}
-  if (!response.ok) {
-    return {
-      ok: false,
-      code: 'SMART_EXTRACTION_PROVIDER_FAILED',
-      provider_status: response.status,
-      provider_message: String(payload?.error?.message || '').slice(0, 240),
-    };
+  const configuredModel = String(process.env.WTS_SMART_RECORDING_MODEL || '').trim();
+  const models = [...new Set([
+    configuredModel,
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+  ].filter(Boolean))];
+  let lastFailure = null;
+
+  for (const model of models) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    let response;
+    try {
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [
+            { text: prompt },
+            { inline_data: { mime_type: image.mimeType, data: image.base64 } },
+          ] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0 },
+        }),
+      });
+    } catch {
+      return { ok: false, code: 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+    }
+
+    let payload = {};
+    try { payload = await response.json(); } catch {}
+    if (!response.ok) {
+      const providerMessage = String(payload?.error?.message || '').slice(0, 240);
+      const keyRejected = response.status === 400 && /api[ _-]?key|key not valid|invalid key|permission denied/i.test(providerMessage);
+      lastFailure = {
+        ok: false,
+        code: keyRejected ? 'SMART_EXTRACTION_PROVIDER_KEY_INVALID' : 'SMART_EXTRACTION_PROVIDER_FAILED',
+        provider_status: response.status,
+        provider_message: providerMessage,
+      };
+      // Invalid credentials must be reported immediately. A missing or
+      // retired model can be recovered by trying the compatibility list.
+      if (keyRejected || response.status === 401 || response.status === 403) return lastFailure;
+      if (response.status !== 400 && response.status !== 404) return lastFailure;
+      continue;
+    }
+
+    const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
+    try {
+      return { ok: true, payload: JSON.parse(raw) };
+    } catch {
+      return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
+    }
   }
-  const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-  try {
-    return { ok: true, payload: JSON.parse(raw) };
-  } catch {
-    return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
-  }
+
+  return lastFailure || { ok: false, code: 'SMART_EXTRACTION_PROVIDER_FAILED' };
 }
 
 async function readSheet(session, sheetId) {
@@ -242,7 +278,7 @@ async function extractGeneric(session, body, image) {
 }
 
 function extractionStatus(code) {
-  return code === 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' || code === 'SMART_EXTRACTION_PROVIDER_FAILED' ? 503 : 422;
+  return ['SMART_RECORDING_PROVIDER_NOT_CONFIGURED', 'SMART_EXTRACTION_PROVIDER_FAILED', 'SMART_EXTRACTION_PROVIDER_KEY_INVALID', 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE'].includes(code) ? 503 : 422;
 }
 
 module.exports = async function smartRecording(req, res) {

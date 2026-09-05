@@ -26,10 +26,91 @@ function menu(a,i,t,c){return'<button class="smart-menu-card" data-area="'+a+'">
 window.openSmartSheetGenerator=function(){navTo('smart',document.getElementById('ni-smart'));setTimeout(function(){openArea('generate');},0);};
 
 function renderScan(){stopScanner();clearCurrent();document.getElementById('smart-work').innerHTML='<section class="smart-card smart-scan-start"><h3>Smart Record</h3><p>Scan a completed sheet. The document scanner finds the paper and captures it automatically when it is steady.</p>'+(S.batch.length?'<div class="smart-batch-note">'+S.batch.length+' sheet'+(S.batch.length===1?'':'s')+' ready in this batch. Scan the next page or sheet.</div>':'')+'<button class="smart-scan-button" id="smart-scan">OPEN DOCUMENT SCANNER</button><input class="smart-hidden" id="smart-file" type="file" accept="image/*" capture="environment"><button class="smart-secondary" id="smart-upload">Use an existing scan or photo</button></section>';document.getElementById('smart-scan').onclick=openScanner;var f=document.getElementById('smart-file');document.getElementById('smart-upload').onclick=function(){f.click();};f.onchange=function(){if(f.files&&f.files[0])prepareImage(f.files[0]);};}
-function openScanner(){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showToast('Live document scanning is unavailable. Use an existing scan instead.','error');return;}var b=document.createElement('div');b.id='smart-scanner';b.className='smart-scanner';b.innerHTML='<video id="smart-camera" autoplay playsinline muted></video><div class="smart-scan-frame"><i></i><i></i><i></i><i></i></div><div class="smart-scan-status" id="smart-scan-status">Looking for the score sheet…</div><div class="smart-scanner-actions"><button id="smart-close">Cancel</button><button id="smart-capture">Capture now</button></div>';document.body.appendChild(b);document.getElementById('smart-close').onclick=stopScanner;document.getElementById('smart-capture').onclick=function(){capture(S.bounds);};navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false}).then(function(stream){S.stream=stream;var v=document.getElementById('smart-camera');if(!v)return;v.srcObject=stream;v.onloadedmetadata=function(){v.play();S.timer=setInterval(analyse,320);};}).catch(function(){stopScanner();showToast('Camera access was not available. Use an existing scan instead.','error');});}
-function stopScanner(){if(S.timer){clearInterval(S.timer);S.timer=null;}if(S.stream){S.stream.getTracks().forEach(function(t){t.stop();});S.stream=null;}var b=document.getElementById('smart-scanner');if(b)b.remove();S.stable=0;S.bounds=null;}
-function analyse(){var v=document.getElementById('smart-camera'),status=document.getElementById('smart-scan-status');if(!v||v.readyState<2)return;var c=document.createElement('canvas'),sc=260/v.videoWidth;c.width=260;c.height=Math.max(160,Math.round(v.videoHeight*sc));var x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,c.width,c.height);var d=x.getImageData(0,0,c.width,c.height).data,sum=0,i;for(i=0;i<d.length;i+=4)sum+=(d[i]+d[i+1]+d[i+2])/3;var avg=sum/(d.length/4),th=Math.max(145,avg+22),minX=c.width,maxX=0,minY=c.height,maxY=0,count=0;for(var y=2;y<c.height-2;y+=2)for(var z=2;z<c.width-2;z+=2){var p=(y*c.width+z)*4,l=(d[p]+d[p+1]+d[p+2])/3;if(l>th){minX=Math.min(minX,z);maxX=Math.max(maxX,z);minY=Math.min(minY,y);maxY=Math.max(maxY,y);count++;}}var q=count>800?{x:minX/c.width,y:minY/c.height,w:(maxX-minX)/c.width,h:(maxY-minY)/c.height}:null;if(!q||q.w*q.h<.30){S.stable=0;S.bounds=null;if(status)status.textContent='Move closer — fit the full sheet inside the frame';return;}var same=S.bounds&&Math.abs(q.x-S.bounds.x)<.025&&Math.abs(q.y-S.bounds.y)<.025&&Math.abs(q.w-S.bounds.w)<.035&&Math.abs(q.h-S.bounds.h)<.035;S.stable=same?S.stable+1:0;S.bounds=q;if(status)status.textContent=S.stable>1?'Hold steady…':'Sheet found — hold steady';if(S.stable>=5)capture(q);}
-function capture(q){var v=document.getElementById('smart-camera');if(!v||v.readyState<2)return;q=q||{x:.06,y:.06,w:.88,h:.88};var sx=q.x*v.videoWidth,sy=q.y*v.videoHeight,sw=Math.min(v.videoWidth-sx,q.w*v.videoWidth),sh=Math.min(v.videoHeight-sy,q.h*v.videoHeight),sc=Math.min(1,1900/Math.max(sw,sh)),c=document.createElement('canvas');c.width=Math.round(sw*sc);c.height=Math.round(sh*sc);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);stopScanner();processCanvas(c);}
+function scanClamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function scanCross(a,b,c){return(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
+function scanHull(points){
+  var sorted=points.slice().sort(function(a,b){return a.x-b.x||a.y-b.y;}),lower=[],upper=[],i;
+  for(i=0;i<sorted.length;i++){while(lower.length>1&&scanCross(lower[lower.length-2],lower[lower.length-1],sorted[i])<=0)lower.pop();lower.push(sorted[i]);}
+  for(i=sorted.length-1;i>=0;i--){while(upper.length>1&&scanCross(upper[upper.length-2],upper[upper.length-1],sorted[i])<=0)upper.pop();upper.push(sorted[i]);}
+  upper.pop();lower.pop();return lower.concat(upper);
+}
+function scanQuadArea(points){var area=0,i,next;for(i=0;i<points.length;i++){next=points[(i+1)%points.length];area+=points[i].x*next.y-next.x*points[i].y;}return Math.abs(area)/2;}
+function scanOrderQuad(hull){
+  if(!hull||hull.length<4)return null;
+  var pick=function(score,used){var best=null,value=score(hull[0]);hull.forEach(function(point,index){if(used[index])return;var next=score(point);if(next<value){value=next;best={point:point,index:index};}});return best||{point:hull[0],index:0};};
+  var used={},tl=pick(function(p){return p.x+p.y;},used);used[tl.index]=true;
+  var br=pick(function(p){return-(p.x+p.y);},used);used[br.index]=true;
+  var tr=pick(function(p){return-p.x+p.y;},used);used[tr.index]=true;
+  var bl=pick(function(p){return p.x-p.y;},used);
+  var result=[tl.point,tr.point,br.point,bl.point];
+  if(scanQuadArea(result)<.08)return null;
+  return result;
+}
+function scanQuadClose(a,b){
+  if(!a||!b||!a.points||!b.points)return false;
+  var total=0;for(var i=0;i<4;i++){var dx=a.points[i].x-b.points[i].x,dy=a.points[i].y-b.points[i].y;total+=Math.sqrt(dx*dx+dy*dy);}
+  return total/4<.075;
+}
+function scanBlend(a,b){return{points:a.points.map(function(point,index){return{x:a.points[index].x*.65+b.points[index].x*.35,y:a.points[index].y*.65+b.points[index].y*.35};}),area:b.area};}
+function scanOverlayPoint(point,video,box){
+  var vw=video.videoWidth||1,vh=video.videoHeight||1,scale=Math.max(box.width/vw,box.height/vh),drawWidth=vw*scale,drawHeight=vh*scale;
+  return{x:((point.x*vw*scale)+(box.width-drawWidth)/2)/box.width*100,y:((point.y*vh*scale)+(box.height-drawHeight)/2)/box.height*100};
+}
+function renderScanQuad(q){
+  var svg=document.getElementById('smart-scan-quad'),video=document.getElementById('smart-camera');if(!svg||!video)return;
+  if(!q||!q.points){svg.classList.remove('is-found');return;}
+  var box=svg.getBoundingClientRect(),points=q.points.map(function(point){return scanOverlayPoint(point,video,box);}),poly=svg.querySelector('polygon');
+  if(poly)poly.setAttribute('points',points.map(function(point){return point.x.toFixed(2)+','+point.y.toFixed(2);}).join(' '));
+  svg.querySelectorAll('circle').forEach(function(circle,index){if(points[index]){circle.setAttribute('cx',points[index].x);circle.setAttribute('cy',points[index].y);}});
+  svg.classList.add('is-found');
+}
+function openScanner(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){showToast('Live document scanning is unavailable. Use an existing scan instead.','error');return;}
+  var b=document.createElement('div');b.id='smart-scanner';b.className='smart-scanner';
+  b.innerHTML='<video id="smart-camera" autoplay playsinline muted></video><button class="smart-scan-close" id="smart-close" aria-label="Close scanner">×</button><div class="smart-scan-topline" id="smart-scan-status">Move over the score sheet</div><svg class="smart-scan-quad" id="smart-scan-quad" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,0 100,0 100,100 0,100"></polygon><circle></circle><circle></circle><circle></circle><circle></circle></svg><div class="smart-scanner-bottom"><div class="smart-scanner-controls"><button class="smart-shutter" id="smart-capture" aria-label="Capture sheet"><span></span></button><div class="smart-scan-thumb" id="smart-scan-thumb"><span>1</span></div></div><div class="smart-scan-mode"><button id="smart-manual">Manual</button><button class="selected" id="smart-auto">Auto capture</button></div><p>WTS Smart Recording will use only the score-sheet images you capture.</p></div>';
+  document.body.appendChild(b);S.autoCapture=true;S.capturing=false;
+  var status=document.getElementById('smart-scan-status'),manual=document.getElementById('smart-manual'),auto=document.getElementById('smart-auto');
+  document.getElementById('smart-close').onclick=stopScanner;
+  document.getElementById('smart-capture').onclick=function(){S.capturing=true;capture(S.bounds);};
+  manual.onclick=function(){S.autoCapture=false;manual.classList.add('selected');auto.classList.remove('selected');if(status)status.textContent='Manual mode — tap the shutter when the whole sheet is clear';};
+  auto.onclick=function(){S.autoCapture=true;auto.classList.add('selected');manual.classList.remove('selected');if(status)status.textContent=S.bounds?'Hold steady…':'Move over the score sheet';};
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false}).then(function(stream){S.stream=stream;var v=document.getElementById('smart-camera');if(!v)return;v.srcObject=stream;v.onloadedmetadata=function(){v.play();S.timer=setInterval(analyse,260);};}).catch(function(){stopScanner();showToast('Camera access was not available. Use an existing scan instead.','error');});
+}
+function stopScanner(){if(S.timer){clearInterval(S.timer);S.timer=null;}if(S.stream){S.stream.getTracks().forEach(function(t){t.stop();});S.stream=null;}var b=document.getElementById('smart-scanner');if(b)b.remove();S.stable=0;S.bounds=null;S.capturing=false;}
+function analyse(){
+  var v=document.getElementById('smart-camera'),status=document.getElementById('smart-scan-status');if(!v||v.readyState<2||!v.videoWidth)return;
+  var c=document.createElement('canvas'),sc=360/v.videoWidth;c.width=360;c.height=Math.max(220,Math.round(v.videoHeight*sc));var x=c.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,c.width,c.height);
+  var d=x.getImageData(0,0,c.width,c.height).data,points=[],sum=0,count=0,i;
+  for(i=0;i<d.length;i+=4)sum+=(d[i]+d[i+1]+d[i+2])/3;
+  var avg=sum/(d.length/4),threshold=Math.max(142,Math.min(214,avg+18));
+  for(var y=4;y<c.height-4;y+=4)for(var z=4;z<c.width-4;z+=4){var p=(y*c.width+z)*4,l=(d[p]+d[p+1]+d[p+2])/3,hi=Math.max(d[p],d[p+1],d[p+2]),lo=Math.min(d[p],d[p+1],d[p+2]);if(l>threshold&&hi-lo<78){points.push({x:z,y:y});count++;}}
+  var hull=count>100?scanHull(points):[],quad=scanOrderQuad(hull),q=quad?{points:quad.map(function(point){return{x:point.x/c.width,y:point.y/c.height};}),area:scanQuadArea(quad)/(c.width*c.height)}:null;
+  if(!q||q.area<.18){S.stable=0;S.bounds=null;renderScanQuad(null);if(status)status.textContent='Move over the sheet — fit all four edges in view';return;}
+  q.points=q.points.map(function(point){return{x:scanClamp(point.x,.015,.985),y:scanClamp(point.y,.015,.985)};});
+  var same=scanQuadClose(S.bounds,q);S.stable=same?S.stable+1:1;S.bounds=S.bounds&&same?scanBlend(S.bounds,q):q;renderScanQuad(S.bounds);
+  if(status)status.textContent=S.stable>1?'Scanning… hold steady':'Sheet found — hold steady';
+  if(S.autoCapture&&!S.capturing&&S.stable>=4){S.capturing=true;capture(S.bounds);}
+}
+function scanSolve(matrix,values){
+  var a=matrix.map(function(row,index){return row.slice().concat(values[index]);});
+  for(var col=0;col<8;col++){var pivot=col;for(var row=col+1;row<8;row++)if(Math.abs(a[row][col])>Math.abs(a[pivot][col]))pivot=row;if(Math.abs(a[pivot][col])<1e-9)return null;var swap=a[col];a[col]=a[pivot];a[pivot]=swap;var divisor=a[col][col];for(var j=col;j<=8;j++)a[col][j]/=divisor;for(row=0;row<8;row++)if(row!==col){var factor=a[row][col];if(!factor)continue;for(j=col;j<=8;j++)a[row][j]-=factor*a[col][j];}}
+  return a.map(function(row){return row[8];});
+}
+function perspectiveCanvas(video,points){
+  var sw=video.videoWidth,sh=video.videoHeight,source=document.createElement('canvas');source.width=sw;source.height=sh;var sourceCtx=source.getContext('2d');sourceCtx.drawImage(video,0,0,sw,sh);
+  var width=Math.max(Math.hypot((points[1].x-points[0].x)*sw,(points[1].y-points[0].y)*sh),Math.hypot((points[2].x-points[3].x)*sw,(points[2].y-points[3].y)*sh));
+  var height=Math.max(Math.hypot((points[3].x-points[0].x)*sw,(points[3].y-points[0].y)*sh),Math.hypot((points[2].x-points[1].x)*sw,(points[2].y-points[1].y)*sh)),scale=Math.min(1,1900/Math.max(width,height)),dw=Math.max(1,Math.round(width*scale)),dh=Math.max(1,Math.round(height*scale));
+  var src=sourceCtx.getImageData(0,0,sw,sh).data,out=document.createElement('canvas');out.width=dw;out.height=dh;var output=out.getContext('2d'),image=output.createImageData(dw,dh),dst=image.data;
+  var uvs=[[0,0],[dw,0],[dw,dh],[0,dh]],matrix=[],values=[];uvs.forEach(function(uv,index){var u=uv[0],v=uv[1],px=points[index].x*sw,py=points[index].y*sh;matrix.push([u,v,1,0,0,0,-u*px,-v*px]);values.push(px);matrix.push([0,0,0,u,v,1,-u*py,-v*py]);values.push(py);});var h=scanSolve(matrix,values);if(!h)throw new Error('perspective transform unavailable');
+  for(var y=0;y<dh;y++)for(var x=0;x<dw;x++){var den=h[6]*x+h[7]*y+1,sx=(h[0]*x+h[1]*y+h[2])/den,sy=(h[3]*x+h[4]*y+h[5])/den;if(sx<0||sy<0||sx>=sw||sy>=sh)continue;var ix=Math.floor(sx),iy=Math.floor(sy),si=(iy*sw+ix)*4,di=(y*dw+x)*4;dst[di]=src[si];dst[di+1]=src[si+1];dst[di+2]=src[si+2];dst[di+3]=255;}
+  output.putImageData(image,0,0);return out;
+}
+function capture(q){
+  var v=document.getElementById('smart-camera');if(!v||v.readyState<2)return;
+  var points=q&&q.points?q.points:[{x:.05,y:.05},{x:.95,y:.05},{x:.95,y:.95},{x:.05,y:.95}],c;
+  try{c=perspectiveCanvas(v,points);}catch(e){var sx=Math.max(0,Math.min.apply(null,points.map(function(p){return p.x;}))*v.videoWidth),sy=Math.max(0,Math.min.apply(null,points.map(function(p){return p.y;}))*v.videoHeight),ex=Math.min(v.videoWidth,Math.max.apply(null,points.map(function(p){return p.x;}))*v.videoWidth),ey=Math.min(v.videoHeight,Math.max.apply(null,points.map(function(p){return p.y;}))*v.videoHeight),sw=Math.max(1,ex-sx),sh=Math.max(1,ey-sy),scale=Math.min(1,1900/Math.max(sw,sh));c=document.createElement('canvas');c.width=Math.round(sw*scale);c.height=Math.round(sh*scale);c.getContext('2d').drawImage(v,sx,sy,sw,sh,0,0,c.width,c.height);}
+  stopScanner();processCanvas(c);
+}
 function prepareImage(file){if(!/^image\//.test(file.type||'')){showToast('Choose an image of the score sheet.','error');return;}showLoad('Preparing sheet…');decode(file).then(function(img){var w=img.naturalWidth||img.width,h=img.naturalHeight||img.height,sc=Math.min(1,1900/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.round(w*sc);c.height=Math.round(h*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);processCanvas(c);}).catch(function(){hideLoad();showToast('This image could not be opened.','error');});}
 function decode(f){if(typeof createImageBitmap==='function')return createImageBitmap(f);return new Promise(function(ok,no){var r=new FileReader();r.onerror=no;r.onload=function(){var i=new Image();i.onload=function(){ok(i);};i.onerror=no;i.src=r.result;};r.readAsDataURL(f);});}
 function processCanvas(c){S.canvas=c;S.image=c.toDataURL('image/jpeg',.88);hideLoad();renderCaptureReview();}
@@ -39,7 +120,19 @@ function detectQr(c){if('BarcodeDetector' in window)try{return new BarcodeDetect
 function qrPixels(c){try{if(typeof window.jsQR!=='function')return null;var x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height),q=window.jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});return q?parseCode(q.data):null;}catch(e){return null;}}
 function parseCode(raw){var m=/WTS-SR1:([0-9a-f-]{36})(?::(\d+))?/i.exec(String(raw||''));if(m)return{ids:[m[1]],page:Number(m[2]||0)};m=/WTS-SRM1:([A-Za-z0-9_-]+):(\d+)/.exec(String(raw||''));if(!m)return null;try{var b=m[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';var ids=JSON.parse(atob(b));return Array.isArray(ids)&&ids.length?{ids:ids,page:Number(m[2]||0)}:null;}catch(e){return null;}}
 function responseJson(r){return r.text().then(function(raw){var d={};try{d=raw?JSON.parse(raw):{};}catch(e){d={};}if(!r.ok||d.ok===false){d.http_status=r.status;throw d;}return d;});}
-function extractionMessage(e){if(e&&e.code==='SMART_RECORDING_PROVIDER_NOT_CONFIGURED')return'Add a Gemini API key in Settings first.';if(e&&e.code==='SMART_EXTRACTION_PROVIDER_FAILED')return'The Gemini API key was rejected. Replace it in Settings.';if(e&&e.code==='SMART_SHEET_NOT_FOUND')return'That generated sheet is no longer available. Select its details below.';return'Scores could not be extracted. Check the image and try again.';}
+function extractionMessage(e){
+  if(e&&e.code==='SMART_RECORDING_PROVIDER_NOT_CONFIGURED')return'Add a Gemini API key in Settings first.';
+  if(e&&e.code==='SMART_EXTRACTION_PROVIDER_UNAVAILABLE')return'The handwriting service could not be reached. Check the connection and try again.';
+  if(e&&e.code==='SMART_EXTRACTION_PROVIDER_KEY_INVALID')return'The Gemini API key was rejected. Save a current key in Settings.';
+  if(e&&e.code==='SMART_EXTRACTION_PROVIDER_FAILED'){
+    if(Number(e.provider_status)===401||Number(e.provider_status)===403)return'The Gemini API key was rejected. Save a current key in Settings.';
+    if(Number(e.provider_status)===404)return'The configured handwriting model is unavailable. Try again after saving a current key in Settings.';
+    if(Number(e.provider_status)===429)return'The handwriting service is busy. Try this scan again in a moment.';
+    return'The handwriting service could not read this scan. Try a clearer page image.';
+  }
+  if(e&&e.code==='SMART_SHEET_NOT_FOUND')return'That generated sheet is no longer available. Select its details below.';
+  return'Scores could not be extracted. Check the image and try again.';
+}
 function beginExtraction(ids,page){S.page=Number(page||0);showLoad('Reading handwritten scores…');fetch('/api/smart-recording',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action:'extract',sheet_ids:ids,page_index:S.page,image_data_url:S.image})}).then(responseJson).then(function(d){hideLoad();S.sheet=d.sheet;S.sheets=d.sheet.group_sheets||[d.sheet];S.cells=d.extraction.cells||[];S.fingerprint=d.image_fingerprint;S.corrections=0;indexExisting(d.existing_scores||[]);renderReview();}).catch(function(e){hideLoad();showToast(extractionMessage(e),'error');if(e&&e.code==='SMART_SHEET_NOT_FOUND')showIdentification();else renderCaptureReview();});}
 
 function normalizeSubject(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
@@ -55,7 +148,17 @@ function selected(id){var b=document.getElementById(id);if(!b)return[];if(b.tagN
 function showIdentification(){var w=document.getElementById('smart-work');w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The sheet code was not clear. Select the class and subject; Smart Recording will use the generated template and continue.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label>Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label>Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">CONTINUE</button></div></section>';var c=document.getElementById('sid-class'),wrap=document.getElementById('sid-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Subjects (choose up to four)':'Subject')+chooser('sid-subject',c.value,multi)+'<div class="smart-identify smart-hidden" id="sid-shared-note"></div></label>';wrap.onchange=function(){sharedHint('sid-shared-note',c.value,selected('sid-subject'));};};document.getElementById('sid-term').value=window.TERM||'1st Term';document.getElementById('sid-go').onclick=function(){var ids=selected('sid-subject');if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}var pairs=selectedTargets(c.value,ids);if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}var session=document.getElementById('sid-session').value,term=document.getElementById('sid-term').value;showLoad('Finding generated sheet…');api('context.set',{class_key:c.value,academic_session:session,term:term}).then(function(){return Promise.all(pairs.map(function(pair){return api('smart.sheet.read',{class_key:pair.class_key,subject_index:pair.subject_index,academic_session:session,term:term});}));}).then(function(a){hideLoad();beginExtraction(a.map(function(x){return x.sheet.id;}),0);}).catch(function(e){hideLoad();showToast(e&&e.code==='RESULT_PERMISSION_DENIED'?'This account cannot read one of the selected departments.':'Generate this Smart Score Sheet first.','error');});};}
 
 function renderGenerator(){document.getElementById('smart-work').innerHTML='<section class="smart-card smart-generator"><h3>Generate / Print Smart Broadsheets</h3><p>Early Years and Primary use readable landscape multi-subject sheets. Secondary classes use one individual subject per sheet. Shared SS2/SS3 subjects automatically merge every configured department.</p><div class="smart-form"><label>Class<select id="sg-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><label>Session<input id="sg-session\" value=\"'+esc(getActiveSession())+'\" readonly></label><label>Term<select id=\"sg-term\">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><div class=\"smart-wide\" id=\"sg-wrap\"></div><button class=\"smart-scan-button smart-wide\" id=\"sg-go\">GENERATE &amp; PRINT</button></div></section>';var c=document.getElementById('sg-class'),wrap=document.getElementById('sg-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Choose 1–4 subjects for the landscape sheet':'Choose the subject')+chooser('sg-subject',c.value,multi)+'<div class=\"smart-identify smart-hidden\" id=\"sg-shared-note\"></div></label>';wrap.onchange=function(){sharedHint('sg-shared-note',c.value,selected('sg-subject'));};};document.getElementById('sg-term').value=window.TERM||'1st Term';if(window.CLS&&classes().indexOf(CLS)>-1){c.value=CLS;c.dispatchEvent(new Event('change'));}document.getElementById('sg-go').onclick=generate;}
-function generate(){var c=document.getElementById('sg-class'),term=document.getElementById('sg-term'),session=document.getElementById('sg-session'),ids=selected('sg-subject');if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}var pairs=selectedTargets(c.value,ids);if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}showLoad('Generating identified score sheets…');api('context.set',{class_key:c.value,term:term.value,academic_session:session.value}).then(function(){return Promise.all(pairs.map(function(pair){return api('smart.sheet.create',{class_key:pair.class_key,subject_index:pair.subject_index,term:term.value,academic_session:session.value,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}});}));}).then(function(a){hideLoad();printSheets(a.map(function(x){return x.sheet;}));}).catch(function(e){hideLoad();showToast('Sheet was not generated: '+esc(e&&e.code||'request failed'),'error');});}
+function generate(){
+  var c=document.getElementById('sg-class'),term=document.getElementById('sg-term'),session=document.getElementById('sg-session'),ids=selected('sg-subject');
+  if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}
+  var pairs=selectedTargets(c.value,ids);if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}
+  showLoad('Generating identified score sheets…');
+  pairs.reduce(function(chain,pair){return chain.then(function(created){
+    return api('context.set',{class_key:pair.class_key,term:term.value,academic_session:session.value}).then(function(){
+      return api('smart.sheet.create',{class_key:pair.class_key,subject_index:pair.subject_index,term:term.value,academic_session:session.value,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}});
+    }).then(function(result){created.push(result.sheet);return created;});
+  });},Promise.resolve([])).then(function(sheets){hideLoad();printSheets(sheets);}).catch(function(e){hideLoad();showToast('Sheet was not generated: '+(e&&e.code||'request failed'),'error');});
+}
 
 function qrData(v){return new Promise(function(ok,no){try{var q=window.qrcode(0,'M');q.addData(v);q.make();ok(q.createDataURL(4,2));}catch(e){no(e);}});}
 function groupCode(a,p){var b=btoa(JSON.stringify(a.map(function(s){return s.id;}))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');return'WTS-SRM1:'+b+':'+p;}

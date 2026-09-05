@@ -32,3 +32,26 @@
 .smart-print-toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1a2a4a;color:#fff;font:600 14px Arial,sans-serif}
 .smart-print-toolbar strong{margin-right:auto}.smart-print-toolbar span{opacity:.8;font-size:12px}.smart-print-toolbar button{border:1px solid #a8e6cc;border-radius:8px;background:#7dd4b0;color:#1a2a4a;padding:9px 12px;font:800 12px Arial,sans-serif;cursor:pointer}
 @media print{.smart-print-toolbar{display:none!important}}
+
+/* Live document scanner: the guide follows the detected paper corners. */
+.smart-scanner{background:#050708;color:#fff;isolation:isolate}
+.smart-scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.smart-scan-close{position:absolute;top:max(18px,env(safe-area-inset-top));left:18px;z-index:3;width:44px;height:44px;border:0;border-radius:50%;background:rgba(0,0,0,.48);color:#fff;font-size:2rem;line-height:1;cursor:pointer}
+.smart-scan-topline{position:absolute;top:max(18px,env(safe-area-inset-top));left:50%;z-index:3;transform:translateX(-50%);max-width:calc(100% - 130px);padding:11px 18px;border-radius:24px;background:rgba(0,0,0,.58);font:700 14px/1.2 Arial,sans-serif;text-align:center;white-space:nowrap}
+.smart-scan-quad{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none}
+.smart-scan-quad polygon{fill:rgba(47,140,255,.12);stroke:#2f8cff;stroke-width:1.2;vector-effect:non-scaling-stroke;opacity:0;transition:opacity .15s ease}
+.smart-scan-quad circle{fill:#fff;stroke:#2f8cff;stroke-width:1;vector-effect:non-scaling-stroke;opacity:0;transition:opacity .15s ease}
+.smart-scan-quad.is-found polygon,.smart-scan-quad.is-found circle{opacity:1}
+.smart-scanner-bottom{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:30px 20px max(24px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.82) 28%,rgba(0,0,0,.94));text-align:center}
+.smart-scanner-controls{min-height:92px;display:flex;align-items:center;justify-content:center;position:relative}
+.smart-shutter{width:82px;height:82px;border:5px solid #fff;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 3px rgba(0,0,0,.22);cursor:pointer;padding:7px}
+.smart-shutter span{display:block;width:100%;height:100%;border-radius:50%;background:#fff;transition:transform .12s ease}
+.smart-shutter:active span{transform:scale(.88)}
+.smart-scan-thumb{position:absolute;right:max(12px,calc(50% - 185px));bottom:15px;width:54px;height:68px;border:2px solid #fff;border-radius:7px;background:rgba(255,255,255,.2);box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:flex-end;overflow:hidden}
+.smart-scan-thumb:before{content:'□';position:absolute;inset:8px;color:rgba(255,255,255,.7);font:28px/1 Arial;text-align:center}
+.smart-scan-thumb span{position:relative;z-index:1;min-width:21px;height:21px;margin:0 -7px -7px 0;border-radius:50%;background:#56b5ef;color:#08223b;font:700 12px/21px Arial,sans-serif}
+.smart-scan-mode{display:inline-flex;margin-top:18px;padding:3px;border-radius:24px;background:rgba(255,255,255,.18)}
+.smart-scan-mode button{border:0;border-radius:21px;background:transparent;color:#fff;padding:10px 19px;font:700 14px Arial,sans-serif;cursor:pointer}
+.smart-scan-mode button.selected{background:#fff;color:#111}
+.smart-scanner-bottom p{margin:14px auto 0;max-width:300px;color:rgba(255,255,255,.82);font:12px/1.4 Arial,sans-serif}
+@media(max-width:520px){.smart-scan-topline{font-size:13px}.smart-scan-thumb{right:20px}.smart-scanner-bottom{padding-left:12px;padding-right:12px}}
