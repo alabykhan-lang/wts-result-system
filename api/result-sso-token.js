@@ -107,7 +107,16 @@ module.exports = async function resultSsoToken(req, res) {
     authorize.searchParams.set('state', state);
     authorize.searchParams.set('nonce', nonce);
     appendCookie(res, transactionCookie(transaction));
-    sendJson(res, 200, { ok: true, authorize_url: authorize.toString() });
+    // Keep the HttpOnly transaction as the primary path. The verifier is also
+    // returned because some embedded browsers drop host cookies while the
+    // authorization request visits the School Portal origin.
+    sendJson(res, 200, {
+      ok: true,
+      authorize_url: authorize.toString(),
+      code_verifier: verifier,
+      state,
+      nonce,
+    });
     return;
   }
 
