@@ -1703,6 +1703,22 @@ function ssoStatus(message){
   if(err){err.textContent=message;err.className='auth-err show';}
 }
 
+function resultSsoFailureMessage(code){
+  var messages={
+    SSO_REQUEST_INVALID:'The secure sign-in request was invalid. Return to the School Portal and open Results again.',
+    SSO_CLIENT_OR_REDIRECT_INVALID:'Results is not currently registered with the School Portal. Please try again later.',
+    SSO_CODE_INVALID:'The secure sign-in response expired. Return to the School Portal and open Results again.',
+    SSO_CODE_EXPIRED:'The secure sign-in response expired. Return to the School Portal and open Results again.',
+    SSO_PKCE_INVALID:'The secure sign-in response could not be verified. Return to the School Portal and open Results again.',
+    SSO_STATE_OR_NONCE_INVALID:'The secure sign-in response could not be verified. Return to the School Portal and open Results again.',
+    RESULT_ACCESS_NOT_GRANTED:'This account does not have an active Results grant.',
+    RESULT_IDENTITY_NOT_RESOLVED:'This staff identity is not linked to a Results account. Please contact school management.',
+    IDENTITY_SERVICE_UNAVAILABLE:'The identity service is temporarily unavailable. Please try again later.',
+    RESULT_SESSION_ISSUE_FAILED:'Results could not create a secure session. Please try again.'
+  };
+  return messages[code]||'School Portal sign-in was rejected. Please return to the School Portal and try again.';
+}
+
 function resultSsoRequest(body){
   return fetch('/api/result-sso-token',{
     method:'POST',
@@ -1763,11 +1779,7 @@ function completeResultSso(){
       restartResultSso();
       return;
     }
-    if(payload&&payload.code==='RESULT_ACCESS_NOT_GRANTED'){
-      ssoStatus('This account does not have an active Results grant.');
-    }else{
-      ssoStatus('School Portal sign-in was rejected. Please return to the School Portal and try again.');
-    }
+    ssoStatus(resultSsoFailureMessage(payload&&payload.code));
   });
 }
 
