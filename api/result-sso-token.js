@@ -56,7 +56,7 @@ function isUrlSafe(value, min, max) {
     && /^[A-Za-z0-9._~-]+$/.test(value);
 }
 
-function safeExchangeResponse(payload, managementAllowed) {
+function safeExchangeResponse(payload) {
   return {
     ok: true,
     code: 'RESULT_SSO_SESSION_ISSUED',
@@ -67,7 +67,6 @@ function safeExchangeResponse(payload, managementAllowed) {
     staff: payload.staff || null,
     access_role: payload.access_role || null,
     permissions: Array.isArray(payload.permissions) ? payload.permissions : [],
-    central_registry_management_allowed: managementAllowed === true,
   };
 }
 
@@ -157,18 +156,7 @@ module.exports = async function resultSsoToken(req, res) {
     return;
   }
 
-  let managementAllowed = false;
-  try {
-    const management = await supabaseRpc('school_result_central_management_access', {
-      p_session_id: payload.session_id,
-      p_session_secret: payload.session_secret,
-    });
-    managementAllowed = management?.ok === true && management.central_registry_management_allowed === true;
-  } catch {
-    managementAllowed = false;
-  }
-
   setSessionCookie(res, payload.session_id, payload.session_secret);
   clearTransaction(res);
-  sendJson(res, 200, safeExchangeResponse(payload, managementAllowed));
+  sendJson(res, 200, safeExchangeResponse(payload));
 };

@@ -42,8 +42,9 @@ const invalidLogin = await request('/api/result-auth', {
     password: 'contract-test-invalid-password',
   }),
 });
-assert.equal(invalidLogin.response.status, 401);
+assert.equal(invalidLogin.response.status, 400);
 assert.equal(invalidLogin.body.ok, false);
+assert.equal(invalidLogin.body.code, 'SSO_REQUIRED');
 assert.equal(typeof invalidLogin.body.session_secret, 'undefined');
 assert.equal(typeof invalidLogin.body.session_id, 'undefined');
 

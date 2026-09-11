@@ -1752,6 +1752,7 @@ function completeResultSso(){
     if(payload&&(
       payload.code==='SSO_PKCE_INVALID'
       || payload.code==='SSO_STATE_OR_NONCE_INVALID'
+      || payload.code==='SSO_REQUEST_INVALID'
     )){
       restartResultSso();
       return;
