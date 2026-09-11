@@ -1741,6 +1741,7 @@ function completeResultSso(){
     client_id:'result_portal',
     redirect_uri:window.WTS_RESULT_CONFIG.redirectUri,
     code:code,
+    code_verifier:ssoStorageGet('wts_pkce_verifier')||'',
     state:state,
     nonce:nonce
   }).then(function(payload){
@@ -1769,7 +1770,10 @@ function startResultSso(isRecovery){
   if(!isRecovery)ssoStorageRemove('wts_pkce_recovery_attempt');
   ssoStatus('Opening the official WTS sign-in…');
   resultSsoRequest({action:'sso_begin',portal_origin:new URL(window.WTS_RESULT_CONFIG.authorizeUri).origin}).then(function(payload){
-    if(!payload||!payload.authorize_url)throw new Error('SSO_BEGIN_FAILED');
+    if(!payload||!payload.authorize_url||!payload.code_verifier||!payload.state||!payload.nonce)throw new Error('SSO_BEGIN_FAILED');
+    ssoStorageSet('wts_pkce_verifier',payload.code_verifier);
+    ssoStorageSet('wts_pkce_state',payload.state);
+    ssoStorageSet('wts_pkce_nonce',payload.nonce);
     window.location.replace(payload.authorize_url);
   }).catch(function(){
     ssoClearTransientState();
