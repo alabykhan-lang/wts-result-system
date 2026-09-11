@@ -1736,12 +1736,17 @@ function completeResultSso(){
     return;
   }
   ssoStatus('Completing secure WTS sign-in…');
+  // A stale WebView cookie/sessionStorage pair must never submit an old
+  // verifier for a new callback. If the saved state belongs to this callback
+  // it is safe to use; otherwise the server can use its transaction cookie.
+  var savedState=ssoStorageGet('wts_pkce_state');
+  var savedVerifier=savedState===state?ssoStorageGet('wts_pkce_verifier'):'';
   resultSsoRequest({
     grant_type:'authorization_code',
     client_id:'result_portal',
     redirect_uri:window.WTS_RESULT_CONFIG.redirectUri,
     code:code,
-    code_verifier:ssoStorageGet('wts_pkce_verifier')||'',
+    code_verifier:savedVerifier,
     state:state,
     nonce:nonce
   }).then(function(payload){
@@ -1770,10 +1775,17 @@ function startResultSso(isRecovery){
   if(!isRecovery)ssoStorageRemove('wts_pkce_recovery_attempt');
   ssoStatus('Opening the official WTS sign-in…');
   resultSsoRequest({action:'sso_begin',portal_origin:new URL(window.WTS_RESULT_CONFIG.authorizeUri).origin}).then(function(payload){
-    if(!payload||!payload.authorize_url||!payload.code_verifier||!payload.state||!payload.nonce)throw new Error('SSO_BEGIN_FAILED');
-    ssoStorageSet('wts_pkce_verifier',payload.code_verifier);
-    ssoStorageSet('wts_pkce_state',payload.state);
-    ssoStorageSet('wts_pkce_nonce',payload.nonce);
+    if(!payload||!payload.authorize_url)throw new Error('SSO_BEGIN_FAILED');
+    var transaction=payload.transaction||{
+      verifier:payload.code_verifier,
+      state:payload.state,
+      nonce:payload.nonce
+    };
+    if(transaction.verifier&&transaction.state&&transaction.nonce){
+      ssoStorageSet('wts_pkce_verifier',transaction.verifier);
+      ssoStorageSet('wts_pkce_state',transaction.state);
+      ssoStorageSet('wts_pkce_nonce',transaction.nonce);
+    }
     window.location.replace(payload.authorize_url);
   }).catch(function(){
     ssoClearTransientState();

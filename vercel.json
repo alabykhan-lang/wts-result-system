@@ -6,6 +6,10 @@
       "dest": "/api/$1"
     },
     {
+      "src": "^/$",
+      "dest": "/portal_core.html"
+    },
+    {
       "src": "/(.*)",
       "headers": {
         "X-Content-Type-Options": "nosniff",
