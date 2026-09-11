@@ -12,6 +12,7 @@ const {
 const { buildExtractionPrompt, normalizeExtraction } = require('./_smart-recording');
 
 const MAX_IMAGE_BYTES = 4_000_000;
+const PROVIDER_TIMEOUT_MS = 35_000;
 
 function imageParts(dataUrl) {
   const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
@@ -40,17 +41,38 @@ async function readStoredProviderKey(session, scope) {
     p_academic_session: scope?.academic_session || null,
     p_term: scope?.term || null,
   });
-  return payload?.ok && typeof payload.provider_key === 'string'
+  if (!payload?.ok) {
+    if (payload?.code === 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED') return '';
+    throw payload || { ok: false, code: 'SMART_PROVIDER_KEY_READ_FAILED' };
+  }
+  return payload?.provider_key && typeof payload.provider_key === 'string'
     ? payload.provider_key.trim()
     : '';
 }
 
 async function resolveProviderKey(session, scope) {
-  try {
-    const stored = await readStoredProviderKey(session, scope);
-    if (stored) return stored;
-  } catch {}
-  return String(process.env.WTS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
+  const stored = await readStoredProviderKey(session, scope);
+  if (stored) return { ok: true, key: stored };
+  const fallback = String(process.env.WTS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
+  if (fallback) return { ok: true, key: fallback };
+  return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
+}
+
+function parseGeminiJson(raw) {
+  const cleaned = String(raw || '').trim().replace(/^\uFEFF/, '');
+  const unfenced = cleaned.replace(/^\x60\x60\x60(?:json)?\s*/i, '').replace(/\s*\x60\x60\x60$/i, '').trim();
+  try { return JSON.parse(unfenced); } catch {}
+  const first = unfenced.indexOf('{');
+  const last = unfenced.lastIndexOf('}');
+  if (first >= 0 && last > first) {
+    try { return JSON.parse(unfenced.slice(first, last + 1)); } catch {}
+  }
+  const arrayFirst = unfenced.indexOf('[');
+  const arrayLast = unfenced.lastIndexOf(']');
+  if (arrayFirst >= 0 && arrayLast > arrayFirst) {
+    try { return JSON.parse(unfenced.slice(arrayFirst, arrayLast + 1)); } catch {}
+  }
+  return null;
 }
 
 async function callGemini(apiKey, prompt, image) {
@@ -67,10 +89,14 @@ async function callGemini(apiKey, prompt, image) {
   for (const model of models) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
     let response;
+    let timeoutId;
     try {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
       response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [
             { text: prompt },
@@ -79,8 +105,10 @@ async function callGemini(apiKey, prompt, image) {
           generationConfig: { responseMimeType: 'application/json', temperature: 0 },
         }),
       });
-    } catch {
-      return { ok: false, code: 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+    } catch (error) {
+      return { ok: false, code: error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
     }
 
     let payload = {};
@@ -103,7 +131,10 @@ async function callGemini(apiKey, prompt, image) {
 
     const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
     try {
-      return { ok: true, payload: JSON.parse(raw) };
+      const parsed = parseGeminiJson(raw);
+      return parsed === null
+        ? { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' }
+        : { ok: true, payload: parsed };
     } catch {
       return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
     }
@@ -201,13 +232,14 @@ function groupedSheet(sheetPayloads) {
 }
 
 async function extractSmart(session, sheet, pageIndex, image) {
-  const apiKey = await resolveProviderKey(session, {
+  const provider = await resolveProviderKey(session, {
     class_key: sheet.class_key,
     subject_index: Number(sheet.subject_index),
     academic_session: sheet.academic_session,
     term: sheet.term,
   });
-  return callGemini(apiKey, buildExtractionPrompt(sheet, pageIndex), image);
+  if (!provider.ok) return provider;
+  return callGemini(provider.key, buildExtractionPrompt(sheet, pageIndex), image);
 }
 
 function genericPrompt(body) {
@@ -251,13 +283,14 @@ function smartGenericPrompt(body) {
 }
 
 async function extractRecordBook(session, body, image) {
-  const apiKey = await resolveProviderKey(session, {
+  const provider = await resolveProviderKey(session, {
     class_key: body.class_key,
     subject_index: Number.isInteger(Number(body.subject_index)) ? Number(body.subject_index) : null,
     academic_session: body.academic_session,
     term: body.term,
   });
-  const result = await callGemini(apiKey, genericPrompt(body), image);
+  if (!provider.ok) return provider;
+  const result = await callGemini(provider.key, genericPrompt(body), image);
   if (!result.ok) return result;
   const rows = Array.isArray(result.payload) ? result.payload : result.payload?.rows;
   return Array.isArray(rows) ? { ok: true, rows } : { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
@@ -265,20 +298,21 @@ async function extractRecordBook(session, body, image) {
 
 async function extractGeneric(session, body, image) {
   const subjectIndex = Number.isInteger(Number(body.subject_index)) ? Number(body.subject_index) : null;
-  const apiKey = await resolveProviderKey(session, {
+  const provider = await resolveProviderKey(session, {
     class_key: body.class_key,
     subject_index: subjectIndex,
     academic_session: body.academic_session,
     term: body.term,
   });
-  const result = await callGemini(apiKey, smartGenericPrompt(body), image);
+  if (!provider.ok) return provider;
+  const result = await callGemini(provider.key, smartGenericPrompt(body), image);
   if (!result.ok) return result;
   const rows = Array.isArray(result.payload) ? result.payload : result.payload?.rows;
   return Array.isArray(rows) ? { ok: true, rows } : { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
 }
 
 function extractionStatus(code) {
-  return ['SMART_RECORDING_PROVIDER_NOT_CONFIGURED', 'SMART_EXTRACTION_PROVIDER_FAILED', 'SMART_EXTRACTION_PROVIDER_KEY_INVALID', 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE'].includes(code) ? 503 : 422;
+  return ['SMART_RECORDING_PROVIDER_NOT_CONFIGURED', 'SMART_EXTRACTION_PROVIDER_FAILED', 'SMART_EXTRACTION_PROVIDER_KEY_INVALID', 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE', 'SMART_EXTRACTION_PROVIDER_TIMEOUT'].includes(code) ? 503 : 422;
 }
 
 module.exports = async function smartRecording(req, res) {

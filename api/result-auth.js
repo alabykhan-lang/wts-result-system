@@ -20,6 +20,7 @@ function safeLoginResponse(payload) {
     result_user: payload.result_user,
     access_role: payload.access_role,
     permissions: payload.permissions,
+    result_write_enabled: payload.result_write_enabled === true,
   };
 }
 

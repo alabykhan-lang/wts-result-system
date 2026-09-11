@@ -38,7 +38,27 @@ module.exports = async function resultData(req, res) {
     return;
   }
   const requestPayload = body.payload && typeof body.payload === 'object' ? body.payload : {};
-  let payload = action === 'smart.sheet.create'
+  let payload = action === 'staff.write_access.read'
+    ? await supabaseRpc('school_result_staff_write_access_read', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+      })
+    : action === 'staff.write_access.update'
+      ? await supabaseRpc('school_result_staff_write_access_update', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+          p_person_id: requestPayload.person_id || null,
+          p_write_enabled: requestPayload.write_enabled === true,
+          p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
+        })
+    : action === 'staff.write_access.bulk'
+      ? await supabaseRpc('school_result_staff_write_access_bulk', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+          p_write_enabled: requestPayload.write_enabled === true,
+          p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
+        })
+    : action === 'smart.sheet.create'
     ? await supabaseRpc('school_result_smart_sheet_create', {
         p_session_id: session.sessionId,
         p_session_secret: session.sessionSecret,

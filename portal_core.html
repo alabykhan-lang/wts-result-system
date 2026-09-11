@@ -567,6 +567,12 @@ body.result-context-read-only .results-history-readable{display:flex}
 @media(max-width:600px){.score-publish-all{width:100%}.score-publish-all .btn{flex:1}}
 
 </style>
+<style>
+.result-staff-write-note{display:none;margin:0 0 13px;padding:10px 12px;border-left:3px solid var(--gold);border-radius:8px;background:#fff8e9;color:#725d37;font-size:.75rem;line-height:1.45}
+body.result-staff-write-disabled .result-staff-write-note{display:block}
+body.result-staff-write-disabled #sheet-rows .sc-inp{pointer-events:none;opacity:.62;background:#f3f4f6}
+body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disabled #publish-btn{opacity:.5;pointer-events:none}
+</style>
 </head>
 <body>
 
@@ -872,6 +878,7 @@ body.result-context-read-only .results-history-readable{display:flex}
         <div id="sheet-rows"></div>
       </div>
       <p class="result-read-only-note">This is a previous or closed academic context. You can view it, but edits and publication are disabled.</p>
+      <p class="result-staff-write-note">This staff account is currently read-only. You can view and cross-check scores, but recording, editing, applying OCR scores, and publishing are disabled until management enables score entry in Settings.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-outline" id="save-draft-btn" onclick="saveDraft()">Save Draft</button>
         <button class="btn btn-primary" id="publish-btn" onclick="togglePublish()">Publish Subject</button>
@@ -1034,6 +1041,26 @@ body.result-context-read-only .results-history-readable{display:flex}
           <div id="gemini-key-status" style="font-size:.75rem;color:var(--gray);margin-top:4px">Checking provider configuration…</div>
           <div style="font-size:.75rem;color:var(--gray);margin-top:4px">Used by the record-book scanner and Smart Recording. The key is stored on the server and is never shown back here. Get a key at aistudio.google.com</div>
           <button class="btn btn-primary btn-sm" onclick="saveGeminiKey()" style="margin-top:10px">Save / Replace API Key</button>
+        </div>
+      </div>
+
+      <div class="tbl-wrap" id="result-staff-write-card" style="margin-bottom:0;grid-column:1/-1;display:none">
+        <div class="tbl-head">
+          <h3>Staff score-entry access</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-xs" type="button" onclick="setAllStaffWriteAccess(true)">Turn on all</button>
+            <button class="btn btn-outline btn-xs" type="button" onclick="setAllStaffWriteAccess(false)">Turn off all</button>
+          </div>
+        </div>
+        <div style="padding:16px">
+          <p style="font-size:.75rem;color:var(--gray);margin-bottom:12px">Turn writing on only for the staff who should record or edit scores. Everyone else can still view and cross-check results.</p>
+          <div id="result-staff-write-status" style="font-size:.75rem;color:var(--gray);margin-bottom:10px">Loading staff access…</div>
+          <div style="overflow-x:auto">
+            <table class="data-table" style="font-size:.78rem;min-width:620px">
+              <thead><tr><th>Staff</th><th>Role</th><th>Score permission</th><th style="text-align:center">Can write</th></tr></thead>
+              <tbody id="result-staff-write-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
       <div class="tbl-wrap" style="margin-bottom:0">
@@ -1469,6 +1496,8 @@ var CURRENT_USER=null;
 var CURRENT_AUTH_MODE=null;
 var CURRENT_PERMISSIONS=[];
 var CONTEXT_READ_ONLY=false;
+var RESULT_WRITE_ENABLED=false;
+var RESULT_ENTRY_WRITE_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish'];
 window._academicContext=null;
 window._academicHistory=[];
 window._activeTermStatus='open';
@@ -1490,6 +1519,7 @@ function resultAuthRequest(method,body){
 }
 
 function resultDataRequest(action,payload){
+  if(isCentralAuth()&&RESULT_ENTRY_WRITE_ACTIONS.indexOf(action)>-1&&!RESULT_WRITE_ENABLED)return Promise.reject({code:'RESULT_STAFF_WRITE_DISABLED'});
   if(CONTEXT_READ_ONLY&&isResultMutationAction(action))return Promise.reject({code:'RESULT_ACADEMIC_CONTEXT_READ_ONLY'});
   return fetch('/api/result-data',{
     method:'POST',credentials:'same-origin',
@@ -1527,11 +1557,15 @@ function centralUserFromPayload(payload){
     full_name:resultUser.full_name||resultUser.email,
     _permissions:permissions,
     _person:payload&&payload.person,
-    _expires_at:payload&&payload.expires_at
+    _expires_at:payload&&payload.expires_at,
+    _write_enabled:payload&&payload.result_write_enabled===true
   };
 }
 
 function isCentralAuth(){return CURRENT_AUTH_MODE==='central';}
+function hasResultManagementAccess(){return isCentralAuth()&&(hasResultPermission('results.manage')||hasResultPermission('result_users.manage')||hasResultPermission('result_settings.manage'));}
+function canWriteResults(){return isCentralAuth()&&!CONTEXT_READ_ONLY&&RESULT_WRITE_ENABLED&&(CURRENT_PERMISSIONS.indexOf('scores.enter')>-1||CURRENT_PERMISSIONS.indexOf('results.manage')>-1);}
+window.canWriteResults=canWriteResults;
 
 function hasResultPermission(permission){
   if(!isCentralAuth())return false;
@@ -1558,6 +1592,8 @@ function loginSuccess(user,mode){
   CURRENT_USER=user;
   CURRENT_AUTH_MODE='central';
   CURRENT_PERMISSIONS=Array.isArray(user._permissions)?user._permissions:[];
+  RESULT_WRITE_ENABLED=user._write_enabled===true;
+  document.body.classList.toggle('result-staff-write-disabled',!RESULT_WRITE_ENABLED);
   document.getElementById('auth-screen').style.display='none';
   // Set user info in sidebar
   document.getElementById('sb-user-name').textContent=user.full_name;
@@ -1575,7 +1611,7 @@ function loginSuccess(user,mode){
   if(lg)document.getElementById('auth-logo').src=lg.src;
   NAV_HISTORY=['home'];
   try{history.replaceState({page:'home'},'',window.location.pathname);}catch(e){}
-  loadRemoteSettings({force:true}).then(function(){
+  Promise.all([loadRemoteSettings({force:true}),loadResultSubjectCatalog()]).then(function(){
     restorePortalPageAfterLogin();
   }).catch(function(){
     restorePortalPageAfterLogin();
@@ -1741,6 +1777,8 @@ function completeResultSso(){
   var error=params.get('error')||'';
   if(error){
     ssoClearTransientState();
+    RESULT_WRITE_ENABLED=false;
+    document.body.classList.add('result-staff-write-disabled');
     ssoStatus('Central WTS sign-in was not completed. Please try again.');
     return;
   }
@@ -1768,7 +1806,9 @@ function completeResultSso(){
   }).then(function(payload){
     ssoClearTransientState();
     ssoStorageRemove('wts_pkce_recovery_attempt');
-    loginSuccess(centralUserFromPayload(payload),'central');
+    return resultAuthRequest('GET').catch(function(){return payload;});
+  }).then(function(context){
+    loginSuccess(centralUserFromPayload(context),'central');
   }).catch(function(payload){
     ssoClearTransientState();
     if(payload&&(
@@ -1820,6 +1860,8 @@ function checkSession(){
 }
 
 function showAuthScreen(){
+  RESULT_WRITE_ENABLED=false;
+  document.body.classList.add('result-staff-write-disabled');
   var a=document.getElementById('auth-screen');
   if(a)a.style.display='flex';
   document.body.classList.remove('results-management-mode');
@@ -1969,6 +2011,7 @@ function isOfficialOpenContext(session,term){
 function updateContextLock(){
   CONTEXT_READ_ONLY=Boolean(CONTEXT_EXPLICIT&&!isOfficialOpenContext(getActiveSession(),TERM));
   document.body.classList.toggle('result-context-read-only',CONTEXT_READ_ONLY);
+  document.body.classList.toggle('result-staff-write-disabled',isCentralAuth()&&!RESULT_WRITE_ENABLED);
   var label=document.getElementById('official-context-label');
   var official=officialAcademicContext();
   if(label)label.textContent='Official · '+official.session+' · '+official.term;
@@ -2474,8 +2517,34 @@ function ensureSeniorGeneralSubjects(classKey,list){
   SENIOR_GENERAL_SUBJECTS.forEach(function(subject){var key=subjectConfigKey(subject);if(!present[key]){out.push(subject);present[key]=true;}});
   return out;
 }
+
+var RESULT_SUBJECT_CATALOG={};
+var RESULT_SUBJECT_CATALOG_READY=false;
+function loadResultSubjectCatalog(){
+  if(!isCentralAuth())return Promise.resolve();
+  return resultDataRequest('read.subjects',{}).then(function(payload){
+    var next={};
+    Object.keys(DEPTS||{}).forEach(function(key){next[key]=[];});
+    (payload.rows||[]).forEach(function(row){
+      var key=String(row.class_key||'').trim();
+      var name=String(row.subject_name||'').trim();
+      if(!key||!name||!Object.prototype.hasOwnProperty.call(next,key))return;
+      next[key].push({index:Number(row.subject_index),name:name});
+    });
+    Object.keys(next).forEach(function(key){
+      next[key].sort(function(a,b){return a.index-b.index;});
+      RESULT_SUBJECT_CATALOG[key]=next[key].map(function(row){return row.name;});
+    });
+    RESULT_SUBJECT_CATALOG_READY=true;
+  }).catch(function(error){
+    console.warn('Result subject catalog unavailable; using local subject fallback.',error);
+  });
+}
 function configuredSubjects(classKey,cfg){
   cfg=cfg||getCfg();
+  if(RESULT_SUBJECT_CATALOG_READY&&Object.prototype.hasOwnProperty.call(RESULT_SUBJECT_CATALOG,classKey)){
+    return RESULT_SUBJECT_CATALOG[classKey].slice();
+  }
   var cfgDepts=cfg.depts||{};
   var list;
   if(cfgDepts[classKey]&&Array.isArray(cfgDepts[classKey].subjects))list=cfgDepts[classKey].subjects.slice();
@@ -3228,7 +3297,7 @@ function renderStudents(){
 }
 
 function openAddStudent(){
-  if(CONTEXT_READ_ONLY){showToast('Historical records are read-only.','error');return;}
+  if(!canWriteResults()){showToast('Score entry is currently read-only.','error');return;}
   photoDataURL='';
   document.getElementById('modal-title').textContent='Add Student';
   document.getElementById('edit-id').value='';
@@ -3346,9 +3415,9 @@ function renderScoreGrid(){
   var subjs=subjects();
   var el=document.getElementById('subj-cards');
   var scoreHeading=document.getElementById('score-grid-heading');
-  if(scoreHeading)scoreHeading.textContent=CONTEXT_READ_ONLY?'View Subject Scores':'Select a Subject to Enter Scores';
+  if(scoreHeading)scoreHeading.textContent=canWriteResults()?'Select a Subject to Enter Scores':'View Subject Scores';
   var publishTools=document.getElementById('score-publish-all');
-  if(publishTools)publishTools.style.display=CONTEXT_READ_ONLY?'none':'flex';
+  if(publishTools)publishTools.style.display=canWriteResults()?'flex':'none';
   document.getElementById('scores-grid-view').style.display='block';
   document.getElementById('scores-sheet-view').style.display='none';
   if(!students.length){
@@ -3492,6 +3561,7 @@ function scoreSaveMessage(error){
   if(code==='RESULT_ACADEMIC_SESSION_NOT_ACTIVE'||code==='RESULT_CONTEXT_INVALID')return 'Save failed — not recorded: select the selected academic session again.';
   if(code==='RESULT_CLASS_SCOPE_DENIED'||code==='RESULT_SUBJECT_SCOPE_DENIED')return 'Save failed — not recorded: this class or subject is not assigned.';
   if(code==='RESULT_PERMISSION_DENIED')return 'Save failed — not recorded: score-entry permission is required.';
+  if(code==='RESULT_STAFF_WRITE_DISABLED')return 'Save failed — this staff account is currently read-only. Ask management to enable score entry in Settings.';
   return 'Save failed — not recorded';
 }
 function queueScoreSave(studentId,subjectIdx){
@@ -3519,7 +3589,7 @@ function openSheet(idx){
   var subjs=subjects();
   currentSheetIdx=idx;
   var isPub=isPublished(CLS,idx);
-  var scoreInputLock=CONTEXT_READ_ONLY?' readonly':'';
+  var scoreInputLock=canWriteResults()?'':' readonly';
   document.getElementById('scores-grid-view').style.display='none';
   document.getElementById('scores-sheet-view').style.display='block';
   document.getElementById('sheet-title').textContent=(idx+1)+'. '+subjs[idx];
@@ -3609,6 +3679,7 @@ function dbUpsertScore(studentId,subjectIdx,ca1,ca2,ca3,exam){
   return Promise.reject({code:'RESULT_CENTRAL_SESSION_REQUIRED'});
 }
 function saveDraft(){
+  if(!canWriteResults()){showToast('Score entry is currently read-only.','error');return;}
   var idx=currentSheetIdx;
   if(idx<0)return;
   var students=DB_STUDENTS[CLS]||[];
@@ -3635,6 +3706,7 @@ function saveDraft(){
 }
 
 function togglePublish(){
+  if(!canWriteResults()){showToast('Score entry is currently read-only.','error');return;}
   var idx=currentSheetIdx;if(idx<0)return;
   var isPub=isPublished(CLS,idx);
   if(isPub){
@@ -4731,9 +4803,50 @@ function renderAnalytics(){
 // ============================================================
 // SETTINGS
 // ============================================================
+
+var STAFF_WRITE_ACCESS=[];
+function staffWriteErrorMessage(error){
+  var code=error&&error.code;
+  if(code==='RESULT_PERMISSION_DENIED')return 'Only Results management can change staff score-entry access.';
+  if(code==='RESULT_STAFF_WRITE_TARGET_NOT_FOUND')return 'That staff member no longer has an active Results grant.';
+  return 'Staff score-entry access could not be updated.';
+}
+function renderStaffWriteAccess(data){
+  var card=document.getElementById('result-staff-write-card'),body=document.getElementById('result-staff-write-tbody'),status=document.getElementById('result-staff-write-status');
+  if(!card||!body||!status)return;
+  if(!hasResultManagementAccess()){card.style.display='none';return;}
+  card.style.display='block';
+  STAFF_WRITE_ACCESS=Array.isArray(data&&data.rows)?data.rows:[];
+  status.textContent=(data&&data.default_write_enabled?'Default: writing enabled for eligible staff.':'Default: read-only; enable selected staff below.')+' '+STAFF_WRITE_ACCESS.length+' active Results staff.';
+  body.innerHTML=STAFF_WRITE_ACCESS.map(function(row){
+    var perms=Array.isArray(row.permissions)?row.permissions:[];
+    var manager=perms.indexOf('results.manage')>-1;
+    var eligible=row.eligible_for_score_entry===true;
+    var locked=!eligible||manager;
+    var label=manager?'Management (always enabled)':eligible?(row.write_enabled?'Writing enabled':'Read-only'):'View only';
+    return '<tr><td><strong>'+escapeHtml(row.full_name||row.email||row.person_id)+'</strong><small style="display:block;color:var(--gray)">'+escapeHtml(row.email||'')+'</small></td>'
+      +'<td>'+escapeHtml(row.access_role||'Staff')+'</td><td><span class="badge '+(eligible?'badge-green':'badge')+'">'+(eligible?'Eligible':'View only')+'</span></td>'
+      +'<td style="text-align:center"><label class="toggle" title="'+escapeHtml(label)+'"><input type="checkbox" '+(row.write_enabled?'checked ':'')+(locked?'disabled ':'')+' onchange="setStaffWriteAccess(\''+escapeHtml(row.person_id)+'\',this.checked)"/><span class="toggle-slider"></span></label><small style="display:block;color:var(--gray)">'+escapeHtml(label)+'</small></td></tr>';
+  }).join('')||'<tr><td colspan="4" style="color:var(--gray)">No active Results staff grants found.</td></tr>';
+}
+function loadStaffWriteAccess(){
+  var card=document.getElementById('result-staff-write-card');
+  if(!card||!hasResultManagementAccess()){if(card)card.style.display='none';return Promise.resolve();}
+  return resultDataRequest('staff.write_access.read',{}).then(function(data){renderStaffWriteAccess(data);}).catch(function(error){card.style.display='block';var status=document.getElementById('result-staff-write-status');if(status)status.textContent=staffWriteErrorMessage(error);});
+}
+function setStaffWriteAccess(personId,enabled){
+  if(!hasResultManagementAccess())return;
+  resultDataRequest('staff.write_access.update',{person_id:personId,write_enabled:!!enabled,reason:'Updated from Result Portal Settings'}).then(function(){showToast(enabled?'Score entry enabled for this staff member.':'Staff member is now read-only.');return loadStaffWriteAccess();}).catch(function(error){showToast(staffWriteErrorMessage(error),'error');loadStaffWriteAccess();});
+}
+function setAllStaffWriteAccess(enabled){
+  if(!hasResultManagementAccess())return;
+  if(!window.confirm((enabled?'Turn on writing for all eligible Results staff?':'Turn off writing for all Results staff?')+' Existing scores will not be changed.'))return;
+  resultDataRequest('staff.write_access.bulk',{write_enabled:!!enabled,reason:'Bulk update from Result Portal Settings'}).then(function(){showToast(enabled?'Score entry enabled for all eligible staff.':'All staff are now read-only.');return loadStaffWriteAccess();}).catch(function(error){showToast(staffWriteErrorMessage(error),'error');});
+}
 function renderSettings(){
   var ki=document.getElementById('gemini-key-input');if(ki)ki.value='';
   loadProviderStatus();
+  loadStaffWriteAccess();
   var sc=getSessionCfg();
   var el=function(id){return document.getElementById(id);};
   if(el('cfg-resumption'))el('cfg-resumption').value=sc.resumption||'';
@@ -5112,8 +5225,8 @@ function handleOCRImage(evt){
     var rawSrc=e.target.result;
     var img2=new Image();
     img2.onload=function(){
-      // Resize to max 1200px for better handwriting legibility
-      var MAX=1200;
+      // Preserve enough detail for handwriting while staying below the server body limit.
+      var MAX=2200;
       var w=img2.width,h=img2.height;
       if(w>MAX||h>MAX){
         if(w>h){h=Math.round(h*MAX/w);w=MAX;}
@@ -5123,7 +5236,12 @@ function handleOCRImage(evt){
       canvas.width=w; canvas.height=h;
       var ctx=canvas.getContext('2d');
       ctx.drawImage(img2,0,0,w,h);
-      var compressed=canvas.toDataURL('image/jpeg',0.85);
+      var quality=.86;
+      var compressed=canvas.toDataURL('image/jpeg',quality);
+      while(compressed.length>5200000&&quality>.55){
+        quality-=.06;
+        compressed=canvas.toDataURL('image/jpeg',quality);
+      }
       OCR_IMG_B64=compressed.split(',')[1];
       var prev=document.getElementById('ocr-preview-img');
       if(prev)prev.src=compressed;
@@ -5241,6 +5359,7 @@ function updateOCRMatch(el){
 }
 
 function applyOCRScores(){
+  if(!canWriteResults()){showToast('OCR results can be reviewed, but this staff account cannot apply scores while it is read-only.','error');return;}
   var applied=0;
   OCR_MATCHES.forEach(function(m){
     if(!m.student)return;

@@ -55,3 +55,16 @@
 .smart-scan-mode button.selected{background:#fff;color:#111}
 .smart-scanner-bottom p{margin:14px auto 0;max-width:300px;color:rgba(255,255,255,.82);font:12px/1.4 Arial,sans-serif}
 @media(max-width:520px){.smart-scan-topline{font-size:13px}.smart-scan-thumb{right:20px}.smart-scanner-bottom{padding-left:12px;padding-right:12px}}
+
+@media print{
+  .smart-print-page{break-inside:avoid;page-break-inside:avoid}
+  .smart-print-header{height:24mm!important;min-height:24mm;gap:3mm}
+  .smart-print-title{min-width:0;flex:1;overflow:hidden}
+  .smart-print-header>div:last-child{width:27mm;flex:0 0 27mm;text-align:center}
+  .smart-print-table{margin-top:2mm}
+  .smart-print-page.landscape .smart-print-table th,
+  .smart-print-page.landscape .smart-print-table td{height:3mm!important;padding:.12mm .3mm!important;font-size:5.4pt;line-height:1}
+  .smart-print-page.landscape .smart-print-table .score{font-size:5pt}
+  .smart-print-page.portrait .smart-print-table th,
+  .smart-print-page.portrait .smart-print-table td{height:4.1mm!important;padding:.22mm .45mm!important;font-size:6.1pt;line-height:1.02}
+}
