@@ -33,8 +33,12 @@ module.exports = async function resultData(req, res) {
   }
 
   const action = body.action.trim();
+  if (action === 'students.upsert' || action === 'students.archive') {
+    sendJson(res, 403, { ok: false, code: 'RESULT_STUDENT_MUTATION_REGISTRY_ONLY' });
+    return;
+  }
   const requestPayload = body.payload && typeof body.payload === 'object' ? body.payload : {};
-  const payload = action === 'smart.sheet.create'
+  let payload = action === 'smart.sheet.create'
     ? await supabaseRpc('school_result_smart_sheet_create', {
         p_session_id: session.sessionId,
         p_session_secret: session.sessionSecret,
@@ -184,6 +188,21 @@ module.exports = async function resultData(req, res) {
         p_action: action,
         p_payload: requestPayload,
       });
+  if (payload?.ok && action === 'read.students' && Array.isArray(payload.rows) && payload.rows.length) {
+    const portfolioPayload = await supabaseRpc('school_profile_portfolios_read', {
+      p_session_id: session.sessionId,
+      p_session_secret: session.sessionSecret,
+      p_target_type: 'student',
+      p_class_key: requestPayload.class_key || null,
+      p_student_id: requestPayload.student_id || null,
+      p_academic_session: requestPayload.academic_session || null,
+      p_term: requestPayload.term || null,
+    });
+    if (portfolioPayload?.ok && Array.isArray(portfolioPayload.rows)) {
+      const byStudent = new Map(portfolioPayload.rows.map((entry) => [String(entry.student_id), Array.isArray(entry.portfolios) ? entry.portfolios : []]));
+      payload = { ...payload, rows: payload.rows.map((student) => ({ ...student, portfolios: byStudent.get(String(student.id)) || [] })) };
+    }
+  }
   if (!payload?.ok) {
     sendJson(res, authStatus(payload?.code), payload || { ok: false, code: 'RESULT_REQUEST_FAILED' });
     return;

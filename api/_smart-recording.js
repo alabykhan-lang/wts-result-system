@@ -120,7 +120,7 @@ function normalizeExtraction(sheet, providerPayload, pageIndex = 0) {
 function buildExtractionPrompt(sheet, pageIndex = 0) {
   const rows = (sheet.roster || [])
     .filter((student) => Number(student.page_index || 0) === Number(pageIndex))
-    .map((student) => ({ row_index: student.row_index, page_row: student.page_row, printed_name: student.name, admission_number: student.admno || '' }));
+    .map((student) => ({ row_index: student.row_index, page_row: student.page_row }));
   const subjectSheets = sheetList(sheet);
   const visibleSubjectSheets = sheet.grouped_across_classes === true
     ? [subjectSheets[0]]
@@ -134,7 +134,7 @@ function buildExtractionPrompt(sheet, pageIndex = 0) {
   }));
   return [
     'Read handwritten numeric scores from this WTS controlled score sheet.',
-    'Use the printed row number as the main identity. Read the printed student name and admission number only as secondary evidence if a row is unclear.',
+    'Use the printed row number as the identity. Student names and admission numbers are intentionally not supplied to the provider.',
     'Return every listed row, every listed subject, and every component: ca1, ca2, ca3, exam.',
     'For a genuinely empty cell use state "blank", value null, confidence 1.',
     'For handwriting that is present but unclear use state "uncertain", your best numeric value or null, and confidence below 0.82.',

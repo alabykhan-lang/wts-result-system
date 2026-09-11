@@ -466,6 +466,11 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .progress-table th,.progress-table td{padding:3px 4px}
   .progress-table td.progress-name{white-space:normal}
   #rc-wrap{overflow:visible!important}
+  #bs-wrap{overflow:visible!important}
+  #bs-wrap table{width:100%!important;table-layout:fixed;font-size:7.5pt!important}
+  #bs-wrap thead{display:table-header-group}
+  #bs-wrap tr{break-inside:avoid;page-break-inside:avoid}
+  #bs-wrap .broadsheet-subject{break-inside:auto!important;page-break-inside:auto!important}
   .report-card{
     page:reportcard;
     width:100%!important;
@@ -825,11 +830,10 @@ body.result-context-read-only .results-history-readable{display:flex}
   <div class="page" id="page-students">
     <div class="tbl-wrap">
       <div class="tbl-head">
-        <h3>Student Roster</h3>
-        <button class="btn btn-primary btn-sm" onclick="openAddStudent()">+ Add Student</button>
+        <div><h3>Student Roster</h3><small style="color:var(--gray)">Student records are managed only in Central Registry.</small></div>
       </div>
       <table class="data-table">
-        <thead><tr><th>#</th><th>Full Name</th><th>Gender</th><th>Reg. No.</th><th>House</th><th>Photo</th><th>Actions</th></tr></thead>
+        <thead><tr><th>#</th><th>Full Name</th><th>Gender</th><th>Reg. No.</th><th>House</th><th>Photo</th></tr></thead>
         <tbody id="stu-tbody"></tbody>
       </table>
     </div>
@@ -881,6 +885,10 @@ body.result-context-read-only .results-history-readable{display:flex}
       <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
         <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Class:</label>
         <div id="bs-class-label" style="font-weight:700;color:var(--g1);font-size:.88rem"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
+        <label for="bs-subject-select" style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Subject:</label>
+        <select id="bs-subject-select" class="sel" style="min-width:190px" onchange="refreshBroadsheet()"></select>
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
         <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Term:</label>
@@ -1339,6 +1347,7 @@ body.result-context-read-only .results-history-readable{display:flex}
             <div><strong>Age:</strong> <span id="pf-age"></span></div>
             <div><strong>Class:</strong> <span id="pf-class"></span></div>
           </div>
+          <div id="pf-portfolios" style="display:none;margin-top:8px;gap:5px;flex-wrap:wrap"></div>
         </div>
       </div>
       <p class="sec-title" style="margin-top:0">Published Subjects</p>
@@ -1722,15 +1731,7 @@ function completeResultSso(){
   var code=params.get('code')||'';
   var state=params.get('state')||'';
   var nonce=params.get('nonce')||'';
-  var verifier='';
-  var expectedState='';
-  var expectedNonce='';
-  try{
-    verifier=ssoStorageGet('wts_pkce_verifier');
-    expectedState=ssoStorageGet('wts_pkce_state');
-    expectedNonce=ssoStorageGet('wts_pkce_nonce');
-  }catch(e){}
-  if(!code||!verifier||!expectedState||!expectedNonce||state!==expectedState||nonce!==expectedNonce){
+  if(!code||!state||!nonce){
     restartResultSso();
     return;
   }
@@ -1740,7 +1741,6 @@ function completeResultSso(){
     client_id:'result_portal',
     redirect_uri:window.WTS_RESULT_CONFIG.redirectUri,
     code:code,
-    code_verifier:verifier,
     state:state,
     nonce:nonce
   }).then(function(payload){
@@ -1765,38 +1765,11 @@ function completeResultSso(){
 }
 
 function startResultSso(isRecovery){
-  if(!window.crypto||!window.crypto.subtle||!window.crypto.getRandomValues){
-    ssoStatus('This browser cannot perform secure sign-in. Please use an updated browser.');
-    return;
-  }
-  var verifier='';
-  var state='';
-  var nonce='';
-  try{
-    if(!isRecovery)ssoStorageRemove('wts_pkce_recovery_attempt');
-    verifier=ssoRandomToken(64);
-    state=ssoRandomToken(24);
-    nonce=ssoRandomToken(24);
-    ssoStorageSet('wts_pkce_verifier',verifier);
-    ssoStorageSet('wts_pkce_state',state);
-    ssoStorageSet('wts_pkce_nonce',nonce);
-  }catch(e){
-    ssoStatus('Secure sign-in could not start. Please try again.');
-    return;
-  }
+  if(!isRecovery)ssoStorageRemove('wts_pkce_recovery_attempt');
   ssoStatus('Opening the official WTS sign-in…');
-  window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier)).then(function(digest){
-    var challenge=ssoBytesToBase64Url(new Uint8Array(digest));
-    var authorize=new URL(window.WTS_RESULT_CONFIG.authorizeUri);
-    authorize.searchParams.set('response_type','code');
-    authorize.searchParams.set('client_id','result_portal');
-    authorize.searchParams.set('redirect_uri',window.WTS_RESULT_CONFIG.redirectUri);
-    authorize.searchParams.set('scope','results');
-    authorize.searchParams.set('code_challenge',challenge);
-    authorize.searchParams.set('code_challenge_method','S256');
-    authorize.searchParams.set('state',state);
-    authorize.searchParams.set('nonce',nonce);
-    window.location.replace(authorize.toString());
+  resultSsoRequest({action:'sso_begin',portal_origin:new URL(window.WTS_RESULT_CONFIG.authorizeUri).origin}).then(function(payload){
+    if(!payload||!payload.authorize_url)throw new Error('SSO_BEGIN_FAILED');
+    window.location.replace(payload.authorize_url);
   }).catch(function(){
     ssoClearTransientState();
     ssoStatus('Secure sign-in could not start. Please try again.');
@@ -3211,7 +3184,7 @@ function renderStudents(){
   var students=DB_STUDENTS[CLS]||[];
   var tbody=document.getElementById('stu-tbody');
   if(!students.length){
-    tbody.innerHTML='<tr><td colspan="7"><div class="empty"><h3>No Students</h3><p>Add students to get started</p></div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="6"><div class="empty"><h3>No Students</h3><p>Add or restore students through Central Registry.</p></div></td></tr>';
     return;
   }
   tbody.innerHTML=students.map(function(s,i){
@@ -3221,18 +3194,8 @@ function renderStudents(){
       +'<td><span class="badge '+(s.gender==='Male'?'badge-blue':'badge-gold')+'">'+s.gender+'</span></td>'
       +'<td>'+(s.admno||'--')+'</td>'
       +'<td>'+(s.house||'--')+'</td>'
-      +'<td>'+(s.photo?'<img src="'+s.photo+'" style="width:30px;height:36px;object-fit:cover;border-radius:4px"/>':'--')+'</td>'
-      +'<td style="display:flex;gap:6px">'
-      +'<button class="btn btn-outline btn-xs" data-edit="'+s.id+'">Edit</button>'
-      +'<button class="btn btn-danger btn-xs" data-del="'+s.id+'">Del</button>'
-      +'</td></tr>';
+      +'<td>'+(s.photo?'<img src="'+s.photo+'" style="width:30px;height:36px;object-fit:cover;border-radius:4px"/>':'--')+'</td></tr>';
   }).join('');
-  tbody.querySelectorAll('[data-edit]').forEach(function(btn){
-    btn.onclick=function(){openEditStu(btn.getAttribute('data-edit'));};
-  });
-  tbody.querySelectorAll('[data-del]').forEach(function(btn){
-    btn.onclick=function(){deleteStu(btn.getAttribute('data-del'));};
-  });
 }
 
 function openAddStudent(){
@@ -3688,6 +3651,8 @@ function renderProfile(s){
   document.getElementById('pf-gender').textContent=s.gender;
   document.getElementById('pf-age').textContent=s.age||'--';
   document.getElementById('pf-class').textContent=DEPTS[CLS]?DEPTS[CLS].label:CLS;
+  var portfolioBox=document.getElementById('pf-portfolios');var portfolios=(s.portfolios||[]).filter(function(item){return !item.assignment_status||item.assignment_status==='active';});
+  if(portfolioBox){portfolioBox.style.display=portfolios.length?'flex':'none';portfolioBox.innerHTML=portfolios.map(function(item){return'<span class="badge badge-green">'+escapeHtml(item.name||item.office_name||item.portfolio_name||'Student portfolio')+'</span>';}).join('');}
   var photo=document.getElementById('pf-photo');
   photo.innerHTML=s.photo?'<img src="'+s.photo+'" style="width:100%;height:100%;object-fit:cover"/>':'&#128100;';
 
@@ -3815,18 +3780,35 @@ function saveProfile(){
 // ============================================================
 // BROADSHEET
 // ============================================================
+var BROADSHEET_DATA=null;
+function broadsheetClassKeys(){
+  var match=String(CLS||'').match(/^(ss[23])-/);
+  return match?ALL_CLASSES.filter(function(key){return key.indexOf(match[1]+'-')===0;}):[CLS];
+}
+function populateBroadsheetSubjects(){
+  var select=document.getElementById('bs-subject-select');if(!select)return'';
+  var previous=select.value;var names=[];var seen={};
+  broadsheetClassKeys().forEach(function(key){configuredSubjects(key,getCfg()).forEach(function(name){var id=subjectConfigKey(name);if(!seen[id]){seen[id]=true;names.push(name);}});});
+  names.sort(function(a,b){return a.localeCompare(b);});
+  select.innerHTML=names.map(function(name){return'<option value="'+escapeHtml(subjectConfigKey(name))+'">'+escapeHtml(name)+'</option>';}).join('');
+  if(previous&&seen[previous])select.value=previous;
+  return select.value || (names[0]?subjectConfigKey(names[0]):'');
+}
+function renderSelectedSubjectBroadsheet(){
+  var data=BROADSHEET_DATA||{};var rows=data.rows||[];var school=getSchool();var session=getActiveSession();
+  var bsCls=document.getElementById('bs-class-label');var bsTrm=document.getElementById('bs-term-label');
+  if(bsCls)bsCls.textContent=data.scopeLabel || (DEPTS[CLS]?DEPTS[CLS].label:CLS);if(bsTrm)bsTrm.textContent=TERM;
+  if(!rows.length){document.getElementById('bs-wrap').innerHTML='<div class="empty"><h3>No Students</h3><p>No students offering this subject were found.</p></div>';return;}
+  var vals=rows.map(function(row){return computeTotal(row.score);}).filter(function(total){return total!=='';}).sort(function(a,b){return b-a;});var positions={};vals.forEach(function(value,index){if(positions[value]===undefined)positions[value]=index+1;});
+  var border='#b8edd8',navy='#1a2a4a',mint='#edf8f4';
+  var html='<div style="font-family:Arial,sans-serif;max-width:100%"><div style="text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid '+border+'"><div style="font-size:13pt;font-weight:700;color:'+navy+'">'+escapeHtml(school.name)+'</div><div style="font-size:9pt;color:#555">'+escapeHtml(school.addr)+'</div><div style="font-size:10pt;font-weight:600;color:'+navy+';margin-top:5px">'+escapeHtml(data.subjectName)+' — '+escapeHtml(data.scopeLabel)+' — '+escapeHtml(TERM)+' — '+escapeHtml(session)+'</div></div>';
+  html+='<div class="broadsheet-subject"><div style="background:'+navy+';color:#fff;padding:7px 14px;font-weight:700;font-size:10pt">'+escapeHtml(data.subjectName)+' · '+rows.length+' students</div><table style="width:100%;border-collapse:collapse;font-size:8.5pt"><thead><tr style="background:'+mint+'"><th style="padding:6px;border:1px solid '+border+'">#</th><th style="padding:6px;border:1px solid '+border+';text-align:left">Student Name</th><th style="padding:6px;border:1px solid '+border+';text-align:left">Department</th><th style="padding:6px;border:1px solid '+border+'">CA1 /10</th><th style="padding:6px;border:1px solid '+border+'">CA2 /10</th><th style="padding:6px;border:1px solid '+border+'">CA3 /10</th><th style="padding:6px;border:1px solid '+border+'">Exam /70</th><th style="padding:6px;border:1px solid '+border+'">Total</th><th style="padding:6px;border:1px solid '+border+'">Grade</th><th style="padding:6px;border:1px solid '+border+'">Pos</th></tr></thead><tbody>';
+  rows.forEach(function(row,index){var score=row.score||{};var total=computeTotal(score);var grade=getGrade(total);html+='<tr style="background:'+(index%2?'#fff':mint)+'"><td style="padding:5px;border:1px solid '+border+';text-align:center">'+(index+1)+'</td><td style="padding:5px;border:1px solid '+border+';font-weight:600">'+escapeHtml(row.student.name)+'</td><td style="padding:5px;border:1px solid '+border+'">'+escapeHtml(row.classLabel)+'</td>'+['ca1','ca2','ca3','exam'].map(function(key){return'<td style="padding:5px;border:1px solid '+border+';text-align:center">'+escapeHtml(score[key]===undefined?'':score[key])+'</td>';}).join('')+'<td style="padding:5px;border:1px solid '+border+';text-align:center;font-weight:700">'+escapeHtml(total)+'</td><td style="padding:5px;border:1px solid '+border+';text-align:center;font-weight:700;color:'+grade.c+'">'+escapeHtml(grade.g)+'</td><td style="padding:5px;border:1px solid '+border+';text-align:center">'+escapeHtml(total===''?'':positions[total])+'</td></tr>';});
+  html+='</tbody></table></div></div>';document.getElementById('bs-wrap').innerHTML=html;
+}
 function refreshBroadsheet(){
-  showLoad('Refreshing...');
-  Promise.all([
-    dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(CLS))+'&term=eq.'+encodeURIComponent(TERM)),
-    dbGet('published_subjects?class_key=eq.'+encodeURIComponent(dbClassKey(CLS))+'&term=eq.'+encodeURIComponent(TERM))
-  ]).then(function(res){
-    DB_SCORES={};
-    (res[0]||[]).forEach(function(s){if(!DB_SCORES[s.student_id])DB_SCORES[s.student_id]={};DB_SCORES[s.student_id][s.subject_index]={ca1:scoreCellValue(s.ca1),ca2:scoreCellValue(s.ca2),ca3:scoreCellValue(s.ca3),exam:scoreCellValue(s.exam)};});
-    Object.keys(PUB_CACHE).forEach(function(k){if(k.startsWith(CLS+'|'+TERM+'|'))delete PUB_CACHE[k];});
-    (res[1]||[]).forEach(function(r){PUB_CACHE[pubKey(CLS,r.term,r.subject_index)]=true;});
-    hideLoad();renderBroadsheet();showToast('Broadsheet refreshed');
-  }).catch(function(){hideLoad();showToast('Refresh failed','error');});
+  var subjectKey=populateBroadsheetSubjects();var classes=broadsheetClassKeys().filter(function(key){return configuredSubjects(key,getCfg()).some(function(name){return subjectConfigKey(name)===subjectKey;});});var originalClass=CLS;var rows=[];var subjectName='';showLoad('Building subject broadsheet...');
+  classes.reduce(function(chain,key){return chain.then(function(){var list=configuredSubjects(key,getCfg());var index=list.findIndex(function(name){return subjectConfigKey(name)===subjectKey;});subjectName=subjectName||list[index]||subjectKey;return setResultContext(key,getActiveSession(),TERM).then(function(){return Promise.all([dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))]);}).then(function(result){var scores={};(result[1]||[]).forEach(function(score){scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};});(result[0]||[]).forEach(function(student){rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});});});});},Promise.resolve()).then(function(){return setResultContext(originalClass,getActiveSession(),TERM);}).then(function(){rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});var level=String(originalClass).match(/^(ss[23])-/);BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:level?level[1].toUpperCase()+' · All departments':(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass)};hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');}).catch(function(error){hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');});
 }
 function refreshCard(options){
   options=options||{};
@@ -3873,6 +3855,7 @@ function printCard(){
   });
 }
 function renderBroadsheet(){
+  if(BROADSHEET_DATA){renderSelectedSubjectBroadsheet();return;}
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
   var school=getSchool();
@@ -3971,6 +3954,9 @@ function exportBroadsheet(){
   }).then(exportBroadsheetNow).catch(function(){showToast('Export permission required','error');});
 }
 function exportBroadsheetNow(){
+  if(BROADSHEET_DATA&&BROADSHEET_DATA.rows){
+    var data=BROADSHEET_DATA;var rows=[['#','Student','Department','CA1','CA2','CA3','Exam','Total']];data.rows.forEach(function(item,index){var score=item.score||{};rows.push([index+1,item.student.name,item.classLabel,score.ca1||'',score.ca2||'',score.ca3||'',score.exam||'',computeTotal(score)]);});var csv=rows.map(function(row){return row.map(function(value){return'"'+String(value).replace(/"/g,'""')+'"';}).join(',');}).join('\n');var blob=new Blob([csv],{type:'text/csv'});var link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='Broadsheet_'+data.subjectName.replace(/[^a-z0-9]+/gi,'_')+'_'+TERM.replace(/\s+/g,'_')+'.csv';link.click();return;
+  }
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
   if(!students.length){showToast('No students to export','error');return;}
