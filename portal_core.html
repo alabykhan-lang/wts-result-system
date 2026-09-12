@@ -292,6 +292,11 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 /* ── SETTINGS ── */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.settings-dashboard{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:20px;padding:18px 20px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(135deg,#f7fffb,#fff);box-shadow:var(--shadow)}
+.settings-dashboard-copy{flex:1;min-width:220px}.settings-dashboard-copy strong{display:block;color:var(--g1);font-size:1.05rem}.settings-dashboard-copy span{display:block;margin-top:5px;color:var(--gray);font-size:.76rem;line-height:1.45}
+.settings-menu{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.settings-menu-btn{border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--gray);padding:9px 13px;font-size:.75rem;font-weight:800;cursor:pointer;transition:.18s}.settings-menu-btn:hover{border-color:var(--g3);color:var(--g1);background:#f0fdf4}.settings-menu-btn.active{border-color:var(--g1);background:var(--g1);color:#fff;box-shadow:0 5px 12px rgba(26,42,74,.15)}
+.settings-sync-bar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 15px;border:1px solid #c8e6d8;border-radius:12px;background:#f0fdf4}.settings-sync-bar strong{display:block;color:var(--g1);font-size:.8rem}.settings-sync-bar span{display:block;margin-top:3px;color:var(--gray);font-size:.7rem}.settings-sync-bar .btn{white-space:nowrap}
+.settings-category-hidden{display:none!important}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;
   padding:10px 0;border-bottom:1px solid var(--border)}
 .toggle-row:last-child{border-bottom:none}
@@ -417,6 +422,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   #sidebar.open{transform:translateX(0);box-shadow:6px 0 40px rgba(0,0,0,.35)}
   .stats-row{grid-template-columns:1fr 1fr}
   .settings-grid{grid-template-columns:1fr}
+  .settings-sync-bar{grid-column:1}
   .traits-grid{grid-template-columns:1fr}
   .fees-grid{grid-template-columns:1fr 1fr}
   .fg-row{grid-template-columns:1fr}
@@ -427,6 +433,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .content{padding:14px}
   #bottom-nav{display:block}
   .content{padding-bottom:74px}
+  .settings-dashboard{padding:15px}.settings-menu{justify-content:flex-start}.settings-menu-btn{padding:8px 10px}
   .topbar{display:block;padding:11px 14px}
   .tb-left{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"menu heading" "menu meta";align-items:start;gap:4px 8px;width:100%}
   #hamburger{grid-area:menu;margin-top:3px}
@@ -893,6 +900,10 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
         <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Class:</label>
         <div id="bs-class-label" style="font-weight:700;color:var(--g1);font-size:.88rem"></div>
       </div>
+      <div id="bs-dept-filter-wrap" style="display:none;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
+        <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Departments:</label>
+        <div id="bs-dept-filter" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
         <label for="bs-subject-select" style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Subject:</label>
         <select id="bs-subject-select" class="sel" style="min-width:190px" onchange="refreshBroadsheet()"></select>
@@ -1033,8 +1044,22 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
 
   <!-- SETTINGS -->
   <div class="page" id="page-settings">
+    <div class="settings-dashboard">
+      <div class="settings-dashboard-copy">
+        <strong>Settings dashboard</strong>
+        <span>Choose one area at a time. Each area has its own save-and-sync action so changes remain available on every authorized device.</span>
+      </div>
+      <div class="settings-menu" role="tablist" aria-label="Settings sections">
+        <button class="settings-menu-btn" type="button" data-settings-category="overview" onclick="showSettingsCategory('overview')">School</button>
+        <button class="settings-menu-btn" type="button" data-settings-category="ai" onclick="showSettingsCategory('ai')">AI &amp; OCR</button>
+        <button class="settings-menu-btn" type="button" data-settings-category="staff" onclick="showSettingsCategory('staff')">Staff access</button>
+        <button class="settings-menu-btn" type="button" data-settings-category="session" onclick="showSettingsCategory('session')">Session</button>
+        <button class="settings-menu-btn" type="button" data-settings-category="cards" onclick="showSettingsCategory('cards')">Result cards</button>
+        <button class="settings-menu-btn" type="button" data-settings-category="subjects" onclick="showSettingsCategory('subjects')">Subjects</button>
+      </div>
+    </div>
     <div class="settings-grid">
-      <div class="tbl-wrap" style="margin-bottom:0">
+      <div class="tbl-wrap" data-settings-category="ai" style="margin-bottom:0">
         <div class="tbl-head"><h3>AI Score Scanner (OCR)</h3></div>
         <div style="padding:16px">
           <div class="fg"><label>Gemini API Key</label><input class="inp" type="password" id="gemini-key-input" autocomplete="new-password" placeholder="Enter a new key to save or replace"/></div>
@@ -1044,7 +1069,7 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
         </div>
       </div>
 
-      <div class="tbl-wrap" id="result-staff-write-card" style="margin-bottom:0;grid-column:1/-1;display:none">
+      <div class="tbl-wrap" id="result-staff-write-card" data-settings-category="staff" style="margin-bottom:0;grid-column:1/-1;display:none">
         <div class="tbl-head">
           <h3>Staff score-entry access</h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1056,14 +1081,14 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           <p style="font-size:.75rem;color:var(--gray);margin-bottom:12px">Turn writing on only for the staff who should record or edit scores. Everyone else can still view and cross-check results.</p>
           <div id="result-staff-write-status" style="font-size:.75rem;color:var(--gray);margin-bottom:10px">Loading staff access…</div>
           <div style="overflow-x:auto">
-            <table class="data-table" style="font-size:.78rem;min-width:620px">
-              <thead><tr><th>Staff</th><th>Role</th><th>Score permission</th><th style="text-align:center">Can write</th></tr></thead>
+            <table class="data-table" style="font-size:.78rem;min-width:860px">
+              <thead><tr><th>Staff</th><th>Registry role</th><th>Results access</th><th>Score permission</th><th style="text-align:center">Can write</th></tr></thead>
               <tbody id="result-staff-write-tbody"></tbody>
             </table>
           </div>
         </div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0">
+      <div class="tbl-wrap" data-settings-category="overview" style="margin-bottom:0">
         <div class="tbl-head"><h3>School Information</h3></div>
         <div style="padding:16px">
           <div class="fg"><label>School Name</label><input class="inp" id="cfg-name"/></div>
@@ -1075,7 +1100,7 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           </div>
         </div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0">
+      <div class="tbl-wrap" data-settings-category="session" style="margin-bottom:0">
         <div class="tbl-head"><h3>Session Configuration</h3></div>
         <div style="padding:16px">
           <div class="fg"><label>Next Term Resumption Date</label><input class="inp" type="date" id="cfg-resumption"/></div>
@@ -1100,7 +1125,7 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           </div>
         </div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+      <div class="tbl-wrap" data-settings-category="session" style="margin-bottom:0;grid-column:1/-1">
         <div class="tbl-head"><h3>Promotion thresholds</h3></div>
         <div style="padding:16px">
           <div class="promotion-note">
@@ -1121,7 +1146,7 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           </div>
         </div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0">
+      <div class="tbl-wrap" data-settings-category="cards" style="margin-bottom:0">
         <div class="tbl-head"><h3>Proprietor Signature</h3></div>
         <div style="padding:16px">
           <div class="sig-preview-wrap" id="sig-preview-wrap" onclick="document.getElementById('sig-upload').click()">
@@ -1133,29 +1158,29 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           <button class="btn btn-outline btn-sm" onclick="clearSig()">Clear Signature</button>
         </div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0">
+      <div class="tbl-wrap" data-settings-category="cards" style="margin-bottom:0">
         <div class="tbl-head"><h3>Card Section Toggles</h3></div>
         <div style="padding:16px" id="card-toggles"></div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0">
+      <div class="tbl-wrap" data-settings-category="cards" style="margin-bottom:0">
         <div class="tbl-head"><h3>Card Colour Theme</h3></div>
         <div style="padding:16px">
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px" id="theme-picker"></div>
           <p style="font-size:.78rem;color:var(--gray)">Selected: <strong id="theme-name">Forest Green</strong></p>
         </div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+      <div class="tbl-wrap" data-settings-category="cards" style="margin-bottom:0;grid-column:1/-1">
         <div class="tbl-head"><h3>Automated General Remarks</h3></div>
         <div style="padding:16px" id="remarks-cfg" class="remarks-cfg"></div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+      <div class="tbl-wrap" data-settings-category="cards" style="margin-bottom:0;grid-column:1/-1">
         <div class="tbl-head"><h3>Grade Scale</h3></div>
         <div style="padding:16px"><table class="data-table" style="font-size:.82rem">
           <thead><tr><th>Grade</th><th>Min</th><th>Max</th><th>Remark</th></tr></thead>
           <tbody id="grade-cfg-tbody"></tbody>
         </table></div>
       </div>
-      <div class="tbl-wrap" style="margin-bottom:0;grid-column:1/-1">
+      <div class="tbl-wrap" data-settings-category="subjects" style="margin-bottom:0;grid-column:1/-1">
         <div class="tbl-head"><h3>Class Subject Configuration</h3></div>
         <div style="padding:16px">
           <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
@@ -2101,10 +2126,11 @@ function dbUpsertSettings(key,value){
 function saveCfg(cfg){
   window._remoteCfg=cfg;
   if(isCentralAuth()&&hasResultPermission('result_settings.manage')){
-    dbUpsertSettings('app_config',JSON.stringify(cfg))
-      .then(function(){showSaved();})
-      .catch(function(e){console.error('Config sync failed:',e);});
+    return dbUpsertSettings('app_config',JSON.stringify(cfg))
+      .then(function(){showSaved();return true;})
+      .catch(function(e){console.error('Config sync failed:',e);return false;});
   }
+  return Promise.resolve(false);
 }
 var REMOTE_SETTINGS_PROMISE=null;
 var PORTAL_REFRESH_PROMISE=null;
@@ -3911,6 +3937,27 @@ function refreshBroadsheet(){
   var subjectKey=populateBroadsheetSubjects();var classes=broadsheetClassKeys().filter(function(key){return configuredSubjects(key,getCfg()).some(function(name){return subjectConfigKey(name)===subjectKey;});});var originalClass=CLS;var rows=[];var subjectName='';showLoad('Building subject broadsheet...');
   classes.reduce(function(chain,key){return chain.then(function(){var list=configuredSubjects(key,getCfg());var index=list.findIndex(function(name){return subjectConfigKey(name)===subjectKey;});subjectName=subjectName||list[index]||subjectKey;return setResultContext(key,getActiveSession(),TERM).then(function(){return Promise.all([dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))]);}).then(function(result){var scores={};(result[1]||[]).forEach(function(score){scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};});(result[0]||[]).forEach(function(student){rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});});});});},Promise.resolve()).then(function(){return setResultContext(originalClass,getActiveSession(),TERM);}).then(function(){rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});var level=String(originalClass).match(/^(ss[23])-/);BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:level?level[1].toUpperCase()+' · All departments':(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass)};hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');}).catch(function(error){hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');});
 }
+var BROADSHEET_DEPARTMENT_SELECTION={};
+function broadsheetLevel(){var match=String(CLS||'').match(/^(ss[23])-/);return match?match[1]:'';}
+function broadsheetDepartmentKeys(level){var order={science:0,arts:1,business:2,commercial:2};return ALL_CLASSES.filter(function(key){return String(key).indexOf(level+'-')===0;}).sort(function(a,b){return (order[String(a).split('-')[1]]===undefined?99:order[String(a).split('-')[1]])-(order[String(b).split('-')[1]]===undefined?99:order[String(b).split('-')[1]])||a.localeCompare(b);});}
+function renderBroadsheetDepartmentFilter(){
+  var wrap=document.getElementById('bs-dept-filter-wrap'),holder=document.getElementById('bs-dept-filter'),level=broadsheetLevel();if(!wrap||!holder)return;
+  if(!level){wrap.style.display='none';holder.innerHTML='';return;}
+  var keys=broadsheetDepartmentKeys(level),selected=BROADSHEET_DEPARTMENT_SELECTION[level]||{};
+  if(!keys.some(function(key){return selected[key];})){keys.forEach(function(key){selected[key]=true;});BROADSHEET_DEPARTMENT_SELECTION[level]=selected;}
+  wrap.style.display='flex';holder.innerHTML=keys.map(function(key){return'<label style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--g1);font-weight:700"><input type="checkbox" data-bs-department="'+escapeHtml(key)+'" '+(selected[key]?'checked':'')+'/> '+escapeHtml(String(DEPTS[key]?DEPTS[key].label:key).replace(/^SS[23]\s*-\s*/i,''))+'</label>';}).join('');
+  holder.querySelectorAll('input[data-bs-department]').forEach(function(input){input.onchange=function(){var next={};holder.querySelectorAll('input[data-bs-department]').forEach(function(item){next[item.getAttribute('data-bs-department')]=item.checked;});if(!Object.keys(next).some(function(key){return next[key];})){input.checked=true;next[input.getAttribute('data-bs-department')]=true;}BROADSHEET_DEPARTMENT_SELECTION[level]=next;BROADSHEET_DATA=null;refreshBroadsheet();};});
+}
+function selectedBroadsheetClassKeys(){var level=broadsheetLevel();if(!level)return[CLS];var all=broadsheetDepartmentKeys(level),selected=BROADSHEET_DEPARTMENT_SELECTION[level]||{};return all.filter(function(key){return selected[key];}).length?all.filter(function(key){return selected[key];}):all;}
+function broadsheetClassKeys(){return selectedBroadsheetClassKeys();}
+function populateBroadsheetSubjects(){
+  var select=document.getElementById('bs-subject-select');if(!select)return'';var previous=select.value,names=[],seen={};broadsheetClassKeys().forEach(function(key){configuredSubjects(key,getCfg()).forEach(function(name){var id=subjectConfigKey(name);if(!seen[id]){seen[id]=true;names.push(name);}});});names.sort(function(a,b){return a.localeCompare(b);});select.innerHTML=names.map(function(name){return'<option value="'+escapeHtml(subjectConfigKey(name))+'">'+escapeHtml(name)+'</option>';}).join('');if(previous&&seen[previous])select.value=previous;return select.value||(names[0]?subjectConfigKey(names[0]):'');
+}
+function refreshBroadsheet(){
+  renderBroadsheetDepartmentFilter();
+  var subjectKey=populateBroadsheetSubjects(),classes=broadsheetClassKeys().filter(function(key){return configuredSubjects(key,getCfg()).some(function(name){return subjectConfigKey(name)===subjectKey;});}),originalClass=CLS,rows=[],subjectName='';showLoad('Building subject broadsheet...');
+  classes.reduce(function(chain,key){return chain.then(function(){var list=configuredSubjects(key,getCfg()),index=list.findIndex(function(name){return subjectConfigKey(name)===subjectKey;});subjectName=subjectName||list[index]||subjectKey;return setResultContext(key,getActiveSession(),TERM).then(function(){return Promise.all([dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))]);}).then(function(result){var scores={};(result[1]||[]).forEach(function(score){scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};});(result[0]||[]).forEach(function(student){rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});});});});},Promise.resolve()).then(function(){return setResultContext(originalClass,getActiveSession(),TERM);}).then(function(){rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});var level=broadsheetLevel(),keys=broadsheetClassKeys(),scopeLabel=level?level.toUpperCase()+' · '+keys.map(function(key){return String(DEPTS[key]?DEPTS[key].label:key).replace(/^SS[23]\s*-\s*/i,'');}).join(' + '):(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass);BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:scopeLabel};hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');}).catch(function(error){hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');});
+}
 function refreshCard(options){
   options=options||{};
   var sid=document.getElementById('rc-stu').value;
@@ -4054,9 +4101,15 @@ function exportBroadsheet(){
     class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()
   }).then(exportBroadsheetNow).catch(function(){showToast('Export permission required','error');});
 }
+function downloadBlob(blob,filename){
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=filename;a.style.display='none';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){if(a.parentNode)a.parentNode.removeChild(a);URL.revokeObjectURL(url);},1500);
+}
 function exportBroadsheetNow(){
   if(BROADSHEET_DATA&&BROADSHEET_DATA.rows){
-    var data=BROADSHEET_DATA;var rows=[['#','Student','Department','CA1','CA2','CA3','Exam','Total']];data.rows.forEach(function(item,index){var score=item.score||{};rows.push([index+1,item.student.name,item.classLabel,score.ca1||'',score.ca2||'',score.ca3||'',score.exam||'',computeTotal(score)]);});var csv=rows.map(function(row){return row.map(function(value){return'"'+String(value).replace(/"/g,'""')+'"';}).join(',');}).join('\n');var blob=new Blob([csv],{type:'text/csv'});var link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='Broadsheet_'+data.subjectName.replace(/[^a-z0-9]+/gi,'_')+'_'+TERM.replace(/\s+/g,'_')+'.csv';link.click();return;
+    var data=BROADSHEET_DATA;var rows=[['#','Student','Department','CA1','CA2','CA3','Exam','Total']];data.rows.forEach(function(item,index){var score=item.score||{};rows.push([index+1,item.student.name,item.classLabel,score.ca1||'',score.ca2||'',score.ca3||'',score.exam||'',computeTotal(score)]);});var csv=rows.map(function(row){return row.map(function(value){return'"'+String(value).replace(/"/g,'""')+'"';}).join(',');}).join('\n');var blob=new Blob([csv],{type:'text/csv'});downloadBlob(blob,'Broadsheet_'+data.subjectName.replace(/[^a-z0-9]+/gi,'_')+'_'+TERM.replace(/\s+/g,'_')+'.csv');return;
   }
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
@@ -4073,10 +4126,7 @@ function exportBroadsheetNow(){
   });
   var csv=rows.map(function(r){return r.map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var blob=new Blob([csv],{type:'text/csv'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='Broadsheet_'+DEPTS[CLS].label+'_'+TERM+'.csv';
-  a.click();
+  downloadBlob(blob,'Broadsheet_'+DEPTS[CLS].label+'_'+TERM+'.csv');
 }
 
 // ============================================================
@@ -4809,6 +4859,8 @@ function staffWriteErrorMessage(error){
   var code=error&&error.code;
   if(code==='RESULT_PERMISSION_DENIED')return 'Only Results management can change staff score-entry access.';
   if(code==='RESULT_STAFF_WRITE_TARGET_NOT_FOUND')return 'That staff member no longer has an active Results grant.';
+  if(code==='RESULT_STAFF_WRITE_TARGET_REQUIRED')return 'Choose an active Results staff member first.';
+  if(code==='RESULT_SESSION_REQUIRED')return 'Your secure Result session expired. Return to Staff Portal and open Results again.';
   return 'Staff score-entry access could not be updated.';
 }
 function renderStaffWriteAccess(data){
@@ -4817,17 +4869,22 @@ function renderStaffWriteAccess(data){
   if(!hasResultManagementAccess()){card.style.display='none';return;}
   card.style.display='block';
   STAFF_WRITE_ACCESS=Array.isArray(data&&data.rows)?data.rows:[];
-  status.textContent=(data&&data.default_write_enabled?'Default: writing enabled for eligible staff.':'Default: read-only; enable selected staff below.')+' '+STAFF_WRITE_ACCESS.length+' active Results staff.';
+  var eligibleCount=STAFF_WRITE_ACCESS.filter(function(row){return row.eligible_for_score_entry===true;}).length;
+  status.textContent=(data&&data.default_write_enabled?'Default: writing enabled for eligible Results staff.':'Default: read-only; enable selected staff below.')+' '+STAFF_WRITE_ACCESS.length+' active registry staff · '+eligibleCount+' eligible for score entry.';
   body.innerHTML=STAFF_WRITE_ACCESS.map(function(row){
     var perms=Array.isArray(row.permissions)?row.permissions:[];
     var manager=perms.indexOf('results.manage')>-1;
     var eligible=row.eligible_for_score_entry===true;
-    var locked=!eligible||manager;
-    var label=manager?'Management (always enabled)':eligible?(row.write_enabled?'Writing enabled':'Read-only'):'View only';
-    return '<tr><td><strong>'+escapeHtml(row.full_name||row.email||row.person_id)+'</strong><small style="display:block;color:var(--gray)">'+escapeHtml(row.email||'')+'</small></td>'
-      +'<td>'+escapeHtml(row.access_role||'Staff')+'</td><td><span class="badge '+(eligible?'badge-green':'badge')+'">'+(eligible?'Eligible':'View only')+'</span></td>'
+    var hasResultsAccess=row.results_access!==false&&row.grant_status==='active';
+    var locked=!eligible||manager||!hasResultsAccess;
+    var label=manager?'Management (always enabled)':!hasResultsAccess?'No Results access — grant it in Central Registry':eligible?(row.write_enabled?'Writing enabled':'Read-only'):'View only';
+    var registryRole=row.registry_role||row.designation||row.staff_category||'Staff';
+    var accessLabel=hasResultsAccess?(row.access_role||'Results staff'):'No Results access';
+    return '<tr><td><strong>'+escapeHtml(row.full_name||row.email||row.person_id)+'</strong><small style="display:block;color:var(--gray)">'+escapeHtml(row.staff_number||'')+(row.email?' · '+escapeHtml(row.email):'')+'</small></td>'
+      +'<td>'+escapeHtml(registryRole)+'</td><td><span class="badge '+(hasResultsAccess?'badge-green':'badge')+'">'+escapeHtml(accessLabel)+'</span></td>'
+      +'<td><span class="badge '+(eligible?'badge-green':'badge')+'">'+(eligible?'Eligible':'View only')+'</span></td>'
       +'<td style="text-align:center"><label class="toggle" title="'+escapeHtml(label)+'"><input type="checkbox" '+(row.write_enabled?'checked ':'')+(locked?'disabled ':'')+' onchange="setStaffWriteAccess(\''+escapeHtml(row.person_id)+'\',this.checked)"/><span class="toggle-slider"></span></label><small style="display:block;color:var(--gray)">'+escapeHtml(label)+'</small></td></tr>';
-  }).join('')||'<tr><td colspan="4" style="color:var(--gray)">No active Results staff grants found.</td></tr>';
+  }).join('')||'<tr><td colspan="5" style="color:var(--gray)">No active registry staff were found.</td></tr>';
 }
 function loadStaffWriteAccess(){
   var card=document.getElementById('result-staff-write-card');
@@ -4843,6 +4900,35 @@ function setAllStaffWriteAccess(enabled){
   if(!window.confirm((enabled?'Turn on writing for all eligible Results staff?':'Turn off writing for all Results staff?')+' Existing scores will not be changed.'))return;
   resultDataRequest('staff.write_access.bulk',{write_enabled:!!enabled,reason:'Bulk update from Result Portal Settings'}).then(function(){showToast(enabled?'Score entry enabled for all eligible staff.':'All staff are now read-only.');return loadStaffWriteAccess();}).catch(function(error){showToast(staffWriteErrorMessage(error),'error');});
 }
+var SETTINGS_CATEGORY='overview';
+var SETTINGS_CATEGORY_LABELS={overview:'School information',ai:'AI & OCR',staff:'Staff access',session:'Session and promotion',cards:'Result cards',subjects:'Subjects'};
+function setupSettingsDashboard(){
+  var grid=document.querySelector('#page-settings .settings-grid');if(!grid)return;
+  grid.querySelectorAll('[data-settings-sync]').forEach(function(node){node.remove();});
+  var cards=Array.prototype.filter.call(grid.children,function(node){return node.hasAttribute('data-settings-category');});
+  Object.keys(SETTINGS_CATEGORY_LABELS).forEach(function(category){
+    var first=cards.find(function(card){return card.getAttribute('data-settings-category')===category;});
+    if(!first)return;
+    var bar=document.createElement('div');bar.className='settings-sync-bar';bar.setAttribute('data-settings-sync',category);
+    bar.innerHTML='<div><strong>'+escapeHtml(SETTINGS_CATEGORY_LABELS[category])+'</strong><span>Save this section and sync it to all authorized devices.</span></div><button class="btn btn-primary btn-sm" type="button" onclick="saveSettingsAndSync(\''+category+'\')">Save &amp; sync all devices</button>';
+    grid.insertBefore(bar,first);
+  });
+  showSettingsCategory(SETTINGS_CATEGORY);
+}
+function showSettingsCategory(category){
+  if(!SETTINGS_CATEGORY_LABELS[category])category='overview';
+  SETTINGS_CATEGORY=category;
+  document.querySelectorAll('#page-settings .settings-grid > [data-settings-category]').forEach(function(card){
+    card.classList.toggle('settings-category-hidden',card.getAttribute('data-settings-category')!==category);
+  });
+  document.querySelectorAll('#page-settings .settings-grid [data-settings-sync]').forEach(function(bar){
+    bar.classList.toggle('settings-category-hidden',bar.getAttribute('data-settings-sync')!==category);
+  });
+  document.querySelectorAll('#page-settings .settings-menu-btn').forEach(function(button){
+    var active=button.getAttribute('data-settings-category')===category;button.classList.toggle('active',active);button.setAttribute('aria-selected',active?'true':'false');
+  });
+}
+function saveSettingsAndSync(category){showSettingsCategory(category);saveSettings();}
 function renderSettings(){
   var ki=document.getElementById('gemini-key-input');if(ki)ki.value='';
   loadProviderStatus();
@@ -4884,7 +4970,7 @@ function renderSettings(){
       +'<td><input class="inp" type="number" value="'+g.max+'" onchange="GRADE_SCALE['+i+'].max=Number(this.value)" style="width:70px;padding:5px 8px"/></td>'
       +'<td><input class="inp" value="'+g.r+'" onchange="GRADE_SCALE['+i+'].r=this.value" style="padding:5px 8px"/></td></tr>';
   }).join('');
-  renderThemePicker();renderSubjCfg();renderPromotionCfg();
+  renderThemePicker();renderSubjCfg();renderPromotionCfg();setupSettingsDashboard();
 }
 function saveSectionToggle(key,val){var cfg=getCfg();if(!cfg.sections)cfg.sections={};cfg.sections[key]=val;saveCfg(cfg);}
 function previewSig(){
@@ -5024,14 +5110,14 @@ function saveSettings(){
     }
   };
   cfg.promotionCfg=readPromotionCfgFromForm();
-  saveCfg(cfg);
   var sb=document.getElementById('sb-session-lbl');if(sb)sb.textContent=cfg.session+' Session';
   var hs=document.getElementById('home-session');if(hs)hs.textContent=cfg.session+' Session';
   var rcs=document.getElementById('rc-session');if(rcs)rcs.value=CONTEXT_EXPLICIT?getActiveSession():cfg.session;
-  // Sync to Supabase
-  dbUpsertSettings('app_config',JSON.stringify(cfg))
-    .then(function(){showToast('Settings synced to cloud ✓');showSaved();})
-    .catch(function(){showToast('Saved locally — cloud sync failed','error');showSaved();});
+  return saveCfg(cfg).then(function(synced){
+    showToast(synced?'Settings synced to all devices ✓':'Settings saved locally — cloud sync was not available',synced?'':'error');
+    showSaved();
+    return synced;
+  });
 }
 function resetSettings(){if(!confirm('Reset the in-memory settings view?'))return;window._remoteCfg=null;renderSettings();}
 
@@ -5055,8 +5141,7 @@ function exportData(){
       data={students:DB_STUDENTS,scores:DB_SCORES,traits:DB_TRAITS,fees:DB_FEES,remarks:DB_REMARKS};
     }
     var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download='WTS_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+    downloadBlob(blob,'WTS_Backup_'+new Date().toISOString().slice(0,10)+'.json');
   }).catch(function(){showToast('Export permission required','error');});
 }
 // ============================================================
@@ -5143,10 +5228,10 @@ var OCR_IMG_MIME='image/jpeg';
 function forceSyncSettings(){
   var cfg=getCfg();
   showLoad('Syncing to all devices...');
-  dbUpsertSettings('app_config',JSON.stringify(cfg))
-    .then(function(){
+  saveCfg(cfg)
+    .then(function(synced){
       hideLoad();
-      showToast('Settings synced to all devices');
+      showToast(synced?'Settings synced to all devices':'Cloud sync was not available',synced?'':'error');
     }).catch(function(){
       hideLoad();
       showToast('Sync failed - check connection','error');
@@ -5190,7 +5275,8 @@ function saveGeminiKey(){
     })
     .catch(function(e){
       hideLoad();
-      showToast(e&&e.code==='RESULT_PROVIDER_KEY_INVALID'?'That provider key is not valid.':'Provider key could not be saved.','error');
+      var message=e&&e.code==='RESULT_PROVIDER_KEY_INVALID'?'That provider key was rejected by Gemini.':e&&e.code==='RESULT_PROVIDER_KEY_NO_MODEL'?'That key has no usable Gemini generation model enabled.':e&&e.code==='RESULT_PROVIDER_KEY_VERIFICATION_FAILED'?'Gemini could not verify the key right now. Check the key, API access and connection, then try again.':'Provider key could not be saved.';
+      showToast(message,'error');
     });
 }
 function getGeminiKey(){
@@ -5389,6 +5475,18 @@ function applyOCRScores(){
     openSheet(idx);
     showToast('Scores applied. Tap Save Draft to sync.','error');
   });
+}
+function printBroadsheet(){
+  var win=window.open('about:blank','_blank');
+  if(!win){showToast('Allow pop-ups to print the broadsheet.','error');return;}
+  win.document.write('<!doctype html><html><body style="font-family:Arial;padding:24px">Preparing broadsheet…</body></html>');win.document.close();
+  readOnlyOrAction('results.export',{class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()}).then(function(){
+    var wrap=document.getElementById('bs-wrap');if(!wrap)throw new Error('Broadsheet is not rendered');
+    var school=getSchool()||{},title=(BROADSHEET_DATA&&BROADSHEET_DATA.subjectName?BROADSHEET_DATA.subjectName+' · ':'')+(BROADSHEET_DATA&&BROADSHEET_DATA.scopeLabel?BROADSHEET_DATA.scopeLabel:'Broadsheet');
+    var css='<style>@page{size:A4;margin:10mm}html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,sans-serif}.print-toolbar{display:flex;gap:10px;align-items:center;padding:10px 0 14px;border-bottom:1px solid #ddd;margin-bottom:14px}.print-toolbar strong{margin-right:auto}.print-toolbar button{border:0;border-radius:6px;padding:8px 12px;background:#1a2a4a;color:#fff;font-weight:700}.print-content table{page-break-inside:auto}.print-content thead{display:table-header-group}.print-content tr{page-break-inside:avoid;break-inside:avoid}.print-content .broadsheet-subject{break-inside:auto}.print-content th,.print-content td{print-color-adjust:exact;-webkit-print-color-adjust:exact}</style>';
+    var toolbar='<div class="print-toolbar"><strong>'+escapeHtml(title)+'</strong><button onclick="window.print()">PRINT / SAVE PDF</button><button onclick="window.close()">CLOSE</button></div>';
+    win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(school.name||'Broadsheet')+'</title>'+css+'</head><body>'+toolbar+'<main class="print-content">'+wrap.innerHTML+'</main></body></html>');win.document.close();win.focus();
+  }).catch(function(){try{win.close();}catch(ignore){}showToast('Export permission required','error');});
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>

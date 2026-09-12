@@ -34,8 +34,14 @@ process.env.GEMINI_API_KEY = 'test-only-key';
 const originalFetch = globalThis.fetch;
 let providerPrompt = '';
 globalThis.fetch = async (url, options) => {
+  if (String(url).includes('/rest/v1/rpc/school_result_smart_provider_key_read')) {
+    return new Response(JSON.stringify({ ok: true, provider_key: 'test-only-key' }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }
   if (String(url).includes('/rest/v1/rpc/school_result_smart_sheet_read')) {
     return new Response(JSON.stringify({ ok: true, sheet, existing_scores: [{ student_id: sheet.roster[0].student_id, ca1: 7, ca2: null, ca3: null, exam: 54 }] }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }
+  if (String(url).includes('/v1beta/models?')) {
+    return new Response(JSON.stringify({ models: [{ name: 'models/gemini-2.5-flash', supportedGenerationMethods: ['generateContent'] }] }), { status: 200, headers: { 'content-type': 'application/json' } });
   }
   if (String(url).includes('generativelanguage.googleapis.com')) {
     const body = JSON.parse(options.body); providerPrompt = body.contents[0].parts[0].text;

@@ -8,6 +8,7 @@ const {
   sessionFromRequest,
   supabaseRpc,
 } = require('./_lib');
+const smartRecording = require('./smart-recording');
 
 module.exports = async function resultData(req, res) {
   if (req.method !== 'POST') {
@@ -172,11 +173,21 @@ module.exports = async function resultData(req, res) {
         p_config: requestPayload.config && typeof requestPayload.config === 'object' ? requestPayload.config : {},
       })
     : action === 'settings.provider_key.update'
-      ? await supabaseRpc('school_result_provider_key_update', {
-        p_session_id: session.sessionId,
-        p_session_secret: session.sessionSecret,
-        p_provider_key: typeof requestPayload.provider_key === 'string' ? requestPayload.provider_key : '',
-      })
+      ? await (async () => {
+        const authorized = await supabaseRpc('school_result_provider_key_authorize', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+        });
+        if (!authorized?.ok) return authorized;
+        const providerKey = typeof requestPayload.provider_key === 'string' ? requestPayload.provider_key.trim() : '';
+        const verified = await smartRecording.verifyGeminiApiKey(providerKey);
+        if (!verified?.ok) return verified;
+        return supabaseRpc('school_result_provider_key_update', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+          p_provider_key: providerKey,
+        });
+      })()
     : action === 'settings.provider_key.status'
       ? await supabaseRpc('school_result_provider_key_status', {
         p_session_id: session.sessionId,

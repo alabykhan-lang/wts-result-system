@@ -13,6 +13,13 @@ const { buildExtractionPrompt, normalizeExtraction } = require('./_smart-recordi
 
 const MAX_IMAGE_BYTES = 4_000_000;
 const PROVIDER_TIMEOUT_MS = 35_000;
+const PROVIDER_LIST_TIMEOUT_MS = 12_000;
+const FALLBACK_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+];
+const PROVIDER_MODEL_CACHE = new Map();
 
 function imageParts(dataUrl) {
   const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
@@ -23,16 +30,6 @@ function imageParts(dataUrl) {
 }
 
 async function readStoredProviderKey(session, scope) {
-  if (scope?.class_key && scope?.academic_session && scope?.term) {
-    const context = await supabaseRpc('school_result_context_set', {
-      p_session_id: session.sessionId,
-      p_session_secret: session.sessionSecret,
-      p_class_key: scope.class_key,
-      p_academic_session: scope.academic_session,
-      p_term: scope.term,
-    });
-    if (!context?.ok) throw context || { ok: false, code: 'RESULT_CONTEXT_INVALID' };
-  }
   const payload = await supabaseRpc('school_result_smart_provider_key_read', {
     p_session_id: session.sessionId,
     p_session_secret: session.sessionSecret,
@@ -75,69 +72,153 @@ function parseGeminiJson(raw) {
   return null;
 }
 
+function providerFailureFromResponse(response, payload) {
+  const providerMessage = String(payload?.error?.message || '').slice(0, 240);
+  const keyRejected = /api[ _-]?key|key not valid|invalid key|permission denied|authentication/i.test(providerMessage);
+  return {
+    ok: false,
+    code: keyRejected || response.status === 401 || response.status === 403
+      ? 'SMART_EXTRACTION_PROVIDER_KEY_INVALID'
+      : 'SMART_EXTRACTION_PROVIDER_FAILED',
+    provider_status: response.status,
+    provider_message: providerMessage,
+  };
+}
+
+function modelName(value) {
+  return String(value || '').replace(/^models\//, '').trim();
+}
+
+function usableGeminiModel(model) {
+  const name = modelName(model?.name || model);
+  const methods = Array.isArray(model?.supportedGenerationMethods) ? model.supportedGenerationMethods : [];
+  if (!name || (methods.length && !methods.includes('generateContent'))) return false;
+  return !/(embedding|embed|aqa|imagen|veo|audio|tts|robotics)/i.test(name);
+}
+
+function orderGeminiModels(models) {
+  const configuredModel = modelName(process.env.WTS_SMART_RECORDING_MODEL);
+  const names = [...new Set((models || []).map(modelName).filter(Boolean))];
+  const preferred = [configuredModel, ...FALLBACK_MODELS];
+  return [
+    ...preferred.filter((name) => names.includes(name)),
+    ...names
+      .filter((name) => !preferred.includes(name))
+      .sort((a, b) => {
+        const aScore = /flash/i.test(a) ? 0 : /pro/i.test(a) ? 1 : 2;
+        const bScore = /flash/i.test(b) ? 0 : /pro/i.test(b) ? 1 : 2;
+        return aScore - bScore || a.localeCompare(b);
+      }),
+  ];
+}
+
+async function discoverGeminiModels(apiKey) {
+  const key = String(apiKey || '').trim();
+  if (!key) return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
+  const cached = PROVIDER_MODEL_CACHE.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`;
+  let response;
+  let timeoutId;
+  try {
+    const controller = new AbortController();
+    timeoutId = setTimeout(() => controller.abort(), PROVIDER_LIST_TIMEOUT_MS);
+    response = await fetch(endpoint, { headers: { Accept: 'application/json' }, signal: controller.signal });
+  } catch (error) {
+    return {
+      ok: false,
+      code: error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE',
+    };
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+
+  let payload = {};
+  try { payload = await response.json(); } catch {}
+  if (!response.ok) return providerFailureFromResponse(response, payload);
+
+  const models = orderGeminiModels((Array.isArray(payload.models) ? payload.models : []).filter(usableGeminiModel));
+  const result = { ok: true, models };
+  PROVIDER_MODEL_CACHE.set(key, { expiresAt: Date.now() + 5 * 60 * 1000, value: result });
+  return result;
+}
+
+async function verifyGeminiApiKey(apiKey) {
+  const discovered = await discoverGeminiModels(apiKey);
+  if (!discovered.ok) {
+    return discovered.code === 'SMART_EXTRACTION_PROVIDER_KEY_INVALID'
+      ? { ok: false, code: 'RESULT_PROVIDER_KEY_INVALID', provider_status: discovered.provider_status }
+      : { ok: false, code: 'RESULT_PROVIDER_KEY_VERIFICATION_FAILED', provider_code: discovered.code };
+  }
+  if (!discovered.models.length) {
+    return { ok: false, code: 'RESULT_PROVIDER_KEY_NO_MODEL' };
+  }
+  return { ok: true, models: discovered.models };
+}
+
+async function requestGeminiModel(apiKey, model, prompt, image, jsonMode) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const generationConfig = { temperature: 0 };
+  if (jsonMode) generationConfig.responseMimeType = 'application/json';
+  let response;
+  let timeoutId;
+  try {
+    const controller = new AbortController();
+    timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [
+          { text: prompt },
+          { inline_data: { mime_type: image.mimeType, data: image.base64 } },
+        ] }],
+        generationConfig,
+      }),
+    });
+  } catch (error) {
+    return { ok: false, code: error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+  let payload = {};
+  try { payload = await response.json(); } catch {}
+  return { response, payload };
+}
+
 async function callGemini(apiKey, prompt, image) {
   if (!apiKey) return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
-  const configuredModel = String(process.env.WTS_SMART_RECORDING_MODEL || '').trim();
-  const models = [...new Set([
-    configuredModel,
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-  ].filter(Boolean))];
+  const discovered = await discoverGeminiModels(apiKey);
+  if (discovered.code === 'SMART_EXTRACTION_PROVIDER_KEY_INVALID') return discovered;
+  const models = discovered.ok && discovered.models.length ? discovered.models : orderGeminiModels(FALLBACK_MODELS);
   let lastFailure = null;
 
   for (const model of models) {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    let response;
-    let timeoutId;
-    try {
-      const controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
-      response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [
-            { text: prompt },
-            { inline_data: { mime_type: image.mimeType, data: image.base64 } },
-          ] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0 },
-        }),
-      });
-    } catch (error) {
-      return { ok: false, code: error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
-    } finally {
-      if (timeoutId) clearTimeout(timeoutId);
-    }
-
-    let payload = {};
-    try { payload = await response.json(); } catch {}
+    let result = await requestGeminiModel(apiKey, model, prompt, image, true);
+    if (!result.response) return result;
+    let { response, payload } = result;
     if (!response.ok) {
-      const providerMessage = String(payload?.error?.message || '').slice(0, 240);
-      const keyRejected = response.status === 400 && /api[ _-]?key|key not valid|invalid key|permission denied/i.test(providerMessage);
-      lastFailure = {
-        ok: false,
-        code: keyRejected ? 'SMART_EXTRACTION_PROVIDER_KEY_INVALID' : 'SMART_EXTRACTION_PROVIDER_FAILED',
-        provider_status: response.status,
-        provider_message: providerMessage,
-      };
-      // Invalid credentials must be reported immediately. A missing or
-      // retired model can be recovered by trying the compatibility list.
-      if (keyRejected || response.status === 401 || response.status === 403) return lastFailure;
-      if (response.status !== 400 && response.status !== 404) return lastFailure;
-      continue;
+      // Some Gemini models reject responseMimeType even though they support
+      // vision generation. Retry that exact model once in plain-text mode.
+      if (response.status === 400) {
+        result = await requestGeminiModel(apiKey, model, prompt, image, false);
+        if (!result.response) return result;
+        ({ response, payload } = result);
+      }
+      if (!response.ok) {
+        lastFailure = providerFailureFromResponse(response, payload);
+        if (lastFailure.code === 'SMART_EXTRACTION_PROVIDER_KEY_INVALID') return lastFailure;
+        if (response.status !== 400 && response.status !== 404) return lastFailure;
+        continue;
+      }
     }
 
     const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-    try {
-      const parsed = parseGeminiJson(raw);
-      return parsed === null
-        ? { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' }
-        : { ok: true, payload: parsed };
-    } catch {
-      return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
-    }
+    const parsed = parseGeminiJson(raw);
+    if (parsed !== null) return { ok: true, payload: parsed };
+    return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
   }
 
   return lastFailure || { ok: false, code: 'SMART_EXTRACTION_PROVIDER_FAILED' };
@@ -157,6 +238,10 @@ async function readSheet(session, sheetId) {
 
 function isLandscapeClass(classKey) {
   return /^(creche|kg1|kg2|nursery1|nursery2|primary[1-5])$/.test(String(classKey || ''));
+}
+
+function rowsPerPageForClass(classKey) {
+  return isLandscapeClass(classKey) ? 50 : 58;
 }
 
 function templateGeometry(subjectSheets, baseGeometry, landscape) {
@@ -187,7 +272,7 @@ function templateGeometry(subjectSheets, baseGeometry, landscape) {
     canonical_height: height,
     layout: landscape ? 'landscape' : 'portrait',
     subject_count: count,
-    rows_per_page: 40,
+    rows_per_page: rowsPerPageForClass(subjectSheets[0]?.class_key),
     table: { x: tableX, y: tableY, width: tableWidth, row_height: rowHeight },
     student_column: { x: tableX + numberWidth, width: studentWidth },
     columns,
@@ -201,7 +286,11 @@ function groupedSheet(sheetPayloads) {
   }));
   const first = { ...sheets[0], group_sheets: sheets };
   const classKeys = [...new Set(sheets.map((sheet) => String(sheet.class_key || '')))].filter(Boolean);
-  first.geometry = templateGeometry(classKeys.length > 1 ? [sheets[0]] : sheets, first.geometry, isLandscapeClass(first.class_key));
+  first.geometry = templateGeometry(
+    classKeys.length > 1 ? [sheets[0]] : sheets,
+    first.geometry,
+    isLandscapeClass(first.class_key) || (classKeys.length <= 1 && sheets.length > 1),
+  );
   if (classKeys.length <= 1) return first;
 
   const seen = new Set();
@@ -223,8 +312,8 @@ function groupedSheet(sheetPayloads) {
   first.roster = combined.map((student, index) => ({
     ...student,
     row_index: index + 1,
-    page_index: Math.floor(index / 40),
-    page_row: (index % 40) + 1,
+    page_index: Math.floor(index / first.geometry.rows_per_page),
+    page_row: (index % first.geometry.rows_per_page) + 1,
   }));
   first.grouped_across_classes = true;
   first.class_keys = classKeys;
@@ -389,3 +478,6 @@ module.exports = async function smartRecording(req, res) {
     image_fingerprint: crypto.createHash('sha256').update(image.bytes).digest('hex'),
   });
 };
+
+module.exports.discoverGeminiModels = discoverGeminiModels;
+module.exports.verifyGeminiApiKey = verifyGeminiApiKey;
