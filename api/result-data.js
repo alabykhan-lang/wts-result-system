@@ -39,27 +39,7 @@ module.exports = async function resultData(req, res) {
     return;
   }
   const requestPayload = body.payload && typeof body.payload === 'object' ? body.payload : {};
-  let payload = action === 'staff.write_access.read'
-    ? await supabaseRpc('school_result_staff_write_access_read', {
-        p_session_id: session.sessionId,
-        p_session_secret: session.sessionSecret,
-      })
-    : action === 'staff.write_access.update'
-      ? await supabaseRpc('school_result_staff_write_access_update', {
-          p_session_id: session.sessionId,
-          p_session_secret: session.sessionSecret,
-          p_person_id: requestPayload.person_id || null,
-          p_write_enabled: requestPayload.write_enabled === true,
-          p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
-        })
-    : action === 'staff.write_access.bulk'
-      ? await supabaseRpc('school_result_staff_write_access_bulk', {
-          p_session_id: session.sessionId,
-          p_session_secret: session.sessionSecret,
-          p_write_enabled: requestPayload.write_enabled === true,
-          p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
-        })
-    : action === 'smart.sheet.create'
+  let payload = action === 'smart.sheet.create'
     ? await supabaseRpc('school_result_smart_sheet_create', {
         p_session_id: session.sessionId,
         p_session_secret: session.sessionSecret,
@@ -163,8 +143,28 @@ module.exports = async function resultData(req, res) {
       })
     : action === 'context.read'
       ? await supabaseRpc('school_result_context_read', {
+          p_session_id: session.sessionId,
+          p_session_secret: session.sessionSecret,
+        })
+    : action === 'staff.write_access.read'
+      ? await supabaseRpc('school_result_staff_write_access_read', {
         p_session_id: session.sessionId,
         p_session_secret: session.sessionSecret,
+      })
+    : action === 'staff.write_access.update'
+      ? await supabaseRpc('school_result_staff_write_access_update', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+        p_person_id: requestPayload.person_id || null,
+        p_write_enabled: requestPayload.write_enabled === true,
+        p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
+      })
+    : action === 'staff.write_access.bulk'
+      ? await supabaseRpc('school_result_staff_write_access_bulk', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+        p_write_enabled: requestPayload.write_enabled === true,
+        p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
       })
     : action === 'settings.app_config.update'
       ? await supabaseRpc('school_result_app_config_update', {
@@ -174,14 +174,24 @@ module.exports = async function resultData(req, res) {
       })
     : action === 'settings.provider_key.update'
       ? await (async () => {
+        // Authorize before contacting Google so an ordinary Result session
+        // cannot use this endpoint as a provider-key oracle.
         const authorized = await supabaseRpc('school_result_provider_key_authorize', {
           p_session_id: session.sessionId,
           p_session_secret: session.sessionSecret,
         });
         if (!authorized?.ok) return authorized;
         const providerKey = typeof requestPayload.provider_key === 'string' ? requestPayload.provider_key.trim() : '';
-        const verified = await smartRecording.verifyGeminiApiKey(providerKey);
-        if (!verified?.ok) return verified;
+        const verification = await smartRecording.verifyGeminiApiKey(providerKey);
+        if (!verification?.ok) {
+          const invalid = verification.code === 'SMART_EXTRACTION_PROVIDER_KEY_INVALID';
+          return {
+            ok: false,
+            code: invalid ? 'RESULT_PROVIDER_KEY_INVALID' : 'RESULT_PROVIDER_KEY_CHECK_FAILED',
+            provider_status: verification.provider_status,
+            provider_message: verification.provider_message,
+          };
+        }
         return supabaseRpc('school_result_provider_key_update', {
           p_session_id: session.sessionId,
           p_session_secret: session.sessionSecret,

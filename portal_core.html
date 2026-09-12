@@ -275,6 +275,8 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 .bs-table th{background:var(--g1);color:#fff;padding:6px 8px;border:1px solid rgba(255,255,255,.1)}
 .bs-table td{padding:6px 8px;border:1px solid var(--border)}
 .bs-table tr:nth-child(even) td{background:#fafafa}
+.bs-dept-option{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:#f7fcf9;color:var(--g1);font-size:.72rem;font-weight:700;cursor:pointer}
+.bs-dept-option input{accent-color:var(--g3)}
 
 /* CLASS PROGRESS */
 .progress-sheet{margin-bottom:18px;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -292,11 +294,22 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
 
 /* ── SETTINGS ── */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.settings-dashboard{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:20px;padding:18px 20px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(135deg,#f7fffb,#fff);box-shadow:var(--shadow)}
-.settings-dashboard-copy{flex:1;min-width:220px}.settings-dashboard-copy strong{display:block;color:var(--g1);font-size:1.05rem}.settings-dashboard-copy span{display:block;margin-top:5px;color:var(--gray);font-size:.76rem;line-height:1.45}
-.settings-menu{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.settings-menu-btn{border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--gray);padding:9px 13px;font-size:.75rem;font-weight:800;cursor:pointer;transition:.18s}.settings-menu-btn:hover{border-color:var(--g3);color:var(--g1);background:#f0fdf4}.settings-menu-btn.active{border-color:var(--g1);background:var(--g1);color:#fff;box-shadow:0 5px 12px rgba(26,42,74,.15)}
-.settings-sync-bar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 15px;border:1px solid #c8e6d8;border-radius:12px;background:#f0fdf4}.settings-sync-bar strong{display:block;color:var(--g1);font-size:.8rem}.settings-sync-bar span{display:block;margin-top:3px;color:var(--gray);font-size:.7rem}.settings-sync-bar .btn{white-space:nowrap}
-.settings-category-hidden{display:none!important}
+.settings-hero{margin-bottom:18px;padding:25px 28px;border-radius:20px;background:linear-gradient(135deg,#087f58 0%,#12916b 58%,#1aa77b 100%);color:#fff;box-shadow:0 14px 30px rgba(8,127,88,.2);position:relative;overflow:hidden}
+.settings-hero:after{content:'';position:absolute;width:250px;height:250px;right:-80px;top:-145px;border-radius:50%;background:rgba(255,255,255,.12)}
+.settings-hero-kicker{font-size:.68rem;letter-spacing:.18em;font-weight:800;opacity:.78;text-transform:uppercase}
+.settings-hero h2{font-family:'Playfair Display',serif;font-size:1.7rem;margin:7px 0 5px;position:relative;z-index:1}
+.settings-hero p{max-width:620px;font-size:.82rem;line-height:1.5;opacity:.88;position:relative;z-index:1}
+.settings-hero-chip{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:8px 13px;border:1px solid rgba(255,255,255,.25);border-radius:999px;background:rgba(255,255,255,.12);font-size:.72rem;font-weight:700;position:relative;z-index:1}
+.settings-hero-chip:before{content:'';width:8px;height:8px;border-radius:50%;background:#d9ffed;box-shadow:0 0 0 4px rgba(217,255,237,.15)}
+.settings-dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-bottom:18px;padding:7px;border:1px solid rgba(125,212,176,.65);border-radius:18px;background:#fbfffd;box-shadow:var(--shadow)}
+.settings-category{border:0;border-radius:13px;background:transparent;color:#16634c;padding:13px 14px;text-align:left;font:700 .8rem 'DM Sans',sans-serif;cursor:pointer;transition:.16s}
+.settings-category:hover,.settings-category:focus-visible{background:#eefbf5;outline:none}
+.settings-category.active{background:linear-gradient(135deg,#087f58,#d5a62a);color:#fff;box-shadow:0 8px 18px rgba(8,127,88,.16)}
+.settings-sync-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:#fff;box-shadow:var(--shadow)}
+.settings-sync-copy{font-size:.72rem;color:var(--gray);line-height:1.4}
+.settings-sync-copy strong{display:block;color:var(--g1);font-size:.8rem}
+.settings-grid>[data-settings-category]{display:none}
+.settings-grid>[data-settings-category].settings-category-visible{display:block}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;
   padding:10px 0;border-bottom:1px solid var(--border)}
 .toggle-row:last-child{border-bottom:none}
@@ -422,7 +435,7 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   #sidebar.open{transform:translateX(0);box-shadow:6px 0 40px rgba(0,0,0,.35)}
   .stats-row{grid-template-columns:1fr 1fr}
   .settings-grid{grid-template-columns:1fr}
-  .settings-sync-bar{grid-column:1}
+  .settings-dashboard{grid-template-columns:1fr 1fr}
   .traits-grid{grid-template-columns:1fr}
   .fees-grid{grid-template-columns:1fr 1fr}
   .fg-row{grid-template-columns:1fr}
@@ -433,7 +446,6 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .content{padding:14px}
   #bottom-nav{display:block}
   .content{padding-bottom:74px}
-  .settings-dashboard{padding:15px}.settings-menu{justify-content:flex-start}.settings-menu-btn{padding:8px 10px}
   .topbar{display:block;padding:11px 14px}
   .tb-left{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"menu heading" "menu meta";align-items:start;gap:4px 8px;width:100%}
   #hamburger{grid-area:menu;margin-top:3px}
@@ -445,6 +457,10 @@ nav{flex:1;overflow-y:auto;padding:8px 0}
   .tb-meta .official-context-label{max-width:100%;white-space:normal;line-height:1.2}
   .tb-right{justify-content:flex-start;flex-wrap:wrap;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid var(--border)}
   .tb-right .btn{flex:0 1 auto}
+  .settings-hero{padding:21px 19px;border-radius:17px}
+  .settings-hero h2{font-size:1.45rem}
+  .settings-dashboard{grid-template-columns:1fr 1fr;gap:2px;padding:5px}
+  .settings-category{padding:11px 9px;font-size:.72rem}
   .stats-row{grid-template-columns:1fr 1fr;gap:10px}
   .modal{max-width:100%;border-radius:16px 16px 0 0;
     position:fixed;bottom:0;left:0;right:0;height:90vh;max-height:90vh;margin:0;
@@ -513,8 +529,28 @@ body.results-management-mode .results-management-only-bn{display:flex}
 .result-history-picker small{display:block;margin-top:7px;color:var(--gray);font-size:.7rem;line-height:1.4}
 body.result-context-read-only #sheet-rows .sc-inp{pointer-events:none;opacity:.62;background:#f3f4f6}
 body.result-context-read-only #save-draft-btn,body.result-context-read-only #publish-btn,body.result-context-read-only #scan-record-btn{opacity:.5;pointer-events:none}
+body.result-staff-write-disabled #sheet-rows .sc-inp{pointer-events:none;opacity:.62;background:#f3f4f6}
+body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disabled #publish-btn,body.result-staff-write-disabled #scan-record-btn{opacity:.5;pointer-events:none}
 .result-read-only-note{display:none;margin:0 0 13px;padding:10px 12px;border-left:3px solid var(--gold);border-radius:8px;background:#fff8e9;color:#725d37;font-size:.75rem;line-height:1.45}
 body.result-context-read-only .result-read-only-note{display:block}
+.result-staff-write-note{display:none;margin:0 0 13px;padding:10px 12px;border-left:3px solid var(--g3);border-radius:8px;background:#eefbf5;color:#145c46;font-size:.75rem;line-height:1.45}
+body.result-staff-write-disabled .result-staff-write-note{display:block}
+.staff-write-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.staff-write-actions{display:flex;gap:8px;flex-wrap:wrap}
+.staff-write-list{display:grid;gap:8px}
+.staff-write-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff}
+.staff-write-copy{flex:1;min-width:0}
+.staff-write-copy strong{display:block;color:var(--g1);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.staff-write-copy small{display:block;margin-top:3px;color:var(--gray);font-size:.68rem;line-height:1.35}
+.staff-write-state{font-size:.68rem;font-weight:800;white-space:nowrap}
+.staff-write-state.on{color:#16634c}.staff-write-state.off{color:#8a5a00}.staff-write-state.locked{color:#991b1b}
+.staff-write-toggle{width:38px;height:22px;position:relative;flex:0 0 auto}
+.staff-write-toggle input{position:absolute;opacity:0;width:0;height:0}
+.staff-write-toggle span{position:absolute;inset:0;border-radius:999px;background:#d1d5db;cursor:pointer;transition:.16s}
+.staff-write-toggle span:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.16s}
+.staff-write-toggle input:checked+span{background:var(--g3)}
+.staff-write-toggle input:checked+span:before{transform:translateX(16px)}
+.staff-write-toggle input:disabled+span{cursor:not-allowed;opacity:.5}
 
 /* Read-only archive browser */
 .archive-session-list{display:grid;gap:10px;padding:16px}
@@ -573,12 +609,6 @@ body.result-context-read-only .results-history-readable{display:flex}
 .score-publish-all{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:600px){.score-publish-all{width:100%}.score-publish-all .btn{flex:1}}
 
-</style>
-<style>
-.result-staff-write-note{display:none;margin:0 0 13px;padding:10px 12px;border-left:3px solid var(--gold);border-radius:8px;background:#fff8e9;color:#725d37;font-size:.75rem;line-height:1.45}
-body.result-staff-write-disabled .result-staff-write-note{display:block}
-body.result-staff-write-disabled #sheet-rows .sc-inp{pointer-events:none;opacity:.62;background:#f3f4f6}
-body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disabled #publish-btn{opacity:.5;pointer-events:none}
 </style>
 </head>
 <body>
@@ -754,9 +784,7 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
       </div>
     </div>
     <div class="tb-right">
-            <span class="saved-msg" id="saved-msg">Saved</span>
-      <button class="btn btn-outline btn-sm no-print" onclick="downloadAndroidApp()">Download App</button>
-      <button class="btn btn-outline btn-sm no-print" onclick="exportData()">Export</button>
+      <span class="saved-msg" id="saved-msg">Saved</span>
     </div>
   </div>
 
@@ -871,6 +899,7 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
         <h3 id="sheet-title" style="font-family:'Playfair Display',serif;color:var(--g1);font-size:1.1rem;flex:1;margin:0"></h3>
         <span id="sheet-pub-badge" style="display:none;background:#10b981;color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px">Published</span>
       </div>
+      <p class="result-staff-write-note">Management has turned off score entry for this account. Existing scores remain available for viewing and cross-checking.</p>
       <div class="tbl-wrap" style="margin-bottom:14px">
         <div class="sheet-header">
           <span>#</span><span>Student</span>
@@ -885,7 +914,6 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
         <div id="sheet-rows"></div>
       </div>
       <p class="result-read-only-note">This is a previous or closed academic context. You can view it, but edits and publication are disabled.</p>
-      <p class="result-staff-write-note">This staff account is currently read-only. You can view and cross-check scores, but recording, editing, applying OCR scores, and publishing are disabled until management enables score entry in Settings.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-outline" id="save-draft-btn" onclick="saveDraft()">Save Draft</button>
         <button class="btn btn-primary" id="publish-btn" onclick="togglePublish()">Publish Subject</button>
@@ -900,13 +928,14 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
         <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Class:</label>
         <div id="bs-class-label" style="font-weight:700;color:var(--g1);font-size:.88rem"></div>
       </div>
-      <div id="bs-dept-filter-wrap" style="display:none;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
-        <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Departments:</label>
-        <div id="bs-dept-filter" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-      </div>
       <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
         <label for="bs-subject-select" style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Subject:</label>
         <select id="bs-subject-select" class="sel" style="min-width:190px" onchange="refreshBroadsheet()"></select>
+      </div>
+      <div id="bs-department-picker" style="display:none;align-items:center;gap:9px;flex-wrap:wrap;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
+        <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Departments:</label>
+        <div id="bs-department-options" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        <small style="width:100%;font-size:.68rem;color:var(--gray)">Select the departments whose students should be combined for this subject.</small>
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:10px;box-shadow:var(--shadow)">
         <label style="font-size:.78rem;font-weight:700;color:var(--gray);white-space:nowrap">Term:</label>
@@ -1044,22 +1073,30 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
 
   <!-- SETTINGS -->
   <div class="page" id="page-settings">
-    <div class="settings-dashboard">
-      <div class="settings-dashboard-copy">
-        <strong>Settings dashboard</strong>
-        <span>Choose one area at a time. Each area has its own save-and-sync action so changes remain available on every authorized device.</span>
-      </div>
-      <div class="settings-menu" role="tablist" aria-label="Settings sections">
-        <button class="settings-menu-btn" type="button" data-settings-category="overview" onclick="showSettingsCategory('overview')">School</button>
-        <button class="settings-menu-btn" type="button" data-settings-category="ai" onclick="showSettingsCategory('ai')">AI &amp; OCR</button>
-        <button class="settings-menu-btn" type="button" data-settings-category="staff" onclick="showSettingsCategory('staff')">Staff access</button>
-        <button class="settings-menu-btn" type="button" data-settings-category="session" onclick="showSettingsCategory('session')">Session</button>
-        <button class="settings-menu-btn" type="button" data-settings-category="cards" onclick="showSettingsCategory('cards')">Result cards</button>
-        <button class="settings-menu-btn" type="button" data-settings-category="subjects" onclick="showSettingsCategory('subjects')">Subjects</button>
+    <section class="settings-hero">
+      <div class="settings-hero-kicker">Portal control center</div>
+      <h2>Settings dashboard</h2>
+      <p>Manage school identity, academic rules, report cards, AI extraction, subjects and staff access from focused sections.</p>
+      <div class="settings-hero-chip" id="settings-hero-context">Official academic configuration</div>
+    </section>
+    <nav class="settings-dashboard" id="settings-dashboard" aria-label="Settings categories">
+      <button type="button" class="settings-category active" data-settings-category="identity">School identity</button>
+      <button type="button" class="settings-category" data-settings-category="billing">Bills &amp; payments</button>
+      <button type="button" class="settings-category" data-settings-category="academic">Academic rules</button>
+      <button type="button" class="settings-category" data-settings-category="cards">Report cards</button>
+      <button type="button" class="settings-category" data-settings-category="ai">AI usage</button>
+      <button type="button" class="settings-category" data-settings-category="subjects">Subjects</button>
+      <button type="button" class="settings-category" data-settings-category="staff">Management access</button>
+    </nav>
+    <div class="settings-sync-bar">
+      <div class="settings-sync-copy"><strong id="settings-category-title">School identity</strong><span id="settings-category-status">Save changes and sync them to all signed-in devices.</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" type="button" onclick="saveSettings()">Save &amp; sync to all devices</button>
+        <button class="btn btn-outline btn-sm" type="button" onclick="forceSyncSettings()">Sync now</button>
       </div>
     </div>
     <div class="settings-grid">
-      <div class="tbl-wrap" data-settings-category="ai" style="margin-bottom:0">
+      <div class="tbl-wrap settings-category-visible" data-settings-category="ai" style="margin-bottom:0">
         <div class="tbl-head"><h3>AI Score Scanner (OCR)</h3></div>
         <div style="padding:16px">
           <div class="fg"><label>Gemini API Key</label><input class="inp" type="password" id="gemini-key-input" autocomplete="new-password" placeholder="Enter a new key to save or replace"/></div>
@@ -1068,28 +1105,25 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           <button class="btn btn-primary btn-sm" onclick="saveGeminiKey()" style="margin-top:10px">Save / Replace API Key</button>
         </div>
       </div>
-
-      <div class="tbl-wrap" id="result-staff-write-card" data-settings-category="staff" style="margin-bottom:0;grid-column:1/-1;display:none">
-        <div class="tbl-head">
-          <h3>Staff score-entry access</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-primary btn-xs" type="button" onclick="setAllStaffWriteAccess(true)">Turn on all</button>
-            <button class="btn btn-outline btn-xs" type="button" onclick="setAllStaffWriteAccess(false)">Turn off all</button>
+      <div class="tbl-wrap" data-settings-category="staff" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Staff score-entry access</h3></div>
+        <div style="padding:16px" id="staff-write-access-panel">
+          <div class="staff-write-toolbar">
+            <div>
+              <strong style="display:block;color:var(--g1);font-size:.86rem">Choose who may record or edit scores</strong>
+              <small id="staff-write-access-status" style="display:block;margin-top:4px;color:var(--gray);font-size:.72rem">Loading staff access…</small>
+            </div>
+            <div class="staff-write-actions">
+              <button type="button" class="btn btn-primary btn-sm" onclick="setAllStaffWriteAccess(true)">Turn on all</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="setAllStaffWriteAccess(false)">Turn off all</button>
+            </div>
           </div>
-        </div>
-        <div style="padding:16px">
-          <p style="font-size:.75rem;color:var(--gray);margin-bottom:12px">Turn writing on only for the staff who should record or edit scores. Everyone else can still view and cross-check results.</p>
-          <div id="result-staff-write-status" style="font-size:.75rem;color:var(--gray);margin-bottom:10px">Loading staff access…</div>
-          <div style="overflow-x:auto">
-            <table class="data-table" style="font-size:.78rem;min-width:860px">
-              <thead><tr><th>Staff</th><th>Registry role</th><th>Results access</th><th>Score permission</th><th style="text-align:center">Can write</th></tr></thead>
-              <tbody id="result-staff-write-tbody"></tbody>
-            </table>
-          </div>
+          <div class="result-staff-write-note">You can view and cross-check existing records, but score entry, Smart Recording saves, and edits are disabled for this account until management turns write access on.</div>
+          <div id="staff-write-access-list" class="staff-write-list"><div style="font-size:.78rem;color:var(--gray)">Loading staff list…</div></div>
         </div>
       </div>
-      <div class="tbl-wrap" data-settings-category="overview" style="margin-bottom:0">
-        <div class="tbl-head"><h3>School Information</h3></div>
+      <div class="tbl-wrap" data-settings-category="identity" style="margin-bottom:0">
+        <div class="tbl-head"><h3>School identity</h3></div>
         <div style="padding:16px">
           <div class="fg"><label>School Name</label><input class="inp" id="cfg-name"/></div>
           <div class="fg"><label>Address</label><input class="inp" id="cfg-addr"/></div>
@@ -1100,8 +1134,8 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           </div>
         </div>
       </div>
-      <div class="tbl-wrap" data-settings-category="session" style="margin-bottom:0">
-        <div class="tbl-head"><h3>Session Configuration</h3></div>
+      <div class="tbl-wrap" data-settings-category="billing" style="margin-bottom:0">
+        <div class="tbl-head"><h3>Bills &amp; payments</h3></div>
         <div style="padding:16px">
           <div class="fg"><label>Next Term Resumption Date</label><input class="inp" type="date" id="cfg-resumption"/></div>
           <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;margin-bottom:14px">
@@ -1125,8 +1159,8 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
           </div>
         </div>
       </div>
-      <div class="tbl-wrap" data-settings-category="session" style="margin-bottom:0;grid-column:1/-1">
-        <div class="tbl-head"><h3>Promotion thresholds</h3></div>
+      <div class="tbl-wrap" data-settings-category="academic" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Academic rules</h3></div>
         <div style="padding:16px">
           <div class="promotion-note">
             Central Registry is the only service that carries students into a new session. Results stores the configured secondary thresholds below; SS1 departmental placement remains pending until Central Registry defines the transition. SS2 Science, Arts and Business continue to their matching SS3 departments.
@@ -1219,9 +1253,7 @@ body.result-staff-write-disabled #save-draft-btn,body.result-staff-write-disable
       </div>
     </div>
     <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
-      <button class="btn btn-outline btn-sm" onclick="forceSyncSettings()" style="margin-left:8px">&#9729; Sync to All Devices</button>
-      <button class="btn btn-outline" onclick="resetSettings()">Reset to Defaults</button>
+      <button class="btn btn-outline" onclick="resetSettings()">Reset settings view</button>
     </div>
   </div>
 
@@ -1522,13 +1554,14 @@ var CURRENT_AUTH_MODE=null;
 var CURRENT_PERMISSIONS=[];
 var CONTEXT_READ_ONLY=false;
 var RESULT_WRITE_ENABLED=false;
-var RESULT_ENTRY_WRITE_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish'];
 window._academicContext=null;
 window._academicHistory=[];
 window._activeTermStatus='open';
 var RESULT_MUTATING_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish','students.upsert','students.archive','settings.app_config.update'];
+var RESULT_ENTRY_WRITE_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update'];
 
 function isResultMutationAction(action){return RESULT_MUTATING_ACTIONS.indexOf(String(action||'').toLowerCase())>-1;}
+function isResultEntryWriteAction(action){return RESULT_ENTRY_WRITE_ACTIONS.indexOf(String(action||'').toLowerCase())>-1;}
 
 function resultAuthRequest(method,body){
   var opts={method:method,credentials:'same-origin',headers:{'Accept':'application/json'}};
@@ -1544,8 +1577,8 @@ function resultAuthRequest(method,body){
 }
 
 function resultDataRequest(action,payload){
-  if(isCentralAuth()&&RESULT_ENTRY_WRITE_ACTIONS.indexOf(action)>-1&&!RESULT_WRITE_ENABLED)return Promise.reject({code:'RESULT_STAFF_WRITE_DISABLED'});
   if(CONTEXT_READ_ONLY&&isResultMutationAction(action))return Promise.reject({code:'RESULT_ACADEMIC_CONTEXT_READ_ONLY'});
+  if(isCentralAuth()&&isResultEntryWriteAction(action)&&!RESULT_WRITE_ENABLED)return Promise.reject({code:'RESULT_STAFF_WRITE_DISABLED'});
   return fetch('/api/result-data',{
     method:'POST',credentials:'same-origin',
     headers:{'Accept':'application/json','Content-Type':'application/json'},
@@ -1588,14 +1621,20 @@ function centralUserFromPayload(payload){
 }
 
 function isCentralAuth(){return CURRENT_AUTH_MODE==='central';}
-function hasResultManagementAccess(){return isCentralAuth()&&(hasResultPermission('results.manage')||hasResultPermission('result_users.manage')||hasResultPermission('result_settings.manage'));}
-function canWriteResults(){return isCentralAuth()&&!CONTEXT_READ_ONLY&&RESULT_WRITE_ENABLED&&(CURRENT_PERMISSIONS.indexOf('scores.enter')>-1||CURRENT_PERMISSIONS.indexOf('results.manage')>-1);}
-window.canWriteResults=canWriteResults;
 
 function hasResultPermission(permission){
   if(!isCentralAuth())return false;
   if(CURRENT_PERMISSIONS.indexOf(permission)>-1)return true;
   return CURRENT_PERMISSIONS.indexOf('results.manage')>-1 && permission!=='results.view_assigned';
+}
+function hasResultManagementAccess(){
+  return hasResultPermission('results.manage')
+    || hasResultPermission('result_users.manage')
+    || hasResultPermission('result_settings.manage');
+}
+function canWriteResults(){
+  return isCentralAuth()&&!CONTEXT_READ_ONLY&&RESULT_WRITE_ENABLED
+    &&(hasResultPermission('scores.enter')||hasResultPermission('results.manage'));
 }
 
 function authErr(id,msg){
@@ -1623,7 +1662,7 @@ function loginSuccess(user,mode){
   // Set user info in sidebar
   document.getElementById('sb-user-name').textContent=user.full_name;
   var badge=document.getElementById('sb-role-badge');
-  var elevated=hasResultPermission('results.manage');
+  var elevated=hasResultManagementAccess();
   if(elevated){
     badge.textContent='Results management';badge.className='badge-access';
     document.body.classList.add('results-management-mode');
@@ -1636,7 +1675,10 @@ function loginSuccess(user,mode){
   if(lg)document.getElementById('auth-logo').src=lg.src;
   NAV_HISTORY=['home'];
   try{history.replaceState({page:'home'},'',window.location.pathname);}catch(e){}
-  Promise.all([loadRemoteSettings({force:true}),loadResultSubjectCatalog()]).then(function(){
+  Promise.all([
+    loadRemoteSettings({force:true}),
+    loadResultSubjectCatalog()
+  ]).then(function(){
     restorePortalPageAfterLogin();
   }).catch(function(){
     restorePortalPageAfterLogin();
@@ -1685,7 +1727,8 @@ function restorePortalPageAfterLogin(){
 
 function doLogout(){
   var finish=function(){
-    CURRENT_USER=null;CURRENT_AUTH_MODE=null;CURRENT_PERMISSIONS=[];
+    CURRENT_USER=null;CURRENT_AUTH_MODE=null;CURRENT_PERMISSIONS=[];RESULT_WRITE_ENABLED=false;
+    document.body.classList.remove('result-staff-write-disabled');
     showAuthScreen();
     var emailField=document.getElementById('central-email');
     var passwordField=document.getElementById('central-pass');
@@ -1802,8 +1845,6 @@ function completeResultSso(){
   var error=params.get('error')||'';
   if(error){
     ssoClearTransientState();
-    RESULT_WRITE_ENABLED=false;
-    document.body.classList.add('result-staff-write-disabled');
     ssoStatus('Central WTS sign-in was not completed. Please try again.');
     return;
   }
@@ -1831,9 +1872,11 @@ function completeResultSso(){
   }).then(function(payload){
     ssoClearTransientState();
     ssoStorageRemove('wts_pkce_recovery_attempt');
-    return resultAuthRequest('GET').catch(function(){return payload;});
-  }).then(function(context){
-    loginSuccess(centralUserFromPayload(context),'central');
+    // Refresh the post-handoff identity context so the browser receives the
+    // current staff write policy. The SSO exchange itself remains unchanged.
+    resultAuthRequest('GET').catch(function(){return payload;}).then(function(context){
+      loginSuccess(centralUserFromPayload(context),'central');
+    });
   }).catch(function(payload){
     ssoClearTransientState();
     if(payload&&(
@@ -1885,8 +1928,6 @@ function checkSession(){
 }
 
 function showAuthScreen(){
-  RESULT_WRITE_ENABLED=false;
-  document.body.classList.add('result-staff-write-disabled');
   var a=document.getElementById('auth-screen');
   if(a)a.style.display='flex';
   document.body.classList.remove('results-management-mode');
@@ -1969,6 +2010,28 @@ function centralResultRead(path){
       showToast('No class or subject has been assigned to this account.','error');
     }
     throw error;
+  });
+}
+function loadResultSubjectCatalog(){
+  if(!isCentralAuth())return Promise.resolve(null);
+  return resultDataRequest('read.subjects',{}).then(function(payload){
+    var catalog={};
+    Object.keys(DEPTS).forEach(function(key){catalog[key]=[];});
+    (Array.isArray(payload.rows)?payload.rows:[]).forEach(function(row){
+      if(!row||!row.class_key||row.active===false||!row.subject_name)return;
+      if(!catalog[row.class_key])catalog[row.class_key]=[];
+      catalog[row.class_key].push({index:Number(row.subject_index),name:String(row.subject_name)});
+    });
+    Object.keys(catalog).forEach(function(key){
+      catalog[key].sort(function(a,b){return a.index-b.index;});
+      catalog[key]=catalog[key].map(function(row){return row.name;});
+    });
+    RESULT_SUBJECT_CATALOG=catalog;
+    RESULT_SUBJECT_CATALOG_READY=true;
+    return catalog;
+  }).catch(function(error){
+    console.warn('Protected subject catalog unavailable; using local fallback:',error&&error.code||error);
+    return null;
   });
 }
 function dbGet(path){
@@ -2128,7 +2191,7 @@ function saveCfg(cfg){
   if(isCentralAuth()&&hasResultPermission('result_settings.manage')){
     return dbUpsertSettings('app_config',JSON.stringify(cfg))
       .then(function(){showSaved();return true;})
-      .catch(function(e){console.error('Config sync failed:',e);return false;});
+      .catch(function(e){console.error('Config sync failed:',e);throw e;});
   }
   return Promise.resolve(false);
 }
@@ -2332,6 +2395,8 @@ var CORE=['English Language','Mathematics','Digital Technology','Economics','Cit
 // existing spelling used by the portal, while subject matching also accepts
 // the school's Civic Education and Livestock aliases.
 var SENIOR_GENERAL_SUBJECTS=['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Livestock'];
+var RESULT_SUBJECT_CATALOG={};
+var RESULT_SUBJECT_CATALOG_READY=false;
 var SIMPLE=['English Language','Mathematics','Phonics','Handwriting','Quantitative Reasoning','Verbal Reasoning','Basic Science','Social Studies','Cultural & Creative Arts','Computer Studies','Religious & National Values'];
 var JSS_CORE=['English Language','Mathematics','Basic Science','Basic Technology','Social Studies','Civic Education','Cultural & Creative Arts','Agricultural Science','Computer Studies','French','Yoruba','Christian Religious Studies','Home Economics','Physical & Health Education','Business Studies'];
 var DEPTS={
@@ -2542,29 +2607,6 @@ function ensureSeniorGeneralSubjects(classKey,list){
   var present={};out.forEach(function(subject){present[subjectConfigKey(subject)]=true;});
   SENIOR_GENERAL_SUBJECTS.forEach(function(subject){var key=subjectConfigKey(subject);if(!present[key]){out.push(subject);present[key]=true;}});
   return out;
-}
-
-var RESULT_SUBJECT_CATALOG={};
-var RESULT_SUBJECT_CATALOG_READY=false;
-function loadResultSubjectCatalog(){
-  if(!isCentralAuth())return Promise.resolve();
-  return resultDataRequest('read.subjects',{}).then(function(payload){
-    var next={};
-    Object.keys(DEPTS||{}).forEach(function(key){next[key]=[];});
-    (payload.rows||[]).forEach(function(row){
-      var key=String(row.class_key||'').trim();
-      var name=String(row.subject_name||'').trim();
-      if(!key||!name||!Object.prototype.hasOwnProperty.call(next,key))return;
-      next[key].push({index:Number(row.subject_index),name:name});
-    });
-    Object.keys(next).forEach(function(key){
-      next[key].sort(function(a,b){return a.index-b.index;});
-      RESULT_SUBJECT_CATALOG[key]=next[key].map(function(row){return row.name;});
-    });
-    RESULT_SUBJECT_CATALOG_READY=true;
-  }).catch(function(error){
-    console.warn('Result subject catalog unavailable; using local subject fallback.',error);
-  });
 }
 function configuredSubjects(classKey,cfg){
   cfg=cfg||getCfg();
@@ -3323,7 +3365,7 @@ function renderStudents(){
 }
 
 function openAddStudent(){
-  if(!canWriteResults()){showToast('Score entry is currently read-only.','error');return;}
+  if(CONTEXT_READ_ONLY){showToast('Historical records are read-only.','error');return;}
   photoDataURL='';
   document.getElementById('modal-title').textContent='Add Student';
   document.getElementById('edit-id').value='';
@@ -3443,7 +3485,7 @@ function renderScoreGrid(){
   var scoreHeading=document.getElementById('score-grid-heading');
   if(scoreHeading)scoreHeading.textContent=canWriteResults()?'Select a Subject to Enter Scores':'View Subject Scores';
   var publishTools=document.getElementById('score-publish-all');
-  if(publishTools)publishTools.style.display=canWriteResults()?'flex':'none';
+  if(publishTools)publishTools.style.display=canWriteResults()&&hasResultPermission('results.publish')?'flex':'none';
   document.getElementById('scores-grid-view').style.display='block';
   document.getElementById('scores-sheet-view').style.display='none';
   if(!students.length){
@@ -3473,7 +3515,7 @@ function renderScoreGrid(){
 }
 
 function setAllSubjectsPublished(published){
-  if(CONTEXT_READ_ONLY){showToast('Historical records are read-only.','error');return;}
+  if(!canWriteResults()){showToast('Score entry is currently read-only for this account.','error');return;}
   var subjs=subjects();
   if(!subjs.length){showToast('There are no subjects to update.','error');return;}
   var message=published
@@ -3583,11 +3625,11 @@ function confirmedScoreResponse(studentId,subjectIdx,response,version){
 function scoreSaveMessage(error){
   var code=error&&error.code;
   if(code==='RESULT_ACADEMIC_CONTEXT_READ_ONLY'||code==='RESULT_ACADEMIC_TERM_READ_ONLY')return 'Save failed — this previous or closed academic context is read-only.';
+  if(code==='RESULT_STAFF_WRITE_DISABLED')return 'Save failed — management has turned off score entry for this account.';
   if(code==='RESULT_TERM_NOT_ACTIVE'||code==='RESULT_CONTEXT_MISMATCH'||code==='RESULT_TERM_INVALID')return 'Save failed — not recorded: select the selected class, session and term again.';
   if(code==='RESULT_ACADEMIC_SESSION_NOT_ACTIVE'||code==='RESULT_CONTEXT_INVALID')return 'Save failed — not recorded: select the selected academic session again.';
   if(code==='RESULT_CLASS_SCOPE_DENIED'||code==='RESULT_SUBJECT_SCOPE_DENIED')return 'Save failed — not recorded: this class or subject is not assigned.';
   if(code==='RESULT_PERMISSION_DENIED')return 'Save failed — not recorded: score-entry permission is required.';
-  if(code==='RESULT_STAFF_WRITE_DISABLED')return 'Save failed — this staff account is currently read-only. Ask management to enable score entry in Settings.';
   return 'Save failed — not recorded';
 }
 function queueScoreSave(studentId,subjectIdx){
@@ -3705,9 +3747,9 @@ function dbUpsertScore(studentId,subjectIdx,ca1,ca2,ca3,exam){
   return Promise.reject({code:'RESULT_CENTRAL_SESSION_REQUIRED'});
 }
 function saveDraft(){
-  if(!canWriteResults()){showToast('Score entry is currently read-only.','error');return;}
   var idx=currentSheetIdx;
   if(idx<0)return;
+  if(!canWriteResults()){showToast('Score entry is currently read-only for this account.','error');return;}
   var students=DB_STUDENTS[CLS]||[];
   showLoad('Saving…');
   var jobs=students.map(function(student){
@@ -3732,8 +3774,8 @@ function saveDraft(){
 }
 
 function togglePublish(){
-  if(!canWriteResults()){showToast('Score entry is currently read-only.','error');return;}
   var idx=currentSheetIdx;if(idx<0)return;
+  if(!canWriteResults()){showToast('Score publication is currently read-only for this account.','error');return;}
   var isPub=isPublished(CLS,idx);
   if(isPub){
     setPublishedRemote(CLS,TERM,idx,false,function(){
@@ -3908,9 +3950,35 @@ function saveProfile(){
 // BROADSHEET
 // ============================================================
 var BROADSHEET_DATA=null;
-function broadsheetClassKeys(){
+var BROADSHEET_DEPARTMENTS=null;
+function seniorBroadsheetDepartments(){
   var match=String(CLS||'').match(/^(ss[23])-/);
-  return match?ALL_CLASSES.filter(function(key){return key.indexOf(match[1]+'-')===0;}):[CLS];
+  return match?ALL_CLASSES.filter(function(key){return key.indexOf(match[1]+'-')===0;}):[];
+}
+function renderBroadsheetDepartmentPicker(){
+  var picker=document.getElementById('bs-department-picker'),options=document.getElementById('bs-department-options');
+  var all=seniorBroadsheetDepartments();
+  if(!picker||!options)return;
+  if(!all.length){picker.style.display='none';BROADSHEET_DEPARTMENTS=null;return;}
+  var selected=(Array.isArray(BROADSHEET_DEPARTMENTS)?BROADSHEET_DEPARTMENTS:all.slice()).filter(function(key){return all.indexOf(key)>-1;});
+  if(!selected.length)selected=all.slice();
+  BROADSHEET_DEPARTMENTS=selected;
+  picker.style.display='flex';
+  options.innerHTML=all.map(function(key){
+    return'<label class="bs-dept-option"><input type="checkbox" value="'+escapeHtml(key)+'" '+(selected.indexOf(key)>-1?'checked':'')+'>'+escapeHtml(DEPTS[key]?DEPTS[key].label:key)+'</label>';
+  }).join('');
+  options.querySelectorAll('input[type="checkbox"]').forEach(function(input){
+    input.onchange=function(){
+      var next=Array.prototype.filter.call(options.querySelectorAll('input[type="checkbox"]'),function(box){return box.checked;}).map(function(box){return box.value;});
+      if(!next.length){input.checked=true;showToast('Keep at least one department selected.','error');return;}
+      BROADSHEET_DEPARTMENTS=next;refreshBroadsheet();
+    };
+  });
+}
+function broadsheetClassKeys(){
+  var all=seniorBroadsheetDepartments();
+  if(!all.length)return[CLS];
+  return (Array.isArray(BROADSHEET_DEPARTMENTS)&&BROADSHEET_DEPARTMENTS.length?BROADSHEET_DEPARTMENTS:all).filter(function(key){return all.indexOf(key)>-1;});
 }
 function populateBroadsheetSubjects(){
   var select=document.getElementById('bs-subject-select');if(!select)return'';
@@ -3934,29 +4002,9 @@ function renderSelectedSubjectBroadsheet(){
   html+='</tbody></table></div></div>';document.getElementById('bs-wrap').innerHTML=html;
 }
 function refreshBroadsheet(){
+  renderBroadsheetDepartmentPicker();
   var subjectKey=populateBroadsheetSubjects();var classes=broadsheetClassKeys().filter(function(key){return configuredSubjects(key,getCfg()).some(function(name){return subjectConfigKey(name)===subjectKey;});});var originalClass=CLS;var rows=[];var subjectName='';showLoad('Building subject broadsheet...');
-  classes.reduce(function(chain,key){return chain.then(function(){var list=configuredSubjects(key,getCfg());var index=list.findIndex(function(name){return subjectConfigKey(name)===subjectKey;});subjectName=subjectName||list[index]||subjectKey;return setResultContext(key,getActiveSession(),TERM).then(function(){return Promise.all([dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))]);}).then(function(result){var scores={};(result[1]||[]).forEach(function(score){scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};});(result[0]||[]).forEach(function(student){rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});});});});},Promise.resolve()).then(function(){return setResultContext(originalClass,getActiveSession(),TERM);}).then(function(){rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});var level=String(originalClass).match(/^(ss[23])-/);BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:level?level[1].toUpperCase()+' · All departments':(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass)};hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');}).catch(function(error){hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');});
-}
-var BROADSHEET_DEPARTMENT_SELECTION={};
-function broadsheetLevel(){var match=String(CLS||'').match(/^(ss[23])-/);return match?match[1]:'';}
-function broadsheetDepartmentKeys(level){var order={science:0,arts:1,business:2,commercial:2};return ALL_CLASSES.filter(function(key){return String(key).indexOf(level+'-')===0;}).sort(function(a,b){return (order[String(a).split('-')[1]]===undefined?99:order[String(a).split('-')[1]])-(order[String(b).split('-')[1]]===undefined?99:order[String(b).split('-')[1]])||a.localeCompare(b);});}
-function renderBroadsheetDepartmentFilter(){
-  var wrap=document.getElementById('bs-dept-filter-wrap'),holder=document.getElementById('bs-dept-filter'),level=broadsheetLevel();if(!wrap||!holder)return;
-  if(!level){wrap.style.display='none';holder.innerHTML='';return;}
-  var keys=broadsheetDepartmentKeys(level),selected=BROADSHEET_DEPARTMENT_SELECTION[level]||{};
-  if(!keys.some(function(key){return selected[key];})){keys.forEach(function(key){selected[key]=true;});BROADSHEET_DEPARTMENT_SELECTION[level]=selected;}
-  wrap.style.display='flex';holder.innerHTML=keys.map(function(key){return'<label style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--g1);font-weight:700"><input type="checkbox" data-bs-department="'+escapeHtml(key)+'" '+(selected[key]?'checked':'')+'/> '+escapeHtml(String(DEPTS[key]?DEPTS[key].label:key).replace(/^SS[23]\s*-\s*/i,''))+'</label>';}).join('');
-  holder.querySelectorAll('input[data-bs-department]').forEach(function(input){input.onchange=function(){var next={};holder.querySelectorAll('input[data-bs-department]').forEach(function(item){next[item.getAttribute('data-bs-department')]=item.checked;});if(!Object.keys(next).some(function(key){return next[key];})){input.checked=true;next[input.getAttribute('data-bs-department')]=true;}BROADSHEET_DEPARTMENT_SELECTION[level]=next;BROADSHEET_DATA=null;refreshBroadsheet();};});
-}
-function selectedBroadsheetClassKeys(){var level=broadsheetLevel();if(!level)return[CLS];var all=broadsheetDepartmentKeys(level),selected=BROADSHEET_DEPARTMENT_SELECTION[level]||{};return all.filter(function(key){return selected[key];}).length?all.filter(function(key){return selected[key];}):all;}
-function broadsheetClassKeys(){return selectedBroadsheetClassKeys();}
-function populateBroadsheetSubjects(){
-  var select=document.getElementById('bs-subject-select');if(!select)return'';var previous=select.value,names=[],seen={};broadsheetClassKeys().forEach(function(key){configuredSubjects(key,getCfg()).forEach(function(name){var id=subjectConfigKey(name);if(!seen[id]){seen[id]=true;names.push(name);}});});names.sort(function(a,b){return a.localeCompare(b);});select.innerHTML=names.map(function(name){return'<option value="'+escapeHtml(subjectConfigKey(name))+'">'+escapeHtml(name)+'</option>';}).join('');if(previous&&seen[previous])select.value=previous;return select.value||(names[0]?subjectConfigKey(names[0]):'');
-}
-function refreshBroadsheet(){
-  renderBroadsheetDepartmentFilter();
-  var subjectKey=populateBroadsheetSubjects(),classes=broadsheetClassKeys().filter(function(key){return configuredSubjects(key,getCfg()).some(function(name){return subjectConfigKey(name)===subjectKey;});}),originalClass=CLS,rows=[],subjectName='';showLoad('Building subject broadsheet...');
-  classes.reduce(function(chain,key){return chain.then(function(){var list=configuredSubjects(key,getCfg()),index=list.findIndex(function(name){return subjectConfigKey(name)===subjectKey;});subjectName=subjectName||list[index]||subjectKey;return setResultContext(key,getActiveSession(),TERM).then(function(){return Promise.all([dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))]);}).then(function(result){var scores={};(result[1]||[]).forEach(function(score){scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};});(result[0]||[]).forEach(function(student){rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});});});});},Promise.resolve()).then(function(){return setResultContext(originalClass,getActiveSession(),TERM);}).then(function(){rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});var level=broadsheetLevel(),keys=broadsheetClassKeys(),scopeLabel=level?level.toUpperCase()+' · '+keys.map(function(key){return String(DEPTS[key]?DEPTS[key].label:key).replace(/^SS[23]\s*-\s*/i,'');}).join(' + '):(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass);BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:scopeLabel};hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');}).catch(function(error){hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');});
+  classes.reduce(function(chain,key){return chain.then(function(){var list=configuredSubjects(key,getCfg());var index=list.findIndex(function(name){return subjectConfigKey(name)===subjectKey;});subjectName=subjectName||list[index]||subjectKey;return setResultContext(key,getActiveSession(),TERM).then(function(){return Promise.all([dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))]);}).then(function(result){var scores={};(result[1]||[]).forEach(function(score){scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};});(result[0]||[]).forEach(function(student){rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});});});});},Promise.resolve()).then(function(){return setResultContext(originalClass,getActiveSession(),TERM);}).then(function(){rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});var level=String(originalClass).match(/^(ss[23])-/);var allLevel=seniorBroadsheetDepartments();var labels=classes.map(function(key){return DEPTS[key]?DEPTS[key].label:key;});var scopeLabel=level?(classes.length===allLevel.length?level[1].toUpperCase()+' · All departments':level[1].toUpperCase()+' · '+labels.join(' + ')):(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass);BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:scopeLabel};hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');}).catch(function(error){hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');});
 }
 function refreshCard(options){
   options=options||{};
@@ -3990,15 +4038,48 @@ function refreshCard(options){
   });
   return promise;
 }
+function openPortalPrintWindow(title){
+  var win=window.open('','_blank');
+  if(!win){showToast('Allow pop-ups to print or download this document.','error');return null;}
+  try{win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title></head><body><p style="font-family:Arial,sans-serif;padding:24px">Preparing document…</p></body></html>');win.document.close();}catch(error){try{win.close();}catch(ignore){}showToast('The print preview could not be opened.','error');return null;}
+  return win;
+}
+function fillPortalPrintWindow(win,title,html,rootId,extraCss){
+  if(!win||win.closed)return;
+  var styles=Array.prototype.map.call(document.querySelectorAll('style'),function(style){return style.textContent||'';}).join('\n');
+  var links=Array.prototype.map.call(document.querySelectorAll('link[rel="stylesheet"]'),function(link){return link.outerHTML;}).join('');
+  var root=rootId?'<div id="'+escapeHtml(rootId)+'">'+html+'</div>':html;
+  var css='@page{size:A4 landscape;margin:8mm}@page reportcard{size:A4 portrait;margin:5mm}html,body{margin:0!important;padding:0!important;background:#fff!important;color:#111!important}body{font-family:Arial,sans-serif}.portal-print-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;background:#1a2a4a;color:#fff;font:600 13px Arial,sans-serif}.portal-print-toolbar strong{margin-right:auto}.portal-print-toolbar button{border:1px solid #a8e6cc;border-radius:7px;background:#7dd4b0;color:#1a2a4a;padding:8px 11px;font:800 11px Arial,sans-serif;cursor:pointer}.portal-print-sheet{width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}#bs-wrap{overflow:visible!important}#bs-wrap table{width:100%!important;table-layout:fixed;border-collapse:collapse}#bs-wrap thead{display:table-header-group}#bs-wrap tbody{display:table-row-group}#bs-wrap tr{break-inside:avoid;page-break-inside:avoid}#bs-wrap .broadsheet-subject{break-inside:auto!important;page-break-inside:auto!important}#progress-wrap{overflow:visible!important}.progress-sheet{overflow:visible!important}.report-card{page:reportcard;break-inside:avoid;page-break-inside:avoid}.portal-print-sheet img{max-width:100%}'+String(extraCss||'')+'@media print{.portal-print-toolbar{display:none!important}.portal-print-sheet{width:100%!important}.no-print{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}';
+  var documentHtml='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title>'+links+'<style>'+styles+'\n'+css+'</style></head><body><div class="portal-print-toolbar no-print"><strong>'+escapeHtml(title||'WTS document')+'</strong><button type="button" onclick="window.print()">PRINT / SAVE PDF</button><button type="button" onclick="window.close()">CLOSE</button></div><main class="portal-print-sheet">'+root+'</main></body></html>';
+  var printed=false;
+  function printWhenReady(){
+    if(printed||win.closed)return;
+    var images=Array.prototype.slice.call(win.document.images||[]);
+    Promise.all(images.map(function(image){return image.complete?Promise.resolve():new Promise(function(resolve){image.onload=image.onerror=resolve;});})).then(function(){if(printed||win.closed)return;printed=true;setTimeout(function(){win.focus();win.print();},250);});
+  }
+  try{win.document.open();win.document.write(documentHtml);win.document.close();win.onload=printWhenReady;setTimeout(printWhenReady,500);}catch(error){try{win.close();}catch(ignore){}showToast('The print preview could not be prepared.','error');}
+}
 function printBroadsheet(){
+  var win=openPortalPrintWindow('Class Broadsheet');
+  if(!win)return;
   readOnlyOrAction('results.export',{
     class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()
-  }).then(function(){window.print();}).catch(function(){showToast('Export permission required','error');});
+  }).then(function(){
+    var wrap=document.getElementById('bs-wrap');
+    if(!wrap)throw new Error('BROADSHEET_NOT_RENDERED');
+    fillPortalPrintWindow(win,'Class Broadsheet',wrap.innerHTML,'bs-wrap');
+  }).catch(function(){try{win.close();}catch(ignore){}showToast('Export permission required','error');});
 }
 function printCard(){
   var sid=document.getElementById('rc-stu').value;
   if(!sid){showToast('Select a student first','error');return;}
-  refreshCard({silent:true}).then(function(){window.print();}).catch(function(error){
+  var win=openPortalPrintWindow('Report Card');
+  if(!win)return;
+  refreshCard({silent:true}).then(function(){
+    var wrap=document.getElementById('rc-wrap');
+    if(!wrap)throw new Error('CARD_NOT_RENDERED');
+    fillPortalPrintWindow(win,'Report Card',wrap.innerHTML,'rc-wrap');
+  }).catch(function(error){try{win.close();}catch(ignore){}
     showToast(error&&error.code?resultContextMessage(error):'Report-card permission required','error');
   });
 }
@@ -4039,7 +4120,7 @@ function renderBroadsheet(){
   subjs.forEach(function(subj,si){
     if(!isPublished(CLS,si))return;
 
-    html+='<div style="margin-bottom:28px;page-break-inside:avoid">';
+    html+='<div class="broadsheet-subject" style="margin-bottom:28px;page-break-inside:auto">';
 
     // Subject title bar
     html+='<div style="background:'+NAVY+';color:#fff;padding:7px 14px;font-weight:700;font-size:10pt;border-radius:6px 6px 0 0">'
@@ -4101,15 +4182,9 @@ function exportBroadsheet(){
     class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()
   }).then(exportBroadsheetNow).catch(function(){showToast('Export permission required','error');});
 }
-function downloadBlob(blob,filename){
-  var url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=filename;a.style.display='none';
-  document.body.appendChild(a);a.click();
-  setTimeout(function(){if(a.parentNode)a.parentNode.removeChild(a);URL.revokeObjectURL(url);},1500);
-}
 function exportBroadsheetNow(){
   if(BROADSHEET_DATA&&BROADSHEET_DATA.rows){
-    var data=BROADSHEET_DATA;var rows=[['#','Student','Department','CA1','CA2','CA3','Exam','Total']];data.rows.forEach(function(item,index){var score=item.score||{};rows.push([index+1,item.student.name,item.classLabel,score.ca1||'',score.ca2||'',score.ca3||'',score.exam||'',computeTotal(score)]);});var csv=rows.map(function(row){return row.map(function(value){return'"'+String(value).replace(/"/g,'""')+'"';}).join(',');}).join('\n');var blob=new Blob([csv],{type:'text/csv'});downloadBlob(blob,'Broadsheet_'+data.subjectName.replace(/[^a-z0-9]+/gi,'_')+'_'+TERM.replace(/\s+/g,'_')+'.csv');return;
+    var data=BROADSHEET_DATA;var rows=[['#','Student','Department','CA1','CA2','CA3','Exam','Total']];data.rows.forEach(function(item,index){var score=item.score||{};rows.push([index+1,item.student.name,item.classLabel,score.ca1||'',score.ca2||'',score.ca3||'',score.exam||'',computeTotal(score)]);});var csv=rows.map(function(row){return row.map(function(value){return'"'+String(value).replace(/"/g,'""')+'"';}).join(',');}).join('\n');var blob=new Blob([csv],{type:'text/csv'});downloadBlobFile(blob,'Broadsheet_'+data.subjectName.replace(/[^a-z0-9]+/gi,'_')+'_'+TERM.replace(/\s+/g,'_')+'.csv');return;
   }
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
@@ -4126,7 +4201,7 @@ function exportBroadsheetNow(){
   });
   var csv=rows.map(function(r){return r.map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var blob=new Blob([csv],{type:'text/csv'});
-  downloadBlob(blob,'Broadsheet_'+DEPTS[CLS].label+'_'+TERM+'.csv');
+  downloadBlobFile(blob,'Broadsheet_'+(DEPTS[CLS]?DEPTS[CLS].label:CLS)+'_'+TERM+'.csv');
 }
 
 // ============================================================
@@ -4255,9 +4330,16 @@ function renderProgress(){
   wrap.innerHTML=sheets.join('');
 }
 function printProgress(){
+  var win=openPortalPrintWindow('Class Progress');
+  if(!win)return;
   readOnlyOrAction('results.export',{
     class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()
-  }).then(function(){renderProgress();window.print();}).catch(function(){showToast('Export permission required','error');});
+  }).then(function(){
+    renderProgress();
+    var wrap=document.getElementById('progress-wrap');
+    if(!wrap)throw new Error('PROGRESS_NOT_RENDERED');
+    fillPortalPrintWindow(win,'Class Progress',wrap.innerHTML,'progress-wrap');
+  }).catch(function(){try{win.close();}catch(ignore){}showToast('Export permission required','error');});
 }
 
 function fitReportCardsToOnePage(){
@@ -4373,6 +4455,8 @@ function renderCard(){
 function printAll(){
   var students=DB_STUDENTS[CLS]||[];
   if(!students.length){showToast('No students to print','error');return;}
+  var printWindow=openPortalPrintWindow('All Report Cards');
+  if(!printWindow)return;
   var cardTerm=TERM;
   var session=getActiveSession();
   var rct=document.getElementById('rc-term');if(rct)rct.value=cardTerm;
@@ -4416,9 +4500,13 @@ function printAll(){
         pubSet
       );
     }).join('');
-    setTimeout(function(){fitReportCardsToOnePage();window.print();},400);
+    setTimeout(function(){
+      fitReportCardsToOnePage();
+      fillPortalPrintWindow(printWindow,'All Report Cards',wrap.innerHTML,'rc-wrap');
+      setTimeout(resetReportCardPrintFit,100);
+    },400);
   }).catch(function(e){
-    hideLoad();showToast('Failed to load cards','error');
+    hideLoad();try{printWindow.close();}catch(ignore){}showToast('Failed to load cards','error');
     console.error('printAll error:',e);
   });
 }
@@ -4663,15 +4751,27 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
 
 function printAnalytics(){
   if(!DB_STUDENTS[CLS]||!DB_STUDENTS[CLS].length){showToast('No records to print','error');return;}
+  var win=openPortalPrintWindow('Analytics Report');
+  if(!win)return;
   readOnlyOrAction('results.export',{class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()})
-    .then(function(){window.print();})
-    .catch(function(){showToast('Export permission required','error');});
+    .then(function(){
+      var page=document.getElementById('page-analytics');
+      if(!page)throw new Error('ANALYTICS_NOT_RENDERED');
+      fillPortalPrintWindow(win,'Analytics Report',page.innerHTML,'page-analytics');
+    })
+    .catch(function(){try{win.close();}catch(ignore){}showToast('Export permission required','error');});
 }
 function printSubjectAwards(){
   if(!DB_STUDENTS[CLS]||!DB_STUDENTS[CLS].length){showToast('No records to print','error');return;}
+  var win=openPortalPrintWindow('Subject Awards');
+  if(!win)return;
   readOnlyOrAction('results.export',{class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()})
-    .then(function(){window.print();})
-    .catch(function(){showToast('Export permission required','error');});
+    .then(function(){
+      var page=document.getElementById('page-analytics');
+      if(!page)throw new Error('AWARDS_NOT_RENDERED');
+      fillPortalPrintWindow(win,'Subject Awards',page.innerHTML,'page-analytics');
+    })
+    .catch(function(){try{win.close();}catch(ignore){}showToast('Export permission required','error');});
 }
 
 function destroyChart(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
@@ -4853,86 +4953,156 @@ function renderAnalytics(){
 // ============================================================
 // SETTINGS
 // ============================================================
-
-var STAFF_WRITE_ACCESS=[];
+var SETTINGS_CATEGORY='identity';
+var SETTINGS_CATEGORY_LABELS={
+  identity:'School identity',
+  billing:'Bills & payments',
+  academic:'Academic rules',
+  cards:'Report cards',
+  ai:'AI usage',
+  subjects:'Subjects',
+  staff:'Management access'
+};
+function showSettingsCategory(category,scrollIntoView){
+  var key=SETTINGS_CATEGORY_LABELS[category]?category:'identity';
+  SETTINGS_CATEGORY=key;
+  document.querySelectorAll('#settings-dashboard [data-settings-category]').forEach(function(button){
+    var active=button.getAttribute('data-settings-category')===key;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-selected',active?'true':'false');
+  });
+  document.querySelectorAll('#page-settings .settings-grid>[data-settings-category]').forEach(function(card){
+    card.classList.toggle('settings-category-visible',card.getAttribute('data-settings-category')===key);
+  });
+  var title=document.getElementById('settings-category-title');
+  var status=document.getElementById('settings-category-status');
+  if(title)title.textContent=SETTINGS_CATEGORY_LABELS[key];
+  if(status)status.textContent='Save changes and sync them to all signed-in devices.';
+  var context=document.getElementById('settings-hero-context');
+  if(context){var official=officialAcademicContext();context.textContent='Official · '+official.session+' · '+official.term;}
+  if(key==='staff')loadStaffWriteAccess();
+  if(key==='ai')loadProviderStatus();
+  if(scrollIntoView){
+    var page=document.getElementById('page-settings');
+    if(page)page.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+function setupSettingsDashboard(){
+  var dashboard=document.getElementById('settings-dashboard');
+  if(!dashboard)return;
+  dashboard.querySelectorAll('[data-settings-category]').forEach(function(button){
+    button.onclick=function(){showSettingsCategory(button.getAttribute('data-settings-category'),false);};
+  });
+  showSettingsCategory(SETTINGS_CATEGORY,false);
+}
+var STAFF_WRITE_ACCESS=null;
+function canManageStaffWriteAccess(){
+  return isCentralAuth()&&(hasResultPermission('result_users.manage')||hasResultPermission('results.manage')||hasResultPermission('result_settings.manage'));
+}
 function staffWriteErrorMessage(error){
   var code=error&&error.code;
-  if(code==='RESULT_PERMISSION_DENIED')return 'Only Results management can change staff score-entry access.';
-  if(code==='RESULT_STAFF_WRITE_TARGET_NOT_FOUND')return 'That staff member no longer has an active Results grant.';
-  if(code==='RESULT_STAFF_WRITE_TARGET_REQUIRED')return 'Choose an active Results staff member first.';
-  if(code==='RESULT_SESSION_REQUIRED')return 'Your secure Result session expired. Return to Staff Portal and open Results again.';
-  return 'Staff score-entry access could not be updated.';
+  if(code==='RESULT_PERMISSION_DENIED'||code==='RESULT_SYSTEM_READ_ONLY')return 'Only Results management can change staff score-entry access.';
+  if(code==='RESULT_STAFF_WRITE_TARGET_NOT_FOUND'||code==='RESULT_STAFF_WRITE_TARGET_REQUIRED')return 'That staff account is no longer active in Results.';
+  return 'Staff score-entry access could not be loaded. Try again.';
 }
-function renderStaffWriteAccess(data){
-  var card=document.getElementById('result-staff-write-card'),body=document.getElementById('result-staff-write-tbody'),status=document.getElementById('result-staff-write-status');
-  if(!card||!body||!status)return;
-  if(!hasResultManagementAccess()){card.style.display='none';return;}
-  card.style.display='block';
-  STAFF_WRITE_ACCESS=Array.isArray(data&&data.rows)?data.rows:[];
-  var eligibleCount=STAFF_WRITE_ACCESS.filter(function(row){return row.eligible_for_score_entry===true;}).length;
-  status.textContent=(data&&data.default_write_enabled?'Default: writing enabled for eligible Results staff.':'Default: read-only; enable selected staff below.')+' '+STAFF_WRITE_ACCESS.length+' active registry staff · '+eligibleCount+' eligible for score entry.';
-  body.innerHTML=STAFF_WRITE_ACCESS.map(function(row){
-    var perms=Array.isArray(row.permissions)?row.permissions:[];
-    var manager=perms.indexOf('results.manage')>-1;
-    var eligible=row.eligible_for_score_entry===true;
-    var hasResultsAccess=row.results_access!==false&&row.grant_status==='active';
-    var locked=!eligible||manager||!hasResultsAccess;
-    var label=manager?'Management (always enabled)':!hasResultsAccess?'No Results access — grant it in Central Registry':eligible?(row.write_enabled?'Writing enabled':'Read-only'):'View only';
-    var registryRole=row.registry_role||row.designation||row.staff_category||'Staff';
-    var accessLabel=hasResultsAccess?(row.access_role||'Results staff'):'No Results access';
-    return '<tr><td><strong>'+escapeHtml(row.full_name||row.email||row.person_id)+'</strong><small style="display:block;color:var(--gray)">'+escapeHtml(row.staff_number||'')+(row.email?' · '+escapeHtml(row.email):'')+'</small></td>'
-      +'<td>'+escapeHtml(registryRole)+'</td><td><span class="badge '+(hasResultsAccess?'badge-green':'badge')+'">'+escapeHtml(accessLabel)+'</span></td>'
-      +'<td><span class="badge '+(eligible?'badge-green':'badge')+'">'+(eligible?'Eligible':'View only')+'</span></td>'
-      +'<td style="text-align:center"><label class="toggle" title="'+escapeHtml(label)+'"><input type="checkbox" '+(row.write_enabled?'checked ':'')+(locked?'disabled ':'')+' onchange="setStaffWriteAccess(\''+escapeHtml(row.person_id)+'\',this.checked)"/><span class="toggle-slider"></span></label><small style="display:block;color:var(--gray)">'+escapeHtml(label)+'</small></td></tr>';
-  }).join('')||'<tr><td colspan="5" style="color:var(--gray)">No active registry staff were found.</td></tr>';
+function renderStaffWriteAccess(){
+  var panel=document.getElementById('staff-write-access-panel');
+  if(!panel)return;
+  var status=document.getElementById('staff-write-access-status');
+  var list=document.getElementById('staff-write-access-list');
+  var actions=panel.querySelectorAll('.staff-write-actions button');
+  var canManage=canManageStaffWriteAccess();
+  Array.prototype.forEach.call(actions,function(button){button.disabled=!canManage;});
+  if(!canManage){
+    if(status)status.textContent='Only Results management can change this setting.';
+    if(list)list.innerHTML='<div style="font-size:.78rem;color:var(--gray)">Staff access controls are restricted to Results management.</div>';
+    return;
+  }
+  var data=STAFF_WRITE_ACCESS||{};
+  var policy=data.policy||{};
+  var defaultEnabled=policy.default_write_enabled===true;
+  var rows=Array.isArray(data.rows)?data.rows:[];
+  if(status)status.textContent='Default for active Results staff: '+(defaultEnabled?'ON':'OFF')+'. Individual staff can override this default.';
+  if(!list)return;
+  if(!rows.length){
+    list.innerHTML='<div style="font-size:.78rem;color:var(--gray)">No active Results staff grants were found.</div>';
+    return;
+  }
+  list.innerHTML=rows.map(function(row){
+    var eligible=row.eligible_for_score_entry!==false;
+    var enabled=row.write_enabled===true;
+    var label=row.full_name||row.staff_number||'Unnamed staff';
+    var access=row.results_access===false?'No Results access':(row.access_role||'Results staff');
+    var details=[row.staff_number,row.registry_role||row.designation,access].filter(Boolean).join(' · ');
+    var state=eligible?(enabled?'ON':'OFF'):'NO SCORE-ENTRY GRANT';
+    var stateClass=eligible?(enabled?'on':'off'):'locked';
+    return '<div class="staff-write-row">'
+      +'<div class="staff-write-copy"><strong>'+escapeHtml(label)+'</strong><small>'+escapeHtml(details||'Active Results account')+'</small></div>'
+      +'<span class="staff-write-state '+stateClass+'">'+state+'</span>'
+      +'<label class="staff-write-toggle" title="'+(eligible?'Toggle score-entry access':'This account has no score-entry permission')+'">'
+      +'<input type="checkbox" data-staff-write-person="'+escapeHtml(row.person_id||'')+'" '+(enabled?'checked ':'')+(!eligible?'disabled ':'')+'/>'
+      +'<span></span></label></div>';
+  }).join('');
+  list.querySelectorAll('input[data-staff-write-person]').forEach(function(input){
+    input.addEventListener('change',function(){setStaffWriteAccess(input.getAttribute('data-staff-write-person'),input.checked);});
+  });
 }
 function loadStaffWriteAccess(){
-  var card=document.getElementById('result-staff-write-card');
-  if(!card||!hasResultManagementAccess()){if(card)card.style.display='none';return Promise.resolve();}
-  return resultDataRequest('staff.write_access.read',{}).then(function(data){renderStaffWriteAccess(data);}).catch(function(error){card.style.display='block';var status=document.getElementById('result-staff-write-status');if(status)status.textContent=staffWriteErrorMessage(error);});
+  var panel=document.getElementById('staff-write-access-panel');
+  if(!panel)return Promise.resolve(null);
+  if(!canManageStaffWriteAccess()){renderStaffWriteAccess();return Promise.resolve(null);}
+  var status=document.getElementById('staff-write-access-status');
+  if(status)status.textContent='Loading staff access…';
+  return resultDataRequest('staff.write_access.read',{}).then(function(data){
+    STAFF_WRITE_ACCESS=data||{};
+    renderStaffWriteAccess();
+    return data;
+  }).catch(function(error){
+    STAFF_WRITE_ACCESS=null;
+    if(status)status.textContent=staffWriteErrorMessage(error);
+    var list=document.getElementById('staff-write-access-list');
+    if(list)list.innerHTML='<div style="font-size:.78rem;color:#991b1b">'+escapeHtml(staffWriteErrorMessage(error))+'</div>';
+    return null;
+  });
 }
 function setStaffWriteAccess(personId,enabled){
-  if(!hasResultManagementAccess())return;
-  resultDataRequest('staff.write_access.update',{person_id:personId,write_enabled:!!enabled,reason:'Updated from Result Portal Settings'}).then(function(){showToast(enabled?'Score entry enabled for this staff member.':'Staff member is now read-only.');return loadStaffWriteAccess();}).catch(function(error){showToast(staffWriteErrorMessage(error),'error');loadStaffWriteAccess();});
+  if(!canManageStaffWriteAccess()||!personId)return;
+  var status=document.getElementById('staff-write-access-status');
+  if(status)status.textContent=(enabled?'Enabling':'Disabling')+' score entry…';
+  resultDataRequest('staff.write_access.update',{
+    person_id:personId,
+    write_enabled:enabled===true,
+    reason:enabled?'Enabled from Result Portal staff access controls.':'Disabled from Result Portal staff access controls.'
+  }).then(function(){
+    showToast(enabled?'Score entry enabled for this staff member.':'Score entry disabled for this staff member.');
+    return loadStaffWriteAccess();
+  }).catch(function(error){
+    showToast(staffWriteErrorMessage(error),'error');
+    return loadStaffWriteAccess();
+  });
 }
 function setAllStaffWriteAccess(enabled){
-  if(!hasResultManagementAccess())return;
-  if(!window.confirm((enabled?'Turn on writing for all eligible Results staff?':'Turn off writing for all Results staff?')+' Existing scores will not be changed.'))return;
-  resultDataRequest('staff.write_access.bulk',{write_enabled:!!enabled,reason:'Bulk update from Result Portal Settings'}).then(function(){showToast(enabled?'Score entry enabled for all eligible staff.':'All staff are now read-only.');return loadStaffWriteAccess();}).catch(function(error){showToast(staffWriteErrorMessage(error),'error');});
-}
-var SETTINGS_CATEGORY='overview';
-var SETTINGS_CATEGORY_LABELS={overview:'School information',ai:'AI & OCR',staff:'Staff access',session:'Session and promotion',cards:'Result cards',subjects:'Subjects'};
-function setupSettingsDashboard(){
-  var grid=document.querySelector('#page-settings .settings-grid');if(!grid)return;
-  grid.querySelectorAll('[data-settings-sync]').forEach(function(node){node.remove();});
-  var cards=Array.prototype.filter.call(grid.children,function(node){return node.hasAttribute('data-settings-category');});
-  Object.keys(SETTINGS_CATEGORY_LABELS).forEach(function(category){
-    var first=cards.find(function(card){return card.getAttribute('data-settings-category')===category;});
-    if(!first)return;
-    var bar=document.createElement('div');bar.className='settings-sync-bar';bar.setAttribute('data-settings-sync',category);
-    bar.innerHTML='<div><strong>'+escapeHtml(SETTINGS_CATEGORY_LABELS[category])+'</strong><span>Save this section and sync it to all authorized devices.</span></div><button class="btn btn-primary btn-sm" type="button" onclick="saveSettingsAndSync(\''+category+'\')">Save &amp; sync all devices</button>';
-    grid.insertBefore(bar,first);
-  });
-  showSettingsCategory(SETTINGS_CATEGORY);
-}
-function showSettingsCategory(category){
-  if(!SETTINGS_CATEGORY_LABELS[category])category='overview';
-  SETTINGS_CATEGORY=category;
-  document.querySelectorAll('#page-settings .settings-grid > [data-settings-category]').forEach(function(card){
-    card.classList.toggle('settings-category-hidden',card.getAttribute('data-settings-category')!==category);
-  });
-  document.querySelectorAll('#page-settings .settings-grid [data-settings-sync]').forEach(function(bar){
-    bar.classList.toggle('settings-category-hidden',bar.getAttribute('data-settings-sync')!==category);
-  });
-  document.querySelectorAll('#page-settings .settings-menu-btn').forEach(function(button){
-    var active=button.getAttribute('data-settings-category')===category;button.classList.toggle('active',active);button.setAttribute('aria-selected',active?'true':'false');
+  if(!canManageStaffWriteAccess())return;
+  var action=enabled?'turn on':'turn off';
+  if(!window.confirm('Are you sure you want to '+action+' score entry for all active Results staff?'))return;
+  var status=document.getElementById('staff-write-access-status');
+  if(status)status.textContent=(enabled?'Turning on':'Turning off')+' score entry for all staff…';
+  resultDataRequest('staff.write_access.bulk',{
+    write_enabled:enabled===true,
+    reason:enabled?'Enabled for all active Results staff.':'Disabled for all active Results staff.'
+  }).then(function(){
+    showToast(enabled?'Score entry turned on for all active Results staff.':'Score entry turned off for all active Results staff.');
+    return loadStaffWriteAccess();
+  }).catch(function(error){
+    showToast(staffWriteErrorMessage(error),'error');
+    return loadStaffWriteAccess();
   });
 }
-function saveSettingsAndSync(category){showSettingsCategory(category);saveSettings();}
 function renderSettings(){
+  setupSettingsDashboard();
   var ki=document.getElementById('gemini-key-input');if(ki)ki.value='';
-  loadProviderStatus();
-  loadStaffWriteAccess();
+  if(SETTINGS_CATEGORY==='ai')loadProviderStatus();
+  if(SETTINGS_CATEGORY==='staff')loadStaffWriteAccess();
   var sc=getSessionCfg();
   var el=function(id){return document.getElementById(id);};
   if(el('cfg-resumption'))el('cfg-resumption').value=sc.resumption||'';
@@ -4942,7 +5112,11 @@ function renderSettings(){
   if(el('cfg-fee-pri'))el('cfg-fee-pri').value=sc.fees.primary||'';
   if(el('cfg-fee-jss'))el('cfg-fee-jss').value=sc.fees.junior_secondary||'';
   if(el('cfg-fee-ss'))el('cfg-fee-ss').value=sc.fees.senior_secondary||'';
-  var cfg=getCfg();var sch=cfg.school||DEFAULT_SCHOOL;var sig=cfg.signature||{};var secs=getSections();
+  var cfg=getCfg();
+  if(Array.isArray(cfg.gradeScale)&&cfg.gradeScale.length){
+    GRADE_SCALE=GRADE_SCALE.map(function(base,index){return Object.assign({},base,cfg.gradeScale[index]||{});});
+  }
+  var sch=cfg.school||DEFAULT_SCHOOL;var sig=cfg.signature||{};var secs=getSections();
   document.getElementById('cfg-name').value=sch.name||'';
   document.getElementById('cfg-addr').value=sch.addr||'';
   document.getElementById('cfg-phone').value=sch.phone||'';
@@ -4970,7 +5144,7 @@ function renderSettings(){
       +'<td><input class="inp" type="number" value="'+g.max+'" onchange="GRADE_SCALE['+i+'].max=Number(this.value)" style="width:70px;padding:5px 8px"/></td>'
       +'<td><input class="inp" value="'+g.r+'" onchange="GRADE_SCALE['+i+'].r=this.value" style="padding:5px 8px"/></td></tr>';
   }).join('');
-  renderThemePicker();renderSubjCfg();renderPromotionCfg();setupSettingsDashboard();
+  renderThemePicker();renderSubjCfg();renderPromotionCfg();
 }
 function saveSectionToggle(key,val){var cfg=getCfg();if(!cfg.sections)cfg.sections={};cfg.sections[key]=val;saveCfg(cfg);}
 function previewSig(){
@@ -5110,20 +5284,38 @@ function saveSettings(){
     }
   };
   cfg.promotionCfg=readPromotionCfgFromForm();
+  cfg.gradeScale=GRADE_SCALE.map(function(rule){return{
+    min:Number(rule.min),max:Number(rule.max),g:String(rule.g||''),r:String(rule.r||''),
+    c:rule.c,bg:rule.bg
+  };});
+  var status=document.getElementById('settings-category-status');
+  if(status)status.textContent='Saving and syncing to all signed-in devices…';
   var sb=document.getElementById('sb-session-lbl');if(sb)sb.textContent=cfg.session+' Session';
   var hs=document.getElementById('home-session');if(hs)hs.textContent=cfg.session+' Session';
   var rcs=document.getElementById('rc-session');if(rcs)rcs.value=CONTEXT_EXPLICIT?getActiveSession():cfg.session;
-  return saveCfg(cfg).then(function(synced){
-    showToast(synced?'Settings synced to all devices ✓':'Settings saved locally — cloud sync was not available',synced?'':'error');
-    showSaved();
-    return synced;
-  });
+  return saveCfg(cfg)
+    .then(function(){
+      if(status)status.textContent='Saved and synced to all signed-in devices.';
+      showToast('Settings synced to all devices ✓');showSaved();
+    })
+    .catch(function(){
+      if(status)status.textContent='Saved in this session, but cloud sync failed. Try Sync now.';
+      showToast('Saved locally — cloud sync failed','error');showSaved();
+    });
 }
 function resetSettings(){if(!confirm('Reset the in-memory settings view?'))return;window._remoteCfg=null;renderSettings();}
 
 // ============================================================
 // EXPORT / IMPORT
 // ============================================================
+function downloadBlobFile(blob,filename){
+  if(!blob||!Number(blob.size)){showToast('The export was empty and was not downloaded.','error');return false;}
+  var url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=filename||'WTS-export';link.rel='noopener';link.style.display='none';
+  document.body.appendChild(link);
+  try{link.click();}finally{setTimeout(function(){URL.revokeObjectURL(url);link.remove();},1500);}
+  return true;
+}
 function downloadAndroidApp(){
   window.location.href='https://github.com/alabykhan-lang/wts-result-system/releases/download/android-v1.0.1/WTS-Result-Management.apk';
 }
@@ -5141,7 +5333,7 @@ function exportData(){
       data={students:DB_STUDENTS,scores:DB_SCORES,traits:DB_TRAITS,fees:DB_FEES,remarks:DB_REMARKS};
     }
     var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-    downloadBlob(blob,'WTS_Backup_'+new Date().toISOString().slice(0,10)+'.json');
+    downloadBlobFile(blob,'WTS_Backup_'+new Date().toISOString().slice(0,10)+'.json');
   }).catch(function(){showToast('Export permission required','error');});
 }
 // ============================================================
@@ -5226,16 +5418,7 @@ var OCR_IMG_MIME='image/jpeg';
 
 
 function forceSyncSettings(){
-  var cfg=getCfg();
-  showLoad('Syncing to all devices...');
-  saveCfg(cfg)
-    .then(function(synced){
-      hideLoad();
-      showToast(synced?'Settings synced to all devices':'Cloud sync was not available',synced?'':'error');
-    }).catch(function(){
-      hideLoad();
-      showToast('Sync failed - check connection','error');
-    });
+  return saveSettings();
 }
 function loadProviderStatus(){
   var status=document.getElementById('gemini-key-status');
@@ -5275,8 +5458,11 @@ function saveGeminiKey(){
     })
     .catch(function(e){
       hideLoad();
-      var message=e&&e.code==='RESULT_PROVIDER_KEY_INVALID'?'That provider key was rejected by Gemini.':e&&e.code==='RESULT_PROVIDER_KEY_NO_MODEL'?'That key has no usable Gemini generation model enabled.':e&&e.code==='RESULT_PROVIDER_KEY_VERIFICATION_FAILED'?'Gemini could not verify the key right now. Check the key, API access and connection, then try again.':'Provider key could not be saved.';
-      showToast(message,'error');
+      showToast(e&&e.code==='RESULT_PROVIDER_KEY_INVALID'
+        ?'That provider key is not valid.'
+        :e&&e.code==='RESULT_PROVIDER_KEY_CHECK_FAILED'
+          ?'Gemini could not be verified right now. Check the key and try again.'
+          :'Provider key could not be saved.','error');
     });
 }
 function getGeminiKey(){
@@ -5311,23 +5497,21 @@ function handleOCRImage(evt){
     var rawSrc=e.target.result;
     var img2=new Image();
     img2.onload=function(){
-      // Preserve enough detail for handwriting while staying below the server body limit.
-      var MAX=2200;
+      // Keep enough resolution for handwriting while staying under the
+      // server's 4 MB decoded-image limit.
+      var MAX=2200,MAX_URL=5200000,quality=.88,scale=1;
       var w=img2.width,h=img2.height;
       if(w>MAX||h>MAX){
         if(w>h){h=Math.round(h*MAX/w);w=MAX;}
         else{w=Math.round(w*MAX/h);h=MAX;}
       }
       var canvas=document.createElement('canvas');
-      canvas.width=w; canvas.height=h;
       var ctx=canvas.getContext('2d');
-      ctx.drawImage(img2,0,0,w,h);
-      var quality=.86;
-      var compressed=canvas.toDataURL('image/jpeg',quality);
-      while(compressed.length>5200000&&quality>.55){
-        quality-=.06;
-        compressed=canvas.toDataURL('image/jpeg',quality);
-      }
+      var compressed='';
+      function encode(){canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));ctx=canvas.getContext('2d');ctx.drawImage(img2,0,0,canvas.width,canvas.height);return canvas.toDataURL('image/jpeg',quality);}
+      compressed=encode();
+      while(compressed.length>MAX_URL&&quality>.64){quality-=.06;compressed=encode();}
+      while(compressed.length>MAX_URL&&scale>.58){scale*=.84;quality=.82;compressed=encode();}
       OCR_IMG_B64=compressed.split(',')[1];
       var prev=document.getElementById('ocr-preview-img');
       if(prev)prev.src=compressed;
@@ -5384,8 +5568,14 @@ function runOCR(){
       ?'Add a Gemini API key in Settings first.'
       :err&&err.code==='SMART_EXTRACTION_PROVIDER_UNAVAILABLE'
         ?'The handwriting service could not be reached. Check the connection and try again.'
+        :err&&err.code==='SMART_EXTRACTION_PROVIDER_TIMEOUT'
+          ?'The handwriting service took too long to respond. Try a clearer, smaller scan again.'
         :err&&err.code==='SMART_EXTRACTION_PROVIDER_KEY_INVALID'
           ?'The Gemini API key was rejected. Save a current key in Settings.'
+        :err&&err.code==='SMART_IMAGE_INVALID'
+          ?'The image is too large or is not a supported format. Retake the photo with the whole page visible.'
+        :err&&err.code==='RESULT_STAFF_WRITE_DISABLED'
+          ?'Your account can review extracted scores, but management has turned off score entry for it.'
         :err&&err.code==='SMART_EXTRACTION_PROVIDER_FAILED'
           ?((Number(err.provider_status)===401||Number(err.provider_status)===403)
             ?'The Gemini API key was rejected. Save a current key in Settings.'
@@ -5445,7 +5635,7 @@ function updateOCRMatch(el){
 }
 
 function applyOCRScores(){
-  if(!canWriteResults()){showToast('OCR results can be reviewed, but this staff account cannot apply scores while it is read-only.','error');return;}
+  if(!canWriteResults()){showToast('Scores were extracted for review, but this account is read-only. Ask management to turn on score entry before saving.','error');return;}
   var applied=0;
   OCR_MATCHES.forEach(function(m){
     if(!m.student)return;
@@ -5475,18 +5665,6 @@ function applyOCRScores(){
     openSheet(idx);
     showToast('Scores applied. Tap Save Draft to sync.','error');
   });
-}
-function printBroadsheet(){
-  var win=window.open('about:blank','_blank');
-  if(!win){showToast('Allow pop-ups to print the broadsheet.','error');return;}
-  win.document.write('<!doctype html><html><body style="font-family:Arial;padding:24px">Preparing broadsheet…</body></html>');win.document.close();
-  readOnlyOrAction('results.export',{class_key:dbClassKey(CLS),term:TERM,academic_session:getActiveSession()}).then(function(){
-    var wrap=document.getElementById('bs-wrap');if(!wrap)throw new Error('Broadsheet is not rendered');
-    var school=getSchool()||{},title=(BROADSHEET_DATA&&BROADSHEET_DATA.subjectName?BROADSHEET_DATA.subjectName+' · ':'')+(BROADSHEET_DATA&&BROADSHEET_DATA.scopeLabel?BROADSHEET_DATA.scopeLabel:'Broadsheet');
-    var css='<style>@page{size:A4;margin:10mm}html,body{margin:0;padding:0;background:#fff;color:#111;font-family:Arial,sans-serif}.print-toolbar{display:flex;gap:10px;align-items:center;padding:10px 0 14px;border-bottom:1px solid #ddd;margin-bottom:14px}.print-toolbar strong{margin-right:auto}.print-toolbar button{border:0;border-radius:6px;padding:8px 12px;background:#1a2a4a;color:#fff;font-weight:700}.print-content table{page-break-inside:auto}.print-content thead{display:table-header-group}.print-content tr{page-break-inside:avoid;break-inside:avoid}.print-content .broadsheet-subject{break-inside:auto}.print-content th,.print-content td{print-color-adjust:exact;-webkit-print-color-adjust:exact}</style>';
-    var toolbar='<div class="print-toolbar"><strong>'+escapeHtml(title)+'</strong><button onclick="window.print()">PRINT / SAVE PDF</button><button onclick="window.close()">CLOSE</button></div>';
-    win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(school.name||'Broadsheet')+'</title>'+css+'</head><body>'+toolbar+'<main class="print-content">'+wrap.innerHTML+'</main></body></html>');win.document.close();win.focus();
-  }).catch(function(){try{win.close();}catch(ignore){}showToast('Export permission required','error');});
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>

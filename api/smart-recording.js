@@ -12,14 +12,6 @@ const {
 const { buildExtractionPrompt, normalizeExtraction } = require('./_smart-recording');
 
 const MAX_IMAGE_BYTES = 4_000_000;
-const PROVIDER_TIMEOUT_MS = 35_000;
-const PROVIDER_LIST_TIMEOUT_MS = 12_000;
-const FALLBACK_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-];
-const PROVIDER_MODEL_CACHE = new Map();
 
 function imageParts(dataUrl) {
   const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
@@ -38,138 +30,88 @@ async function readStoredProviderKey(session, scope) {
     p_academic_session: scope?.academic_session || null,
     p_term: scope?.term || null,
   });
-  if (!payload?.ok) {
-    if (payload?.code === 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED') return '';
-    throw payload || { ok: false, code: 'SMART_PROVIDER_KEY_READ_FAILED' };
-  }
-  return payload?.provider_key && typeof payload.provider_key === 'string'
-    ? payload.provider_key.trim()
-    : '';
+  if (!payload?.ok) throw payload || { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
+  return typeof payload.provider_key === 'string' ? payload.provider_key.trim() : '';
 }
 
 async function resolveProviderKey(session, scope) {
-  const stored = await readStoredProviderKey(session, scope);
-  if (stored) return { ok: true, key: stored };
+  let storedError = null;
+  try {
+    const stored = await readStoredProviderKey(session, scope);
+    if (stored) return { ok: true, key: stored };
+  } catch (error) {
+    storedError = error;
+  }
+  if (storedError?.code && storedError.code !== 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED') {
+    return { ok: false, code: storedError.code };
+  }
+  if (storedError && !storedError.code) {
+    return { ok: false, code: 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+  }
   const fallback = String(process.env.WTS_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '').trim();
   if (fallback) return { ok: true, key: fallback };
   return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
 }
 
 function parseGeminiJson(raw) {
-  const cleaned = String(raw || '').trim().replace(/^\uFEFF/, '');
-  const unfenced = cleaned.replace(/^\x60\x60\x60(?:json)?\s*/i, '').replace(/\s*\x60\x60\x60$/i, '').trim();
-  try { return JSON.parse(unfenced); } catch {}
-  const first = unfenced.indexOf('{');
-  const last = unfenced.lastIndexOf('}');
-  if (first >= 0 && last > first) {
-    try { return JSON.parse(unfenced.slice(first, last + 1)); } catch {}
-  }
-  const arrayFirst = unfenced.indexOf('[');
-  const arrayLast = unfenced.lastIndexOf(']');
-  if (arrayFirst >= 0 && arrayLast > arrayFirst) {
-    try { return JSON.parse(unfenced.slice(arrayFirst, arrayLast + 1)); } catch {}
+  let text = String(raw || '').trim();
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  try { return JSON.parse(text); } catch {}
+  const starts = [text.indexOf('{'), text.indexOf('[')].filter((index) => index >= 0).sort((a, b) => a - b);
+  const start = starts[0];
+  const end = Math.max(text.lastIndexOf('}'), text.lastIndexOf(']'));
+  if (start >= 0 && end > start) {
+    try { return JSON.parse(text.slice(start, end + 1)); } catch {}
   }
   return null;
 }
 
-function providerFailureFromResponse(response, payload) {
-  const providerMessage = String(payload?.error?.message || '').slice(0, 240);
-  const keyRejected = /api[ _-]?key|key not valid|invalid key|permission denied|authentication/i.test(providerMessage);
-  return {
-    ok: false,
-    code: keyRejected || response.status === 401 || response.status === 403
-      ? 'SMART_EXTRACTION_PROVIDER_KEY_INVALID'
-      : 'SMART_EXTRACTION_PROVIDER_FAILED',
-    provider_status: response.status,
-    provider_message: providerMessage,
-  };
-}
-
-function modelName(value) {
-  return String(value || '').replace(/^models\//, '').trim();
-}
-
-function usableGeminiModel(model) {
-  const name = modelName(model?.name || model);
-  const methods = Array.isArray(model?.supportedGenerationMethods) ? model.supportedGenerationMethods : [];
-  if (!name || (methods.length && !methods.includes('generateContent'))) return false;
-  return !/(embedding|embed|aqa|imagen|veo|audio|tts|robotics)/i.test(name);
-}
-
-function orderGeminiModels(models) {
-  const configuredModel = modelName(process.env.WTS_SMART_RECORDING_MODEL);
-  const names = [...new Set((models || []).map(modelName).filter(Boolean))];
-  const preferred = [configuredModel, ...FALLBACK_MODELS];
-  return [
-    ...preferred.filter((name) => names.includes(name)),
-    ...names
-      .filter((name) => !preferred.includes(name))
-      .sort((a, b) => {
-        const aScore = /flash/i.test(a) ? 0 : /pro/i.test(a) ? 1 : 2;
-        const bScore = /flash/i.test(b) ? 0 : /pro/i.test(b) ? 1 : 2;
-        return aScore - bScore || a.localeCompare(b);
-      }),
-  ];
-}
-
-async function discoverGeminiModels(apiKey) {
-  const key = String(apiKey || '').trim();
-  if (!key) return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
-  const cached = PROVIDER_MODEL_CACHE.get(key);
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
-
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`;
-  let response;
-  let timeoutId;
-  try {
-    const controller = new AbortController();
-    timeoutId = setTimeout(() => controller.abort(), PROVIDER_LIST_TIMEOUT_MS);
-    response = await fetch(endpoint, { headers: { Accept: 'application/json' }, signal: controller.signal });
-  } catch (error) {
-    return {
-      ok: false,
-      code: error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE',
-    };
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
-
-  let payload = {};
-  try { payload = await response.json(); } catch {}
-  if (!response.ok) return providerFailureFromResponse(response, payload);
-
-  const models = orderGeminiModels((Array.isArray(payload.models) ? payload.models : []).filter(usableGeminiModel));
-  const result = { ok: true, models };
-  PROVIDER_MODEL_CACHE.set(key, { expiresAt: Date.now() + 5 * 60 * 1000, value: result });
-  return result;
+function geminiModelsFromPayload(payload) {
+  return (Array.isArray(payload?.models) ? payload.models : [])
+    .filter((model) => Array.isArray(model?.supportedGenerationMethods)
+      && model.supportedGenerationMethods.includes('generateContent'))
+    .map((model) => String(model.name || '').replace(/^models\//, '').trim())
+    .filter(Boolean);
 }
 
 async function verifyGeminiApiKey(apiKey) {
-  const discovered = await discoverGeminiModels(apiKey);
-  if (!discovered.ok) {
-    return discovered.code === 'SMART_EXTRACTION_PROVIDER_KEY_INVALID'
-      ? { ok: false, code: 'RESULT_PROVIDER_KEY_INVALID', provider_status: discovered.provider_status }
-      : { ok: false, code: 'RESULT_PROVIDER_KEY_VERIFICATION_FAILED', provider_code: discovered.code };
+  const key = String(apiKey || '').trim();
+  if (key.length < 20 || key.length > 512 || /[\s\u0000-\u001f]/.test(key)) {
+    return { ok: false, code: 'SMART_EXTRACTION_PROVIDER_KEY_INVALID' };
   }
-  if (!discovered.models.length) {
-    return { ok: false, code: 'RESULT_PROVIDER_KEY_NO_MODEL' };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, {
+      method: 'GET', headers: { Accept: 'application/json' }, signal: controller.signal,
+    });
+    let payload = {};
+    try { payload = await response.json(); } catch {}
+    if (!response.ok) {
+      const message = String(payload?.error?.message || '').slice(0, 240);
+      const invalid = response.status === 401 || response.status === 403
+        || /api[ _-]?key|key not valid|invalid key|permission denied/i.test(message);
+      return { ok: false, code: invalid ? 'SMART_EXTRACTION_PROVIDER_KEY_INVALID' : 'SMART_EXTRACTION_PROVIDER_FAILED', provider_status: response.status, provider_message: message };
+    }
+    const models = geminiModelsFromPayload(payload);
+    if (!models.length) return { ok: false, code: 'SMART_EXTRACTION_PROVIDER_FAILED', provider_message: 'No Gemini model with generateContent is available for this key.' };
+    return { ok: true, models };
+  } catch (error) {
+    return { ok: false, code: error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+  } finally {
+    clearTimeout(timeout);
   }
-  return { ok: true, models: discovered.models };
 }
 
-async function requestGeminiModel(apiKey, model, prompt, image, jsonMode) {
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const generationConfig = { temperature: 0 };
-  if (jsonMode) generationConfig.responseMimeType = 'application/json';
-  let response;
-  let timeoutId;
+async function geminiGenerate(apiKey, model, prompt, image, jsonMode) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 35_000);
   try {
-    const controller = new AbortController();
-    timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
-    response = await fetch(endpoint, {
+    const generationConfig = { temperature: 0 };
+    if (jsonMode) generationConfig.responseMimeType = 'application/json';
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [
           { text: prompt },
@@ -177,48 +119,74 @@ async function requestGeminiModel(apiKey, model, prompt, image, jsonMode) {
         ] }],
         generationConfig,
       }),
+      signal: controller.signal,
     });
+    let payload = {};
+    try { payload = await response.json(); } catch {}
+    return { response, payload };
   } catch (error) {
-    return { ok: false, code: error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+    return { error };
   } finally {
-    if (timeoutId) clearTimeout(timeoutId);
+    clearTimeout(timeout);
   }
-  let payload = {};
-  try { payload = await response.json(); } catch {}
-  return { response, payload };
 }
 
 async function callGemini(apiKey, prompt, image) {
   if (!apiKey) return { ok: false, code: 'SMART_RECORDING_PROVIDER_NOT_CONFIGURED' };
-  const discovered = await discoverGeminiModels(apiKey);
-  if (discovered.code === 'SMART_EXTRACTION_PROVIDER_KEY_INVALID') return discovered;
-  const models = discovered.ok && discovered.models.length ? discovered.models : orderGeminiModels(FALLBACK_MODELS);
+  const configuredModel = String(process.env.WTS_SMART_RECORDING_MODEL || '').trim();
+  const preferredModels = [...new Set([
+    configuredModel,
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+  ].filter(Boolean))];
+  const tried = new Set();
   let lastFailure = null;
 
-  for (const model of models) {
-    let result = await requestGeminiModel(apiKey, model, prompt, image, true);
-    if (!result.response) return result;
-    let { response, payload } = result;
-    if (!response.ok) {
-      // Some Gemini models reject responseMimeType even though they support
-      // vision generation. Retry that exact model once in plain-text mode.
-      if (response.status === 400) {
-        result = await requestGeminiModel(apiKey, model, prompt, image, false);
-        if (!result.response) return result;
-        ({ response, payload } = result);
-      }
+  const tryModel = async (model) => {
+    if (tried.has(model)) return null;
+    tried.add(model);
+    for (const jsonMode of [true, false]) {
+      const result = await geminiGenerate(apiKey, model, prompt, image, jsonMode);
+      if (result.error) return { ok: false, code: result.error?.name === 'AbortError' ? 'SMART_EXTRACTION_PROVIDER_TIMEOUT' : 'SMART_EXTRACTION_PROVIDER_UNAVAILABLE' };
+      const { response, payload } = result;
       if (!response.ok) {
-        lastFailure = providerFailureFromResponse(response, payload);
-        if (lastFailure.code === 'SMART_EXTRACTION_PROVIDER_KEY_INVALID') return lastFailure;
+        const providerMessage = String(payload?.error?.message || '').slice(0, 240);
+        const keyRejected = response.status === 400 && /api[ _-]?key|key not valid|invalid key|permission denied/i.test(providerMessage);
+        lastFailure = { ok: false, code: keyRejected ? 'SMART_EXTRACTION_PROVIDER_KEY_INVALID' : 'SMART_EXTRACTION_PROVIDER_FAILED', provider_status: response.status, provider_message: providerMessage };
+        if (keyRejected || response.status === 401 || response.status === 403) return lastFailure;
+        if ((response.status === 400 || response.status === 404) && jsonMode) continue;
         if (response.status !== 400 && response.status !== 404) return lastFailure;
-        continue;
+        break;
+      }
+      const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
+      const parsed = parseGeminiJson(raw);
+      if (parsed !== null) return { ok: true, payload: parsed };
+      if (!jsonMode) return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
+    }
+    return null;
+  };
+
+  for (const model of preferredModels) {
+    const result = await tryModel(model);
+    if (result) {
+      if (result.ok || result.code !== 'SMART_EXTRACTION_PROVIDER_FAILED') return result;
+    }
+  }
+
+  // Gemini model names change over time. If the stable aliases above are not
+  // available, discover the models enabled for this key and retry with the
+  // provider's current generateContent model names.
+  if (lastFailure?.provider_status === 400 || lastFailure?.provider_status === 404) {
+    const discovered = await verifyGeminiApiKey(apiKey);
+    if (discovered.ok) {
+      for (const model of discovered.models) {
+        const result = await tryModel(model);
+        if (result) {
+          if (result.ok || result.code !== 'SMART_EXTRACTION_PROVIDER_FAILED') return result;
+        }
       }
     }
-
-    const raw = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-    const parsed = parseGeminiJson(raw);
-    if (parsed !== null) return { ok: true, payload: parsed };
-    return { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
   }
 
   return lastFailure || { ok: false, code: 'SMART_EXTRACTION_PROVIDER_FAILED' };
@@ -240,21 +208,52 @@ function isLandscapeClass(classKey) {
   return /^(creche|kg1|kg2|nursery1|nursery2|primary[1-5])$/.test(String(classKey || ''));
 }
 
-function rowsPerPageForClass(classKey) {
-  return isLandscapeClass(classKey) ? 50 : 58;
+function rowsPerPageForClass(classKey, geometry) {
+  const configured = Number(geometry?.rows_per_page);
+  if (configured >= 1 && configured <= 100) return Math.round(configured);
+  const key = String(classKey || '');
+  if (isLandscapeClass(key)) return 50;
+  if (/^(jss|ss)\d/.test(key)) return 58;
+  return 58;
+}
+
+function geometryIsLandscape(geometry, classKey) {
+  if (geometry && typeof geometry.layout === 'string') return geometry.layout === 'landscape';
+  const width = Number(geometry?.canonical_width);
+  const height = Number(geometry?.canonical_height);
+  if (width > 0 && height > 0) return width > height;
+  return isLandscapeClass(classKey);
 }
 
 function templateGeometry(subjectSheets, baseGeometry, landscape) {
   const count = Math.max(1, subjectSheets.length);
-  const width = landscape ? 1754 : 1240;
-  const height = landscape ? 1240 : 1754;
-  const tableX = landscape ? 34 : 54;
-  const tableY = landscape ? 130 : 292;
-  const tableWidth = landscape ? 1686 : 1132;
-  const numberWidth = landscape ? 45 : 45;
-  const studentWidth = landscape ? 335 : 611;
+  const stored = baseGeometry && typeof baseGeometry === 'object' ? baseGeometry : {};
+  const storedWidth = Number(stored.canonical_width);
+  const storedHeight = Number(stored.canonical_height);
+  const effectiveLandscape = stored.layout
+    ? stored.layout === 'landscape'
+    : (storedWidth > 0 && storedHeight > 0 ? storedWidth > storedHeight : landscape);
+  const width = storedWidth > 0 ? storedWidth : (effectiveLandscape ? 1754 : 1240);
+  const height = storedHeight > 0 ? storedHeight : (effectiveLandscape ? 1240 : 1754);
+  const table = stored.table && typeof stored.table === 'object' ? stored.table : {};
+  const tableX = Number.isFinite(Number(table.x)) ? Number(table.x) : (effectiveLandscape ? 34 : 54);
+  const tableY = Number.isFinite(Number(table.y)) ? Number(table.y) : (effectiveLandscape ? 130 : 292);
+  const tableWidth = Number.isFinite(Number(table.width)) ? Number(table.width) : (effectiveLandscape ? 1686 : 1132);
+  const numberWidth = 45;
+  const storedStudentColumn = stored.student_column && typeof stored.student_column === 'object' ? stored.student_column : {};
+  const storedFirstColumn = stored.columns && stored.columns.ca1 && typeof stored.columns.ca1 === 'object'
+    ? stored.columns.ca1 : {};
+  const derivedStudentWidth = Number(storedFirstColumn.x) - tableX - numberWidth;
+  const studentWidth = Number.isFinite(Number(storedStudentColumn.width)) && Number(storedStudentColumn.width) > 0
+    ? Number(storedStudentColumn.width)
+    : (derivedStudentWidth > 0 ? derivedStudentWidth : (effectiveLandscape ? 335 : 611));
   const scoreWidth = Math.max(1, tableWidth - numberWidth - studentWidth);
-  const rowHeight = landscape ? 22 : 33;
+  const configuredRows = Number(stored.rows_per_page);
+  const rowsPerPage = configuredRows >= 1 && configuredRows <= 100
+    ? Math.round(configuredRows)
+    : (effectiveLandscape ? 50 : 58);
+  const rowHeight = Number.isFinite(Number(table.row_height)) && Number(table.row_height) > 0
+    ? Number(table.row_height) : (effectiveLandscape ? 20 : 24);
   const columns = {};
   subjectSheets.forEach((subject, subjectPosition) => {
     const subjectKey = String(subject.group_index === undefined ? subjectPosition : subject.group_index);
@@ -267,16 +266,29 @@ function templateGeometry(subjectSheets, baseGeometry, landscape) {
     });
   });
   return {
-    ...(baseGeometry && typeof baseGeometry === 'object' ? baseGeometry : {}),
+    ...stored,
     canonical_width: width,
     canonical_height: height,
-    layout: landscape ? 'landscape' : 'portrait',
+    layout: effectiveLandscape ? 'landscape' : 'portrait',
     subject_count: count,
-    rows_per_page: rowsPerPageForClass(subjectSheets[0]?.class_key),
-    table: { x: tableX, y: tableY, width: tableWidth, row_height: rowHeight },
+    rows_per_page: rowsPerPage,
+    table: { ...table, x: tableX, y: tableY, width: tableWidth, row_height: rowHeight },
     student_column: { x: tableX + numberWidth, width: studentWidth },
     columns,
   };
+}
+
+function normalizeRoster(roster, rowsPerPage) {
+  return (roster || [])
+    .map((student) => ({ ...student }))
+    .sort((a, b) => Number(a.row_index || 0) - Number(b.row_index || 0)
+      || String(a.name || '').localeCompare(String(b.name || '')))
+    .map((student, index) => ({
+      ...student,
+      row_index: index + 1,
+      page_index: Math.floor(index / rowsPerPage),
+      page_row: (index % rowsPerPage) + 1,
+    }));
 }
 
 function groupedSheet(sheetPayloads) {
@@ -289,9 +301,13 @@ function groupedSheet(sheetPayloads) {
   first.geometry = templateGeometry(
     classKeys.length > 1 ? [sheets[0]] : sheets,
     first.geometry,
-    isLandscapeClass(first.class_key) || (classKeys.length <= 1 && sheets.length > 1),
+    geometryIsLandscape(first.geometry, first.class_key),
   );
-  if (classKeys.length <= 1) return first;
+  const rowsPerPage = rowsPerPageForClass(first.class_key, first.geometry);
+  if (classKeys.length <= 1) {
+    first.roster = normalizeRoster(first.roster, rowsPerPage);
+    return first;
+  }
 
   const seen = new Set();
   const combined = [];
@@ -312,8 +328,8 @@ function groupedSheet(sheetPayloads) {
   first.roster = combined.map((student, index) => ({
     ...student,
     row_index: index + 1,
-    page_index: Math.floor(index / first.geometry.rows_per_page),
-    page_row: (index % first.geometry.rows_per_page) + 1,
+    page_index: Math.floor(index / rowsPerPage),
+    page_row: (index % rowsPerPage) + 1,
   }));
   first.grouped_across_classes = true;
   first.class_keys = classKeys;
@@ -321,14 +337,14 @@ function groupedSheet(sheetPayloads) {
 }
 
 async function extractSmart(session, sheet, pageIndex, image) {
-  const provider = await resolveProviderKey(session, {
+  const resolved = await resolveProviderKey(session, {
     class_key: sheet.class_key,
     subject_index: Number(sheet.subject_index),
     academic_session: sheet.academic_session,
     term: sheet.term,
   });
-  if (!provider.ok) return provider;
-  return callGemini(provider.key, buildExtractionPrompt(sheet, pageIndex), image);
+  if (!resolved.ok) return resolved;
+  return callGemini(resolved.key, buildExtractionPrompt(sheet, pageIndex), image);
 }
 
 function genericPrompt(body) {
@@ -372,14 +388,14 @@ function smartGenericPrompt(body) {
 }
 
 async function extractRecordBook(session, body, image) {
-  const provider = await resolveProviderKey(session, {
+  const resolved = await resolveProviderKey(session, {
     class_key: body.class_key,
     subject_index: Number.isInteger(Number(body.subject_index)) ? Number(body.subject_index) : null,
     academic_session: body.academic_session,
     term: body.term,
   });
-  if (!provider.ok) return provider;
-  const result = await callGemini(provider.key, genericPrompt(body), image);
+  if (!resolved.ok) return resolved;
+  const result = await callGemini(resolved.key, genericPrompt(body), image);
   if (!result.ok) return result;
   const rows = Array.isArray(result.payload) ? result.payload : result.payload?.rows;
   return Array.isArray(rows) ? { ok: true, rows } : { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
@@ -387,14 +403,14 @@ async function extractRecordBook(session, body, image) {
 
 async function extractGeneric(session, body, image) {
   const subjectIndex = Number.isInteger(Number(body.subject_index)) ? Number(body.subject_index) : null;
-  const provider = await resolveProviderKey(session, {
+  const resolved = await resolveProviderKey(session, {
     class_key: body.class_key,
     subject_index: subjectIndex,
     academic_session: body.academic_session,
     term: body.term,
   });
-  if (!provider.ok) return provider;
-  const result = await callGemini(provider.key, smartGenericPrompt(body), image);
+  if (!resolved.ok) return resolved;
+  const result = await callGemini(resolved.key, smartGenericPrompt(body), image);
   if (!result.ok) return result;
   const rows = Array.isArray(result.payload) ? result.payload : result.payload?.rows;
   return Array.isArray(rows) ? { ok: true, rows } : { ok: false, code: 'SMART_EXTRACTION_INVALID_RESPONSE' };
@@ -479,5 +495,8 @@ module.exports = async function smartRecording(req, res) {
   });
 };
 
-module.exports.discoverGeminiModels = discoverGeminiModels;
 module.exports.verifyGeminiApiKey = verifyGeminiApiKey;
+module.exports.discoverGeminiModels = async function discoverGeminiModels(apiKey) {
+  const result = await verifyGeminiApiKey(apiKey);
+  return result.ok ? result.models : result;
+};
