@@ -3751,19 +3751,30 @@ function saveDraft(){
   if(idx<0)return;
   if(!canWriteResults()){showToast('Score entry is currently read-only for this account.','error');return;}
   var students=DB_STUDENTS[CLS]||[];
-  showLoad('Saving…');
-  var jobs=students.map(function(student){
+  var jobs=[];
+  students.forEach(function(student){
     var key=scoreDraftKey(student.id,idx);
     clearTimeout(SCORE_SAVE_TIMERS[key]);
+    var score=scoreDraft(student.id,idx);
+    var hasActualScore=[score.ca1,score.ca2,score.ca3,score.exam].some(function(v){
+      return v!==null&&v!==undefined&&v!=='';
+    });
+    // Do not create database records for students with no entered marks.
+    // Their empty cells remain UI-only until an actual score is saved.
+    if(!hasActualScore)return;
     SCORE_SAVE_VERSIONS[key]=(SCORE_SAVE_VERSIONS[key]||0)+1;
     var version=SCORE_SAVE_VERSIONS[key];
-    var score=scoreDraft(student.id,idx);
     scoreStatus(student.id,idx,'Saving…','var(--gold2)');
-    return dbUpsertScore(student.id,idx,score.ca1,score.ca2,score.ca3,score.exam)
+    jobs.push(dbUpsertScore(student.id,idx,score.ca1,score.ca2,score.ca3,score.exam)
       .then(function(response){
         return confirmedScoreResponse(student.id,idx,response,version);
-      });
+      }));
   });
+  if(!jobs.length){
+    showToast('No scores entered yet.');
+    return;
+  }
+  showLoad('Saving…');
   Promise.all(jobs).then(function(){
     hideLoad();
     showToast('Saved');
