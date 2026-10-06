@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>
@@ -2308,6 +2308,7 @@ function renderCurrentPageAfterSync(){
 function refreshPortalState(options){
   options=options||{};
   if(!CURRENT_USER)return Promise.resolve(false);
+  if(typeof currentSheetIdx!=='undefined'&&currentSheetIdx>=0)return Promise.resolve(false);
   if(PORTAL_REFRESH_PROMISE)return PORTAL_REFRESH_PROMISE;
   if(!options.force&&Date.now()-LAST_PORTAL_REFRESH<15000)return Promise.resolve(false);
   PORTAL_REFRESH_PROMISE=loadRemoteSettings({force:!!options.force})
