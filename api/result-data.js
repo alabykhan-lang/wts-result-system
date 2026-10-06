@@ -157,6 +157,7 @@ module.exports = async function resultData(req, res) {
         p_session_secret: session.sessionSecret,
         p_person_id: requestPayload.person_id || null,
         p_write_enabled: requestPayload.write_enabled === true,
+        p_write_scope: typeof requestPayload.write_scope === 'string' ? requestPayload.write_scope : 'default',
         p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
       })
     : action === 'staff.write_access.bulk'
@@ -164,6 +165,7 @@ module.exports = async function resultData(req, res) {
         p_session_id: session.sessionId,
         p_session_secret: session.sessionSecret,
         p_write_enabled: requestPayload.write_enabled === true,
+        p_write_scope: typeof requestPayload.write_scope === 'string' ? requestPayload.write_scope : 'default',
         p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason : null,
       })
     : action === 'settings.app_config.update'
@@ -250,3 +252,5 @@ module.exports = async function resultData(req, res) {
   }
   sendJson(res, 200, payload);
 };
+
+
