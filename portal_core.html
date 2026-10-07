@@ -4096,8 +4096,7 @@ function fillPortalPrintWindow(win,title,html,rootId,extraCss){
     Promise.all(images.map(function(image){return image.complete?Promise.resolve():new Promise(function(resolve){image.onload=image.onerror=resolve;});})).then(function(){if(printed||win.closed)return;printed=true;setTimeout(function(){win.focus();win.print();},250);});
   }
   try{win.document.open();win.document.write(documentHtml);win.document.close();win.onload=printWhenReady;setTimeout(printWhenReady,500);}catch(error){try{win.close();}catch(ignore){}showToast('The print preview could not be prepared.','error');}
-}
-}
+} 
 function printBroadsheet(){
   var win=openPortalPrintWindow('Class Broadsheet');
   if(!win)return;
