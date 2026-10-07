@@ -29,3 +29,7 @@ body {
 #bottom-nav {
   bottom: 44px !important;
 }
+
+#auth-screen {
+  z-index: 2147483647 !important;
+}
