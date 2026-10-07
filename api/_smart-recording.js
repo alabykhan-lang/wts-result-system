@@ -9,7 +9,7 @@ function numberOrNull(value) {
 }
 
 function providerRows(payload) {
-  const rows = payload && Array.isArray(payload.rows) ? payload.rows : [];
+  const rows = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.rows) ? payload.rows : []);
   const map = new Map();
   rows.forEach((row) => {
     const index = Number(row && row.row_index);
