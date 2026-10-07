@@ -4060,8 +4060,7 @@ function openPortalPrintWindow(title){
 }
 function fillPortalPrintWindow(win,title,html,rootId,extraCss){
   if(!win||(win.closed && !win.isMobile))return;
-  var styles=Array.prototype.map.call(document.querySelectorAll('style'),function(style){return style.textContent||'';}).join('
-');
+  var styles=Array.prototype.map.call(document.querySelectorAll('style'),function(style){return style.textContent||'';}).join('\n');
   var links=Array.prototype.map.call(document.querySelectorAll('link[rel="stylesheet"]'),function(link){return link.outerHTML;}).join('');
   var root=rootId?'<div id="'+escapeHtml(rootId)+'">'+html+'</div>':html;
   var css='@page{size:A4 landscape;margin:8mm}@page reportcard{size:A4 portrait;margin:5mm}html,body{margin:0!important;padding:0!important;background:#fff!important;color:#111!important}body{font-family:Arial,sans-serif}.portal-print-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;background:#1a2a4a;color:#fff;font:600 13px Arial,sans-serif}.portal-print-toolbar strong{margin-right:auto}.portal-print-toolbar button{border:1px solid #a8e6cc;border-radius:7px;background:#7dd4b0;color:#1a2a4a;padding:8px 11px;font:800 11px Arial,sans-serif;cursor:pointer}.portal-print-sheet{width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}#bs-wrap{overflow:visible!important}#bs-wrap table{width:100%!important;table-layout:fixed;border-collapse:collapse}#bs-wrap thead{display:table-header-group}#bs-wrap tbody{display:table-row-group}#bs-wrap tr{break-inside:avoid;page-break-inside:avoid}#bs-wrap .broadsheet-subject{break-inside:auto!important;page-break-inside:auto!important}#progress-wrap{overflow:visible!important}.progress-sheet{overflow:visible!important}.report-card{page:reportcard;break-inside:avoid;page-break-inside:avoid}.portal-print-sheet img{max-width:100%}'+String(extraCss||'')+'@media print{.portal-print-toolbar{display:none!important}.portal-print-sheet{width:100%!important}.no-print{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}';
@@ -4071,9 +4070,7 @@ function fillPortalPrintWindow(win,title,html,rootId,extraCss){
     printDiv.id = 'portal-mobile-print-container';
     printDiv.innerHTML = '<main class="portal-print-sheet">'+root+'</main>';
     var style = document.createElement('style');
-    style.innerHTML = styles + '
-' + css + '
-@media print { body > *:not(#portal-mobile-print-container) { display: none !important; } } #portal-mobile-print-container { width:100%; position: absolute; left: 0; top: 0; background: white; z-index: 2147483647; }';
+    style.innerHTML = styles + '\n' + css + '\n@media print { body > *:not(#portal-mobile-print-container) { display: none !important; } } #portal-mobile-print-container { width:100%; position: absolute; left: 0; top: 0; background: white; z-index: 2147483647; }';
     document.head.appendChild(style);
     document.body.appendChild(printDiv);
     showToast('Preparing PDF preview...');
@@ -4087,8 +4084,7 @@ function fillPortalPrintWindow(win,title,html,rootId,extraCss){
     return;
   }
   
-  var documentHtml='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title>'+links+'<style>'+styles+'
-'+css+'</style></head><body><div class="portal-print-toolbar no-print"><strong>'+escapeHtml(title||'WTS document')+'</strong><button type="button" onclick="window.print()">PRINT / SAVE PDF</button><button type="button" onclick="window.close()">CLOSE</button></div><main class="portal-print-sheet">'+root+'</main></body></html>';
+  var documentHtml='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title>'+links+'<style>'+styles+'\n'+css+'</style></head><body><div class="portal-print-toolbar no-print"><strong>'+escapeHtml(title||'WTS document')+'</strong><button type="button" onclick="window.print()">PRINT / SAVE PDF</button><button type="button" onclick="window.close()">CLOSE</button></div><main class="portal-print-sheet">'+root+'</main></body></html>';
   var printed=false;
   function printWhenReady(){
     if(printed||win.closed)return;
