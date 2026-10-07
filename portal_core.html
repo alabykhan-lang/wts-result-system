@@ -4055,12 +4055,7 @@ function openPortalPrintWindow(title){
   if(isMobile) return { isMobile: true, title: title };
   var win=window.open('','_blank');
   if(!win){showToast('Allow pop-ups to print or download this document.','error');return null;}
-  try{win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title></head><body><p style="font-family:Arial,sans-serif;padding:24px">Preparing document…</p><nav class="wts-global-portal-nav">
-  <a href="https://wts-school-platform.vercel.app/portal/sign-in">Dashboard</a>
-  <a href="https://wts-central-registry.vercel.app">Registry</a>
-  <a href="https://wts-result-system.vercel.app">Results</a>
-</nav>
-</body></html>');win.document.close();}catch(error){try{win.close();}catch(ignore){}showToast('The print preview could not be opened.','error');return null;}
+  try{win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title></head><body><p style="font-family:Arial,sans-serif;padding:24px">Preparing document…</p></body></html>');win.document.close();}catch(error){try{win.close();}catch(ignore){}showToast('The print preview could not be opened.','error');return null;}
   return win;
 }
 function fillPortalPrintWindow(win,title,html,rootId,extraCss){
@@ -4089,12 +4084,7 @@ function fillPortalPrintWindow(win,title,html,rootId,extraCss){
     return;
   }
   
-  var documentHtml='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title>'+links+'<style>'+styles+'\n'+css+'</style></head><body><div class="portal-print-toolbar no-print"><strong>'+escapeHtml(title||'WTS document')+'</strong><button type="button" onclick="window.print()">PRINT / SAVE PDF</button><button type="button" onclick="window.close()">CLOSE</button></div><main class="portal-print-sheet">'+root+'</main><nav class="wts-global-portal-nav">
-  <a href="https://wts-school-platform.vercel.app/portal/sign-in">Dashboard</a>
-  <a href="https://wts-central-registry.vercel.app">Registry</a>
-  <a href="https://wts-result-system.vercel.app">Results</a>
-</nav>
-</body></html>';
+  var documentHtml='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title>'+links+'<style>'+styles+'\n'+css+'</style></head><body><div class="portal-print-toolbar no-print"><strong>'+escapeHtml(title||'WTS document')+'</strong><button type="button" onclick="window.print()">PRINT / SAVE PDF</button><button type="button" onclick="window.close()">CLOSE</button></div><main class="portal-print-sheet">'+root+'</main></body></html>';
   var printed=false;
   function printWhenReady(){
     if(printed||win.closed)return;
