@@ -4051,18 +4051,44 @@ function refreshCard(options){
   return promise;
 }
 function openPortalPrintWindow(title){
+  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.AndroidPrint;
+  if(isMobile) return { isMobile: true, title: title };
   var win=window.open('','_blank');
   if(!win){showToast('Allow pop-ups to print or download this document.','error');return null;}
   try{win.document.open();win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title></head><body><p style="font-family:Arial,sans-serif;padding:24px">Preparing document…</p></body></html>');win.document.close();}catch(error){try{win.close();}catch(ignore){}showToast('The print preview could not be opened.','error');return null;}
   return win;
 }
 function fillPortalPrintWindow(win,title,html,rootId,extraCss){
-  if(!win||win.closed)return;
-  var styles=Array.prototype.map.call(document.querySelectorAll('style'),function(style){return style.textContent||'';}).join('\n');
+  if(!win||(win.closed && !win.isMobile))return;
+  var styles=Array.prototype.map.call(document.querySelectorAll('style'),function(style){return style.textContent||'';}).join('
+');
   var links=Array.prototype.map.call(document.querySelectorAll('link[rel="stylesheet"]'),function(link){return link.outerHTML;}).join('');
   var root=rootId?'<div id="'+escapeHtml(rootId)+'">'+html+'</div>':html;
   var css='@page{size:A4 landscape;margin:8mm}@page reportcard{size:A4 portrait;margin:5mm}html,body{margin:0!important;padding:0!important;background:#fff!important;color:#111!important}body{font-family:Arial,sans-serif}.portal-print-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;background:#1a2a4a;color:#fff;font:600 13px Arial,sans-serif}.portal-print-toolbar strong{margin-right:auto}.portal-print-toolbar button{border:1px solid #a8e6cc;border-radius:7px;background:#7dd4b0;color:#1a2a4a;padding:8px 11px;font:800 11px Arial,sans-serif;cursor:pointer}.portal-print-sheet{width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}#bs-wrap{overflow:visible!important}#bs-wrap table{width:100%!important;table-layout:fixed;border-collapse:collapse}#bs-wrap thead{display:table-header-group}#bs-wrap tbody{display:table-row-group}#bs-wrap tr{break-inside:avoid;page-break-inside:avoid}#bs-wrap .broadsheet-subject{break-inside:auto!important;page-break-inside:auto!important}#progress-wrap{overflow:visible!important}.progress-sheet{overflow:visible!important}.report-card{page:reportcard;break-inside:avoid;page-break-inside:avoid}.portal-print-sheet img{max-width:100%}'+String(extraCss||'')+'@media print{.portal-print-toolbar{display:none!important}.portal-print-sheet{width:100%!important}.no-print{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}';
-  var documentHtml='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title>'+links+'<style>'+styles+'\n'+css+'</style></head><body><div class="portal-print-toolbar no-print"><strong>'+escapeHtml(title||'WTS document')+'</strong><button type="button" onclick="window.print()">PRINT / SAVE PDF</button><button type="button" onclick="window.close()">CLOSE</button></div><main class="portal-print-sheet">'+root+'</main></body></html>';
+  
+  if(win.isMobile) {
+    var printDiv = document.createElement('div');
+    printDiv.id = 'portal-mobile-print-container';
+    printDiv.innerHTML = '<main class="portal-print-sheet">'+root+'</main>';
+    var style = document.createElement('style');
+    style.innerHTML = styles + '
+' + css + '
+@media print { body > *:not(#portal-mobile-print-container) { display: none !important; } } #portal-mobile-print-container { width:100%; position: absolute; left: 0; top: 0; background: white; z-index: 2147483647; }';
+    document.head.appendChild(style);
+    document.body.appendChild(printDiv);
+    showToast('Preparing PDF preview...');
+    setTimeout(function() {
+      window.print();
+      setTimeout(function() {
+        printDiv.remove();
+        style.remove();
+      }, 2000);
+    }, 500);
+    return;
+  }
+  
+  var documentHtml='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHtml(title||'WTS document')+'</title>'+links+'<style>'+styles+'
+'+css+'</style></head><body><div class="portal-print-toolbar no-print"><strong>'+escapeHtml(title||'WTS document')+'</strong><button type="button" onclick="window.print()">PRINT / SAVE PDF</button><button type="button" onclick="window.close()">CLOSE</button></div><main class="portal-print-sheet">'+root+'</main></body></html>';
   var printed=false;
   function printWhenReady(){
     if(printed||win.closed)return;
@@ -4070,6 +4096,7 @@ function fillPortalPrintWindow(win,title,html,rootId,extraCss){
     Promise.all(images.map(function(image){return image.complete?Promise.resolve():new Promise(function(resolve){image.onload=image.onerror=resolve;});})).then(function(){if(printed||win.closed)return;printed=true;setTimeout(function(){win.focus();win.print();},250);});
   }
   try{win.document.open();win.document.write(documentHtml);win.document.close();win.onload=printWhenReady;setTimeout(printWhenReady,500);}catch(error){try{win.close();}catch(ignore){}showToast('The print preview could not be prepared.','error');}
+}
 }
 function printBroadsheet(){
   var win=openPortalPrintWindow('Class Broadsheet');

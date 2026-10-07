@@ -36,7 +36,7 @@ function openArea(area){var w=document.getElementById('smart-work'),back=documen
 function menu(a,i,t,c){return'<button class="smart-menu-card" data-area="'+a+'"><span class="smart-menu-icon">'+i+'</span><span><strong>'+t+'</strong><small>'+c+'</small></span><b>→</b></button>';}
 window.openSmartSheetGenerator=function(){navTo('smart',document.getElementById('ni-smart'));setTimeout(function(){openArea('generate');},0);};
 
-function renderScan(){stopScanner();clearCurrent();document.getElementById('smart-work').innerHTML='<section class="smart-card smart-scan-start"><h3>Smart Record</h3><p>Scan a completed sheet. The document scanner finds the paper and captures it automatically when it is steady.</p>'+(S.batch.length?'<div class="smart-batch-note">'+S.batch.length+' sheet'+(S.batch.length===1?'':'s')+' ready in this batch. Scan the next page or sheet.</div>':'')+'<button class="smart-scan-button" id="smart-scan">OPEN DOCUMENT SCANNER</button><input class="smart-hidden" id="smart-file" type="file" accept="image/*" capture="environment"><button class="smart-secondary" id="smart-upload">Use an existing scan or photo</button></section>';document.getElementById('smart-scan').onclick=openScanner;var f=document.getElementById('smart-file');document.getElementById('smart-upload').onclick=function(){f.click();};f.onchange=function(){if(f.files&&f.files[0])prepareImage(f.files[0]);};}
+function renderScan(){stopScanner();clearCurrent();document.getElementById('smart-work').innerHTML='<section class="smart-card smart-scan-start"><h3>Smart Record</h3><p>Scan a completed sheet. The document scanner finds the paper and captures it automatically when it is steady.</p>'+(S.batch.length?'<div class="smart-batch-note">'+S.batch.length+' sheet'+(S.batch.length===1?'':'s')+' ready in this batch. Scan the next page or sheet.</div>':'')+'<button class="smart-scan-button" id="smart-scan">OPEN DOCUMENT SCANNER</button><input class="smart-hidden" id="smart-file" type="file" accept="image/*"><button class="smart-secondary" id="smart-upload">Use an existing scan or photo</button></section>';document.getElementById('smart-scan').onclick=openScanner;var f=document.getElementById('smart-file');document.getElementById('smart-upload').onclick=function(){f.click();};f.onchange=function(){if(f.files&&f.files[0])prepareImage(f.files[0]);};}
 function scanClamp(v,min,max){return Math.max(min,Math.min(max,v));}
 function scanCross(a,b,c){return(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 function scanHull(points){
@@ -189,9 +189,9 @@ function renderSelectionFields(prefix,classKey){
   wrap.onchange=function(){sharedHint(prefix+'-shared-note',classKey,selected(prefix+'-subject'),smartSelectedDepartments(prefix,classKey));};
   sharedHint(prefix+'-shared-note',classKey,selected(prefix+'-subject'),departments);
 }
-function showIdentification(){var w=document.getElementById('smart-work');w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The sheet code was not clear. Select the class and subject; Smart Recording will use the generated template and continue.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label>Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label>Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">CONTINUE</button></div></section>';var c=document.getElementById('sid-class'),wrap=document.getElementById('sid-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Subjects (choose up to four)':'Subject')+chooser('sid-subject',c.value,multi)+'<div class="smart-identify smart-hidden" id="sid-shared-note"></div></label>';wrap.onchange=function(){sharedHint('sid-shared-note',c.value,selected('sid-subject'));};};document.getElementById('sid-term').value=window.TERM||'1st Term';document.getElementById('sid-go').onclick=function(){var ids=selected('sid-subject');if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}var pairs=selectedTargets(c.value,ids);if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}var session=document.getElementById('sid-session').value,term=document.getElementById('sid-term').value;showLoad('Finding generated sheet…');api('context.set',{class_key:c.value,academic_session:session,term:term}).then(function(){return Promise.all(pairs.map(function(pair){return api('smart.sheet.read',{class_key:pair.class_key,subject_index:pair.subject_index,academic_session:session,term:term});}));}).then(function(a){hideLoad();beginExtraction(a.map(function(x){return x.sheet.id;}),0);}).catch(function(e){hideLoad();showToast(e&&e.code==='RESULT_PERMISSION_DENIED'?'This account cannot read one of the selected departments.':'Generate this Smart Score Sheet first.','error');});};}
+function showIdentification(){var w=document.getElementById('smart-work');w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The sheet code was not clear. Select the class and subject; Smart Recording will use the generated template and continue.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label style="display:none">Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label style="display:none">Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">CONTINUE</button></div></section>';var c=document.getElementById('sid-class'),wrap=document.getElementById('sid-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Subjects (choose up to four)':'Subject')+chooser('sid-subject',c.value,multi)+'<div class="smart-identify smart-hidden" id="sid-shared-note"></div></label>';wrap.onchange=function(){sharedHint('sid-shared-note',c.value,selected('sid-subject'));};};document.getElementById('sid-term').value=window.TERM||'1st Term';document.getElementById('sid-go').onclick=function(){var ids=selected('sid-subject');if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}var pairs=selectedTargets(c.value,ids);if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}var session=document.getElementById('sid-session').value,term=document.getElementById('sid-term').value;showLoad('Finding generated sheet…');api('context.set',{class_key:c.value,academic_session:session,term:term}).then(function(){return Promise.all(pairs.map(function(pair){return api('smart.sheet.read',{class_key:pair.class_key,subject_index:pair.subject_index,academic_session:session,term:term});}));}).then(function(a){hideLoad();beginExtraction(a.map(function(x){return x.sheet.id;}),0);}).catch(function(e){hideLoad();showToast(e&&e.code==='RESULT_PERMISSION_DENIED'?'This account cannot read one of the selected departments.':'Generate this Smart Score Sheet first.','error');});};}
 
-function renderGenerator(){document.getElementById('smart-work').innerHTML='<section class="smart-card smart-generator"><h3>Generate / Print Smart Broadsheets</h3><p>Early Years and Primary use readable landscape multi-subject sheets. Secondary classes use one individual subject per sheet. Shared SS2/SS3 subjects automatically merge every configured department.</p><div class="smart-form"><label>Class<select id="sg-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><label>Session<input id="sg-session\" value=\"'+esc(getActiveSession())+'\" readonly></label><label>Term<select id=\"sg-term\">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><div class=\"smart-wide\" id=\"sg-wrap\"></div><button class=\"smart-scan-button smart-wide\" id=\"sg-go\">GENERATE &amp; PRINT</button></div></section>';var c=document.getElementById('sg-class'),wrap=document.getElementById('sg-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Choose 1–4 subjects for the landscape sheet':'Choose the subject')+chooser('sg-subject',c.value,multi)+'<div class=\"smart-identify smart-hidden\" id=\"sg-shared-note\"></div></label>';wrap.onchange=function(){sharedHint('sg-shared-note',c.value,selected('sg-subject'));};};document.getElementById('sg-term').value=window.TERM||'1st Term';if(window.CLS&&classes().indexOf(CLS)>-1){c.value=CLS;c.dispatchEvent(new Event('change'));}document.getElementById('sg-go').onclick=generate;}
+function renderGenerator(){document.getElementById('smart-work').innerHTML='<section class="smart-card smart-generator"><h3>Generate / Print Smart Broadsheets</h3><p>Early Years and Primary use readable landscape multi-subject sheets. Secondary classes use one individual subject per sheet. Shared SS2/SS3 subjects automatically merge every configured department.</p><div class="smart-form"><label>Class<select id="sg-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><label style="display:none">Session<input id="sg-session"" value=\"'+esc(getActiveSession())+'\" readonly></label><label>Term<select id=\"sg-term\">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><div class=\"smart-wide\" id=\"sg-wrap\"></div><button class=\"smart-scan-button smart-wide\" id=\"sg-go\">GENERATE &amp; PRINT</button></div></section>';var c=document.getElementById('sg-class'),wrap=document.getElementById('sg-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Choose 1–4 subjects for the landscape sheet':'Choose the subject')+chooser('sg-subject',c.value,multi)+'<div class=\"smart-identify smart-hidden\" id=\"sg-shared-note\"></div></label>';wrap.onchange=function(){sharedHint('sg-shared-note',c.value,selected('sg-subject'));};};document.getElementById('sg-term').value=window.TERM||'1st Term';if(window.CLS&&classes().indexOf(CLS)>-1){c.value=CLS;c.dispatchEvent(new Event('change'));}document.getElementById('sg-go').onclick=generate;}
 function generate(){
   var c=document.getElementById('sg-class'),term=document.getElementById('sg-term'),session=document.getElementById('sg-session'),ids=selected('sg-subject');
   if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}
@@ -298,7 +298,7 @@ function beginGenericExtraction(meta,rows,fingerprint){
 }
 function showIdentification(){
   var w=document.getElementById('smart-work');
-  w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The code was not clear. Select the class and subject to continue. A generated Smart Score Sheet is optional.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label>Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label>Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">READ SCORES</button></div></section>';
+  w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The code was not clear. Select the class and subject to continue. A generated Smart Score Sheet is optional.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label style="display:none">Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label style="display:none">Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">READ SCORES</button></div></section>';
   var c=document.getElementById('sid-class'),wrap=document.getElementById('sid-wrap');
   c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Subjects (choose up to four)':'Subject')+chooser('sid-subject',c.value,multi)+'<div class="smart-identify smart-hidden" id="sid-shared-note"></div></label>';wrap.onchange=function(){sharedHint('sid-shared-note',c.value,selected('sid-subject'));};};
   document.getElementById('sid-term').value=window.TERM||'1st Term';
@@ -379,7 +379,7 @@ function smartSelectionSpecs(classKey,subjectKeys,departments){
 }
 function showIdentification(){
   var w=document.getElementById('smart-work');
-  w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The code was not clear. Select the class, departments and up to four subjects to continue. A generated Smart Score Sheet is optional.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label>Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label>Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">READ SCORES</button></div></section>';
+  w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The code was not clear. Select the class, departments and up to four subjects to continue. A generated Smart Score Sheet is optional.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label style="display:none">Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label style="display:none">Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">READ SCORES</button></div></section>';
   var c=document.getElementById('sid-class');
   c.onchange=function(){renderSelectionFields('sid',c.value);};
   document.getElementById('sid-term').value=window.TERM||'1st Term';
@@ -399,7 +399,7 @@ function showIdentification(){
   };
 }
 function renderGenerator(){
-  document.getElementById('smart-work').innerHTML='<section class="smart-card smart-generator"><h3>Generate / Print Smart Broadsheets</h3><p>Choose up to four subjects for early childhood, primary and secondary classes. For SS2 and SS3, choose one, two or three departments; common subjects are combined into one roster.</p><div class="smart-form"><label>Class<select id="sg-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><label>Session<input id="sg-session" value="'+esc(getActiveSession())+'" readonly></label><label>Term<select id="sg-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><div class="smart-wide" id="sg-wrap"></div><button class="smart-scan-button smart-wide" id="sg-go">GENERATE &amp; PRINT</button></div></section>';
+  document.getElementById('smart-work').innerHTML='<section class="smart-card smart-generator"><h3>Generate / Print Smart Broadsheets</h3><p>Choose up to four subjects for early childhood, primary and secondary classes. For SS2 and SS3, choose one, two or three departments; common subjects are combined into one roster.</p><div class="smart-form"><label>Class<select id="sg-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><label style="display:none">Session<input id="sg-session" value="'+esc(getActiveSession())+'" readonly></label><label style="display:none">Term<select id="sg-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><div class="smart-wide" id="sg-wrap"></div><button class="smart-scan-button smart-wide" id="sg-go">GENERATE &amp; PRINT</button></div></section>';
   var c=document.getElementById('sg-class');
   c.onchange=function(){renderSelectionFields('sg',c.value);};
   document.getElementById('sg-term').value=window.TERM||'1st Term';
@@ -424,8 +424,6 @@ function generate(){
 }
 function printSheets(a,win){
   if(!a||!a.length){showToast('No generated sheet was returned.','error');return;}
-  if(!win)win=window.open('about:blank','_blank');
-  if(!win){showToast('Allow pop-ups to print the Smart Score Sheet.','error');return;}
   var groups=[];
   if(uniqueClassKeys(a).length<=1){groups=[a];}
   else{
@@ -433,23 +431,48 @@ function printSheets(a,win){
     a.forEach(function(sheet){var key=canonicalSubject(sheet.subject_name)||String(sheet.subject_index);(bySubject[key]||(bySubject[key]=[])).push(sheet);});
     groups=Object.keys(bySubject).map(function(key){return bySubject[key];});
   }
-  var jobs=[];
-  groups.forEach(function(group){
-    var roster=buildPrintRoster(group),first=group[0],columns=uniqueClassKeys(group).length>1?[first]:group;
-    var landscape=columns.length>1||isPrimary(first.class_key)||(first.geometry&&first.geometry.layout==='landscape');
-    var pages=Math.max(1,Math.max.apply(null,roster.map(function(row){return Number(row.page_index||0); }))+1);
-    for(var page=0;page<pages;page++)jobs.push({group:group,first:first,columns:columns,roster:roster,page:page,pages:pages,landscape:landscape,merged:uniqueClassKeys(group).length>1});
-  });
-  Promise.all(jobs.map(function(job){return qrData(job.group.length>1?groupCode(job.group,job.page):'WTS-SR1:'+job.first.id+':'+job.page);})).then(function(qrs){
-    var body='';
-    jobs.forEach(function(job,index){
-      var rows=job.roster.filter(function(row){return Number(row.page_index||0)===job.page;});
-      body+='<section class="smart-print-page '+(job.landscape?'landscape':'portrait')+'"><header class="smart-print-header"><div class="smart-print-title"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(job.group))+' · '+esc(job.first.term)+' · '+esc(job.first.academic_session)+' · Page '+(index+1)+' of '+jobs.length+'</p></div><div><img class="smart-print-qr" src="'+qrs[index]+'" alt="Sheet code"><div class="smart-print-code">'+esc(job.first.sheet_code)+(job.group.length>1?' · merged':'')+' · '+(job.page+1)+'</div></div></header>'+printTable(job.columns,rows,job.landscape,job.merged)+'</section>';
+  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.AndroidPrint;
+  if(!isMobile && !win)win=window.open('about:blank','_blank');
+  if(!isMobile && !win){showToast('Allow pop-ups to print the Smart Score Sheet.','error');return;}
+  var qrs=[];var htmlBlocks=[];
+  groups.reduce(function(chain,g){
+    return chain.then(function(){
+      var roster=buildPrintRoster(g),pages=Math.max(1,Math.max.apply(null,roster.map(function(r){return Number(r.page_index||0);}))+1),jobs=[];
+      for(var p=0;p<pages;p++)jobs.push(qrData(g.length>1?groupCode(g,p):'WTS-SR1:'+g[0].id+':'+p));
+      return Promise.all(jobs).then(function(res){
+        var body='',columns=printColumns(g),multi=isPrimary(g[0].class_key),first=g[0];
+        for(var p=0;p<pages;p++){
+          var rows=roster.filter(function(r){return Number(r.page_index||0)===p;});
+          body+='<section class="smart-print-page '+(multi?'landscape':'portrait')+'"><header class="smart-print-header"><div class="smart-print-title"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(g))+' &middot; '+esc(first.term)+' &middot; '+esc(first.academic_session)+' &middot; Page '+(p+1)+' of '+pages+'</p></div><div><img class="smart-print-qr" src="'+res[p]+'" alt="Sheet code"><div class="smart-print-code">'+esc(first.sheet_code)+(g.length>1?' &middot; merged':'')+' &middot; '+(p+1)+'</div></div></header>'+printTable(columns,rows,multi,uniqueClassKeys(g).length>1)+'</section>';
+        }
+        htmlBlocks.push(body);
+      });
     });
-    var toolbar='<div class="smart-print-toolbar"><strong>Smart Score Sheet · A4</strong><span>All '+jobs.length+' page'+(jobs.length===1?'':'s')+' included</span><button onclick="window.print()">DOWNLOAD / SAVE AS PDF</button><button onclick="window.close()">CLOSE</button></div>';
-    var script='<scr'+'ipt>window.addEventListener("load",function(){var imgs=Array.prototype.slice.call(document.images);Promise.all(imgs.map(function(img){return img.complete?Promise.resolve():new Promise(function(ok){img.onload=img.onerror=ok;});})).then(function(){setTimeout(function(){window.print();},350);});});<'+'/scr'+'ipt>';
-    win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet · A4</title><link rel="stylesheet" href="'+location.origin+'/smart-recording.css"></head><body>'+toolbar+body+script+'</body></html>');
-    win.document.close();
-  }).catch(function(){try{win.close();}catch(ignore){}showToast('The QR could not be generated.','error');});
+  },Promise.resolve()).then(function(){
+    var finalBody = htmlBlocks.join('');
+    if(isMobile) {
+       var printDiv = document.createElement('div');
+       printDiv.id = 'smart-mobile-print-container';
+       printDiv.innerHTML = finalBody;
+       var style = document.createElement('style');
+       style.innerHTML = '@media print { body > *:not(#smart-mobile-print-container) { display: none !important; } } #smart-mobile-print-container { width:100%; position: absolute; left: 0; top: 0; background: white; z-index: 2147483647; }';
+       document.head.appendChild(style);
+       document.body.appendChild(printDiv);
+       setTimeout(function() {
+           window.print();
+           setTimeout(function() {
+               printDiv.remove();
+               style.remove();
+           }, 2000);
+       }, 500);
+       if(win && !win.closed) win.close();
+    } else {
+       win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet</title><link rel="stylesheet" href="'+location.origin+'/smart-recording.css"></head><body style="background:#fff;margin:0;padding:0;">'+finalBody+'<script>onload=function(){setTimeout(function(){print()},400)}<\/script></body></html>');
+       win.document.close();
+    }
+  }).catch(function(e){
+    if(win && !win.closed) win.close();
+    showToast('The print pages could not be generated.','error');
+  });
 }
 })();
