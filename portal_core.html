@@ -4112,7 +4112,9 @@ function printCard(){
   refreshCard({silent:true}).then(function(){
     var wrap=document.getElementById('rc-wrap');
     if(!wrap)throw new Error('CARD_NOT_RENDERED');
+    fitReportCardsToOnePage();
     fillPortalPrintWindow(win,'Report Card',wrap.innerHTML,'rc-wrap');
+    setTimeout(resetReportCardPrintFit,100);
   }).catch(function(error){try{win.close();}catch(ignore){}
     showToast(error&&error.code?resultContextMessage(error):'Report-card permission required','error');
   });
@@ -4383,7 +4385,7 @@ function fitReportCardsToOnePage(){
   if(!cards.length)return;
 
   var probe=document.createElement('div');
-  probe.style.cssText='position:absolute;visibility:hidden;pointer-events:none;width:198mm;height:284mm';
+  probe.style.cssText='position:absolute;visibility:hidden;pointer-events:none;width:198mm;height:260mm';
   document.body.appendChild(probe);
   var targetWidth=probe.getBoundingClientRect().width;
   var targetHeight=probe.getBoundingClientRect().height;
