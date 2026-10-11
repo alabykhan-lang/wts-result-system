@@ -4063,19 +4063,43 @@ function fillPortalPrintWindow(win,title,html,rootId,extraCss){
   var styles=Array.prototype.map.call(document.querySelectorAll('style'),function(style){return style.textContent||'';}).join('\n');
   var links=Array.prototype.map.call(document.querySelectorAll('link[rel="stylesheet"]'),function(link){return link.outerHTML;}).join('');
   var root=rootId?'<div id="'+escapeHtml(rootId)+'">'+html+'</div>':html;
-  var css='@page{size:A4 landscape;margin:8mm}@page reportcard{size:A4 portrait;margin:5mm}html,body{margin:0!important;padding:0!important;background:#fff!important;color:#111!important}body{font-family:Arial,sans-serif}.portal-print-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;background:#1a2a4a;color:#fff;font:600 13px Arial,sans-serif}.portal-print-toolbar strong{margin-right:auto}.portal-print-toolbar button{border:1px solid #a8e6cc;border-radius:7px;background:#7dd4b0;color:#1a2a4a;padding:8px 11px;font:800 11px Arial,sans-serif;cursor:pointer}.portal-print-sheet{width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}#bs-wrap{overflow:visible!important}#bs-wrap table{width:100%!important;table-layout:fixed;border-collapse:collapse}#bs-wrap thead{display:table-header-group}#bs-wrap tbody{display:table-row-group}#bs-wrap tr{break-inside:avoid;page-break-inside:avoid}#bs-wrap .broadsheet-subject{break-inside:auto!important;page-break-inside:auto!important}#progress-wrap{overflow:visible!important}.progress-sheet{overflow:visible!important}.report-card{page:reportcard;break-inside:avoid;page-break-inside:avoid}.portal-print-sheet img{max-width:100%}'+String(extraCss||'')+'@media print{.portal-print-toolbar{display:none!important}.portal-print-sheet{width:100%!important}.no-print{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}';
+  var isReportCard = (rootId === 'rc-wrap') || (String(title||'').indexOf('Report Card') !== -1) || (root.indexOf('report-card') !== -1);
+  var pageRule = isReportCard
+    ? '@page{size:A4 portrait;margin:5mm}@page reportcard{size:A4 portrait;margin:5mm}'
+    : '@page{size:A4 landscape;margin:8mm}@page reportcard{size:A4 portrait;margin:5mm}';
+  var css = pageRule + 'html,body{margin:0!important;padding:0!important;background:#fff!important;color:#111!important}body{font-family:Arial,sans-serif}.portal-print-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;background:#1a2a4a;color:#fff;font:600 13px Arial,sans-serif}.portal-print-toolbar strong{margin-right:auto}.portal-print-toolbar button{border:1px solid #a8e6cc;border-radius:7px;background:#7dd4b0;color:#1a2a4a;padding:8px 11px;font:800 11px Arial,sans-serif;cursor:pointer}.portal-print-sheet{width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}#bs-wrap{overflow:visible!important}#bs-wrap table{width:100%!important;table-layout:fixed;border-collapse:collapse}#bs-wrap thead{display:table-header-group}#bs-wrap tbody{display:table-row-group}#bs-wrap tr{break-inside:avoid;page-break-inside:avoid}#bs-wrap .broadsheet-subject{break-inside:auto!important;page-break-inside:auto!important}#progress-wrap{overflow:visible!important}.progress-sheet{overflow:visible!important}.report-card{page:reportcard;break-inside:avoid;page-break-inside:avoid;width:198mm!important;max-width:198mm!important;box-sizing:border-box!important}.portal-print-sheet img{max-width:100%}'+String(extraCss||'')+'@media print{.portal-print-toolbar{display:none!important}.portal-print-sheet{width:100%!important}.no-print{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}#portal-mobile-print-container{position:static!important;width:100%!important;background:#fff!important;z-index:auto!important}.report-card{width:198mm!important;max-width:198mm!important;box-sizing:border-box!important;margin:0 auto!important}}';
   
   if(win.isMobile) {
     var printDiv = document.createElement('div');
     printDiv.id = 'portal-mobile-print-container';
     printDiv.innerHTML = '<main class="portal-print-sheet">'+root+'</main>';
     var style = document.createElement('style');
-    style.innerHTML = styles + '\n' + css + '\n@media print { body > *:not(#portal-mobile-print-container) { display: none !important; } } #portal-mobile-print-container { width:100%; position: absolute; left: 0; top: 0; background: white; z-index: 2147483647; }';
+    style.innerHTML = styles + '\n' + css + '\n@media print { body > *:not(#portal-mobile-print-container) { display: none !important; } #portal-mobile-print-container { width:100% !important; position: static !important; background: white !important; z-index: auto !important; } .report-card { width: 198mm !important; max-width: 198mm !important; margin: 0 auto !important; } } #portal-mobile-print-container { width:100%; position: absolute; left: 0; top: 0; background: white; z-index: 2147483647; }';
     document.head.appendChild(style);
     document.body.appendChild(printDiv);
     showToast('Preparing PDF preview...');
     setTimeout(function() {
-      window.print();
+      try {
+        if (window.AndroidPrint && typeof window.AndroidPrint.printPage === 'function') {
+          if (isReportCard) {
+            if (typeof window.AndroidPrint.printPortrait === 'function') {
+              window.AndroidPrint.printPortrait();
+            } else {
+              window.AndroidPrint.printPage('portrait');
+            }
+          } else {
+            if (typeof window.AndroidPrint.printLandscape === 'function') {
+              window.AndroidPrint.printLandscape();
+            } else {
+              window.AndroidPrint.printPage('landscape');
+            }
+          }
+        } else {
+          window.print();
+        }
+      } catch(err) {
+        window.print();
+      }
       setTimeout(function() {
         printDiv.remove();
         style.remove();
@@ -4392,16 +4416,22 @@ function fitReportCardsToOnePage(){
   document.body.removeChild(probe);
 
   cards.forEach(function(card){
+    card.style.width='198mm';
+    card.style.maxWidth='198mm';
     card.style.zoom='1';
     var contentWidth=Math.max(card.scrollWidth,1);
     var contentHeight=Math.max(card.scrollHeight,1);
     var scale=Math.min(1,targetWidth/contentWidth,targetHeight/contentHeight);
     card.style.zoom=String(Math.floor(scale*1000)/1000);
+    card.style.width='198mm';
+    card.style.maxWidth='198mm';
   });
 }
 function resetReportCardPrintFit(){
   document.querySelectorAll('#rc-wrap > .report-card').forEach(function(card){
     card.style.zoom='';
+    card.style.width='';
+    card.style.maxWidth='';
   });
 }
 window.addEventListener('beforeprint',fitReportCardsToOnePage);

@@ -137,26 +137,49 @@ public class MainActivity extends Activity {
     }
 
     private void printCurrentPage() {
+        printCurrentPage(false);
+    }
+
+    private void printCurrentPage(boolean isLandscape) {
         if (webView == null) return;
         PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
         String jobName = getString(R.string.app_name) + " Print";
         PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter(jobName);
-        PrintAttributes attributes = new PrintAttributes.Builder()
-            .setMediaSize(PrintAttributes.MediaSize.ISO_A4.asLandscape())
-            .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
-            .build();
-        printManager.print(jobName, adapter, attributes);
+        PrintAttributes.Builder builder = new PrintAttributes.Builder()
+            .setColorMode(PrintAttributes.COLOR_MODE_COLOR);
+        if (isLandscape) {
+            builder.setMediaSize(PrintAttributes.MediaSize.ISO_A4.asLandscape());
+        } else {
+            builder.setMediaSize(PrintAttributes.MediaSize.ISO_A4.asPortrait());
+        }
+        printManager.print(jobName, adapter, builder.build());
     }
 
     private class PrintBridge {
         @JavascriptInterface
         public void printPage() {
+            printPage("portrait");
+        }
+
+        @JavascriptInterface
+        public void printPage(final String orientation) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    printCurrentPage();
+                    boolean isLandscape = "landscape".equalsIgnoreCase(orientation);
+                    printCurrentPage(isLandscape);
                 }
             });
+        }
+
+        @JavascriptInterface
+        public void printPortrait() {
+            printPage("portrait");
+        }
+
+        @JavascriptInterface
+        public void printLandscape() {
+            printPage("landscape");
         }
     }
 }
