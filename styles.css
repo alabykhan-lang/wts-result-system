@@ -1,4 +1,4 @@
-﻿.wts-global-portal-nav {
+.wts-global-portal-nav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -32,4 +32,17 @@ body {
 
 #auth-screen {
   z-index: 2147483647 !important;
+}
+
+@media print {
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-bottom: 0 !important;
+    height: auto !important;
+  }
+  .wts-global-portal-nav,
+  #bottom-nav {
+    display: none !important;
+  }
 }
