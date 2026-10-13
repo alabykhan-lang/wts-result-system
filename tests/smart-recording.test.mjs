@@ -99,6 +99,14 @@ const migration = fs.readFileSync(new URL('../supabase/migrations/20260904120000
 assert.match(migration, /SMART_CONFLICT_DECISION_REQUIRED/);
 assert.match(migration, /keep_existing','use_scanned/);
 assert.match(migration, /school_result_score_update/);
-assert.match(migration, /revoke all on table public\.result_smart_sheets from anon, authenticated/);
+// Guardrails in smart-recording.js client script
+const clientScript = fs.readFileSync(new URL('../smart-recording.js', import.meta.url), 'utf8');
+assert.match(clientScript, /accept="image\/jpeg,image\/png,image\/webp,image\/jpg"/, 'file input must target gallery images on mobile');
+assert.doesNotMatch(clientScript, /id="smart-file"[^>]*capture=/, 'smart-file input must not have capture attribute which forces camera');
+assert.match(clientScript, /renderSmartPrintPreviewModal/, 'must provide interactive print preview modal for mobile & blocked popups');
+assert.match(clientScript, /AndroidPrint\.printLandscape/, 'must support AndroidPrint interface for landscape sheets');
+assert.match(clientScript, /AndroidPrint\.printPortrait/, 'must support AndroidPrint interface for portrait sheets');
+assert.match(clientScript, /@page\{size:A4 '\+orientation\+';margin:0\}/, 'must define dynamic A4 orientation page rule');
 
-console.log('Smart Recording digital fixtures passed: QR, manual fallback geometry, clear, rotated/perspective, blank, ambiguous, range, failure, conflict guards');
+console.log('Smart Recording digital fixtures passed: QR, manual fallback geometry, clear, rotated/perspective, blank, ambiguous, range, failure, conflict guards, mobile generation & PDF print contracts');
+

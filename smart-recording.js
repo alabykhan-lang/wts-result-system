@@ -36,7 +36,7 @@ function openArea(area){var w=document.getElementById('smart-work'),back=documen
 function menu(a,i,t,c){return'<button class="smart-menu-card" data-area="'+a+'"><span class="smart-menu-icon">'+i+'</span><span><strong>'+t+'</strong><small>'+c+'</small></span><b>→</b></button>';}
 window.openSmartSheetGenerator=function(){navTo('smart',document.getElementById('ni-smart'));setTimeout(function(){openArea('generate');},0);};
 
-function renderScan(){stopScanner();clearCurrent();document.getElementById('smart-work').innerHTML='<section class="smart-card smart-scan-start"><h3>Smart Record</h3><p>Scan a completed sheet. The document scanner finds the paper and captures it automatically when it is steady.</p>'+(S.batch.length?'<div class="smart-batch-note">'+S.batch.length+' sheet'+(S.batch.length===1?'':'s')+' ready in this batch. Scan the next page or sheet.</div>':'')+'<button class="smart-scan-button" id="smart-scan">OPEN DOCUMENT SCANNER</button><input class="smart-hidden" id="smart-file" type="file" accept="image/*"><button class="smart-secondary" id="smart-upload">Use an existing scan or photo</button></section>';document.getElementById('smart-scan').onclick=openScanner;var f=document.getElementById('smart-file');document.getElementById('smart-upload').onclick=function(){f.click();};f.onchange=function(){if(f.files&&f.files[0])prepareImage(f.files[0]);};}
+function renderScan(){stopScanner();clearCurrent();document.getElementById('smart-work').innerHTML='<section class="smart-card smart-scan-start"><h3>Smart Record</h3><p>Scan a completed sheet. The document scanner finds the paper and captures it automatically when it is steady.</p>'+(S.batch.length?'<div class="smart-batch-note">'+S.batch.length+' sheet'+(S.batch.length===1?'':'s')+' ready in this batch. Scan the next page or sheet.</div>':'')+'<button class="smart-scan-button" id="smart-scan">OPEN DOCUMENT SCANNER</button><input class="smart-hidden" id="smart-file" type="file" accept="image/jpeg,image/png,image/webp,image/jpg"><button class="smart-secondary" id="smart-upload">Use an existing scan or photo</button></section>';document.getElementById('smart-scan').onclick=openScanner;var f=document.getElementById('smart-file');document.getElementById('smart-upload').onclick=function(){f.click();};f.onchange=function(){if(f.files&&f.files[0])prepareImage(f.files[0]);};}
 function scanClamp(v,min,max){return Math.max(min,Math.min(max,v));}
 function scanCross(a,b,c){return(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);}
 function scanHull(points){
@@ -231,19 +231,6 @@ function renderSelectionFields(prefix,classKey){
 }
 function showIdentification(){var w=document.getElementById('smart-work');w.innerHTML='<section class="smart-card"><h3>Sheet identification</h3><p>The sheet code was not clear. Select the class and subject; Smart Recording will use the generated template and continue.</p><img class="smart-image" src="'+S.image+'" alt="Scanned score sheet"><div class="smart-form"><label>Class<select id="sid-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><div class="smart-wide" id="sid-wrap"></div><label style="display:none">Session<input id="sid-session" value="'+esc(getActiveSession())+'" readonly></label><label style="display:none">Term<select id="sid-term">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><button class="smart-secondary smart-wide" id="sid-go">CONTINUE</button></div></section>';var c=document.getElementById('sid-class'),wrap=document.getElementById('sid-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Subjects (choose up to four)':'Subject')+chooser('sid-subject',c.value,multi)+'<div class="smart-identify smart-hidden" id="sid-shared-note"></div></label>';wrap.onchange=function(){sharedHint('sid-shared-note',c.value,selected('sid-subject'));};};document.getElementById('sid-term').value=window.TERM||'1st Term';document.getElementById('sid-go').onclick=function(){var ids=selected('sid-subject');if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}var pairs=selectedTargets(c.value,ids);if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}var session=document.getElementById('sid-session').value,term=document.getElementById('sid-term').value;showLoad('Finding generated sheet…');api('context.set',{class_key:c.value,academic_session:session,term:term}).then(function(){return Promise.all(pairs.map(function(pair){return api('smart.sheet.read',{class_key:pair.class_key,subject_index:pair.subject_index,academic_session:session,term:term});}));}).then(function(a){hideLoad();beginExtraction(a.map(function(x){return x.sheet.id;}),0);}).catch(function(e){hideLoad();showToast(e&&e.code==='RESULT_PERMISSION_DENIED'?'This account cannot read one of the selected departments.':'Generate this Smart Score Sheet first.','error');});};}
 
-function renderGenerator(){document.getElementById('smart-work').innerHTML='<section class="smart-card smart-generator"><h3>Generate / Print Smart Broadsheets</h3><p>Early Years and Primary use readable landscape multi-subject sheets. Secondary classes use one individual subject per sheet. Shared SS2/SS3 subjects automatically merge every configured department.</p><div class="smart-form"><label>Class<select id="sg-class"><option value="">Select class</option>'+classes().map(function(k){return'<option value="'+k+'">'+esc(clsLabel(k))+'</option>';}).join('')+'</select></label><label style="display:none">Session<input id="sg-session"" value=\"'+esc(getActiveSession())+'\" readonly></label><label>Term<select id=\"sg-term\">'+opts(['1st Term','2nd Term','3rd Term'])+'</select></label><div class=\"smart-wide\" id=\"sg-wrap\"></div><button class=\"smart-scan-button smart-wide\" id=\"sg-go\">GENERATE &amp; PRINT</button></div></section>';var c=document.getElementById('sg-class'),wrap=document.getElementById('sg-wrap');c.onchange=function(){var multi=isPrimary(c.value);wrap.innerHTML='<label>'+(multi?'Choose 1–4 subjects for the landscape sheet':'Choose the subject')+chooser('sg-subject',c.value,multi)+'<div class=\"smart-identify smart-hidden\" id=\"sg-shared-note\"></div></label>';wrap.onchange=function(){sharedHint('sg-shared-note',c.value,selected('sg-subject'));};};document.getElementById('sg-term').value=window.TERM||'1st Term';if(window.CLS&&classes().indexOf(CLS)>-1){c.value=CLS;c.dispatchEvent(new Event('change'));}document.getElementById('sg-go').onclick=generate;}
-function generate(){
-  var c=document.getElementById('sg-class'),term=document.getElementById('sg-term'),session=document.getElementById('sg-session'),ids=selected('sg-subject');
-  if(!c.value||!ids.length||ids.length>4){showToast('Select a class and up to four subjects.','error');return;}
-  var pairs=selectedTargets(c.value,ids);if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}
-  showLoad('Generating identified score sheets…');
-  pairs.reduce(function(chain,pair){return chain.then(function(created){
-    return api('context.set',{class_key:pair.class_key,term:term.value,academic_session:session.value}).then(function(){
-      return api('smart.sheet.create',{class_key:pair.class_key,subject_index:pair.subject_index,term:term.value,academic_session:session.value,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}});
-    }).then(function(result){created.push(result.sheet);return created;});
-  });},Promise.resolve([])).then(function(sheets){hideLoad();printSheets(sheets);}).catch(function(e){hideLoad();showToast('Sheet was not generated: '+(e&&e.code||'request failed'),'error');});
-}
-
 function qrData(v){return new Promise(function(ok,no){try{var q=window.qrcode(0,'M');q.addData(v);q.make();ok(q.createDataURL(4,2));}catch(e){no(e);}});}
 function groupCode(a,p){var b=btoa(JSON.stringify(a.map(function(s){return s.id;}))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');return'WTS-SRM1:'+b+':'+p;}
 function uniqueClassKeys(a){var seen={},out=[];a.forEach(function(s){if(!seen[s.class_key]){seen[s.class_key]=true;out.push(s.class_key);}});return out;}
@@ -252,8 +239,7 @@ function normalizePrintRoster(rows,perPage){return(rows||[]).map(function(r){ret
 function buildPrintRoster(a){var keys=uniqueClassKeys(a),perPage=rowsPerPageForClass(a[0]&&a[0].class_key,a[0]&&a[0].geometry);if(keys.length<=1)return normalizePrintRoster(a[0].roster||[],perPage);var seen={},rows=[];a.forEach(function(sheet){(sheet.roster||[]).forEach(function(r){var id=String(r.student_id||'');if(!id||seen[id])return;seen[id]=true;rows.push(Object.assign({},r,{source_sheet_id:sheet.id,source_class_key:sheet.class_key}));});});rows.sort(function(x,y){return String(x.name||'').localeCompare(String(y.name||''))||String(x.student_id||'').localeCompare(String(y.student_id||''));});return rows.map(function(r,i){return Object.assign({},r,{row_index:i+1,page_index:Math.floor(i/perPage),page_row:(i%perPage)+1});});}
 function printTitle(a){var keys=uniqueClassKeys(a),first=a[0];if(keys.length>1)return String(first.class_key||'').split('-')[0].toUpperCase()+' · '+first.subject_name+' · All Departments';return clsLabel(first.class_key);}
 function departmentName(k){var text=String(k||'');return text.indexOf('-')>-1?text.split('-').slice(1).join(' ').replace(/\b\w/g,function(c){return c.toUpperCase();}):'';}
-function printSheets(a){if(!a||!a.length){showToast('No generated sheet was returned.','error');return;}var first=a[0],roster=buildPrintRoster(a),multi=isPrimary(first.class_key),pages=Math.max(1,Math.max.apply(null,roster.map(function(r){return Number(r.page_index||0);}))+1),jobs=[];for(var p=0;p<pages;p++)jobs.push(qrData(a.length>1?groupCode(a,p):'WTS-SR1:'+first.id+':'+p));Promise.all(jobs).then(function(qrs){var body='',columns=printColumns(a);for(var p=0;p<pages;p++){var rows=roster.filter(function(r){return Number(r.page_index||0)===p;});body+='<section class=\"smart-print-page '+(multi?'landscape':'portrait')+'\"><header class=\"smart-print-header\"><div class=\"smart-print-title\"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(a))+' · '+esc(first.term)+' · '+esc(first.academic_session)+' · Page '+(p+1)+' of '+pages+'</p></div><div><img class=\"smart-print-qr\" src=\"'+qrs[p]+'\" alt=\"Sheet code\"><div class=\"smart-print-code\">'+esc(first.sheet_code)+(a.length>1?' · merged':'')+' · '+(p+1)+'</div></div></header>'+printTable(columns,rows,multi,uniqueClassKeys(a).length>1)+'</section>';}var win=window.open('','_blank');if(!win){showToast('Allow pop-ups to print the Smart Score Sheet.','error');return;}win.document.write('<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Smart Score Sheet</title><link rel=\"stylesheet\" href=\"'+location.origin+'/smart-recording.css\"></head><body>'+body+'<script>onload=function(){setTimeout(function(){print()},400)}<\\/script></body></html>');win.document.close();}).catch(function(){showToast('The QR could not be generated.','error');});}
-function printTable(a,rows,multi,merged){var top='<tr><th rowspan=\"2\" class=\"num\">#</th><th rowspan=\"2\" class=\"student-id\">STUDENT · ADMISSION NO.</th>'+a.map(function(s){return'<th colspan=\"4\" class=\"subject-head\">'+esc(s.subject_name)+'</th>';}).join('')+'</tr><tr>'+a.map(function(s){return PARTS.map(function(p){return'<th class=\"score\">'+LABELS[p]+' / '+esc(s.assessment_config[p])+'</th>';}).join('');}).join('')+'</tr>';return'<table class=\"smart-print-table '+(multi?'multi':'single')+(merged?' merged':'')+'\"><thead>'+top+'</thead><tbody>'+rows.map(function(r){return'<tr><td class=\"num\">'+r.row_index+'</td><td class=\"student-id\"><strong>'+esc(r.name)+'</strong><small>'+esc(r.admno||'')+'</small>'+(merged?'<span class=\"smart-print-dept\">'+esc(departmentName(r.source_class_key))+'</span>':'')+'</td>'+a.map(function(){return'<td></td><td></td><td></td><td></td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';}
+function printTable(a,rows,multi,merged){var top='<tr><th rowspan="2" class="num">#</th><th rowspan="2" class="student-id">STUDENT · ADMISSION NO.</th>'+a.map(function(s){return'<th colspan="4" class="subject-head">'+esc(s.subject_name)+'</th>';}).join('')+'</tr><tr>'+a.map(function(s){return PARTS.map(function(p){return'<th class="score">'+LABELS[p]+' / '+esc(s.assessment_config[p])+'</th>';}).join('');}).join('')+'</tr>';return'<table class="smart-print-table '+(multi?'multi':'single')+(merged?' merged':'')+'\"><thead>'+top+'</thead><tbody>'+rows.map(function(r){return'<tr><td class="num">'+r.row_index+'</td><td class="student-id"><strong>'+esc(r.name)+'</strong><small>'+esc(r.admno||'')+'</small>'+(merged?'<span class="smart-print-dept">'+esc(departmentName(r.source_class_key))+'</span>':'')+'</td>'+a.map(function(){return'<td></td><td></td><td></td><td></td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';}
 
 function indexExisting(a){S.existing={};a.forEach(function(r){if(r&&r.student_id&&r.sheet_id)S.existing[r.student_id+'|'+r.sheet_id]=r;});}
 function old(c){return S.existing[c.student_id+'|'+c.sheet_id];}
@@ -397,23 +383,6 @@ function renderReview(){
   html+='</tbody></table></div><div class="smart-footer"><button class="smart-secondary" id="smart-discard">START OVER</button><button class="smart-secondary" id="smart-next">SCAN NEXT SHEET</button><button class="smart-save" id="smart-save" '+((unresolved()||unresolvedConflicts())?'disabled':'')+'>SAVE '+(S.batch.length?'ALL ':'')+'SCORES</button></div></section>';
   document.getElementById('smart-work').innerHTML=html;document.querySelectorAll('[data-cell]').forEach(function(button){button.onclick=function(){openCell(button.dataset.cell);};});document.getElementById('smart-discard').onclick=function(){resetRun();renderScan();};document.getElementById('smart-next').onclick=queueNextSheet;document.getElementById('smart-save').onclick=save;
 }
-function printSheets(a){
-  if(!a||!a.length){showToast('No generated sheet was returned.','error');return;}
-  var first=a[0],roster=buildPrintRoster(a),multi=isPrimary(first.class_key),pages=Math.max(1,Math.max.apply(null,roster.map(function(r){return Number(r.page_index||0);}))+1),jobs=[];
-  for(var p=0;p<pages;p++)jobs.push(qrData(a.length>1?groupCode(a,p):'WTS-SR1:'+first.id+':'+p));
-  Promise.all(jobs).then(function(qrs){
-    var body='',columns=printColumns(a);
-    for(var p=0;p<pages;p++){
-      var rows=roster.filter(function(r){return Number(r.page_index||0)===p;});
-      body+='<section class="smart-print-page '+(multi?'landscape':'portrait')+'"><header class="smart-print-header"><div class="smart-print-title"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(a))+' · '+esc(first.term)+' · '+esc(first.academic_session)+' · Page '+(p+1)+' of '+pages+'</p></div><div><img class="smart-print-qr" src="'+qrs[p]+'" alt="Sheet code"><div class="smart-print-code">'+esc(first.sheet_code)+(a.length>1?' · merged':'')+' · '+(p+1)+'</div></div></header>'+printTable(columns,rows,multi,uniqueClassKeys(a).length>1)+'</section>';
-    }
-    var win=window.open('','_blank');if(!win){showToast('Allow pop-ups to download or print the Smart Score Sheet.','error');return;}
-    var toolbar='<div class="smart-print-toolbar"><strong>Smart Score Sheet · A4</strong><span>All '+pages+' page'+(pages===1?'':'s')+' included</span><button onclick="window.print()">DOWNLOAD / SAVE AS PDF</button><button onclick="window.close()">CLOSE</button></div>';
-    var script='<script>(function(){function ready(){var imgs=Array.prototype.slice.call(document.images);Promise.all(imgs.map(function(img){return img.complete?Promise.resolve():new Promise(function(ok){img.onload=img.onerror=ok;});})).then(function(){setTimeout(function(){},250);});}window.addEventListener("load",ready);})();<\\/script>';
-    win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet · A4</title><link rel="stylesheet" href="'+location.origin+'/smart-recording.css"></head><body>'+toolbar+body+script+'</body></html>');
-    win.document.close();
-  }).catch(function(){showToast('The QR could not be generated.','error');});
-}
 
 // Final selection/printing implementation.  These declarations intentionally
 // sit after the legacy compatibility declarations above so older saved pages
@@ -458,36 +427,165 @@ function generate(){
   if(!c.value||!subjectKeys.length||subjectKeys.length>4){showToast('Select a class and up to four subjects.','error');return;}
   var pairs=subjectTargetsForKeys(c.value,subjectKeys,departments);
   if(!pairs.length){showToast('No configured subject was found for that class.','error');return;}
-  var printWindow=window.open('about:blank','_blank');
-  if(!printWindow){showToast('Allow pop-ups to print the Smart Score Sheet.','error');return;}
-  printWindow.document.write('<!doctype html><html><body style="font-family:Arial,sans-serif;padding:24px;color:#19304f"><h2>Preparing Smart Score Sheet…</h2><p>Building the QR code and print pages. Please wait.</p></body></html>');
-  printWindow.document.close();
+
+  var isMobile=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||Boolean(window.AndroidPrint);
+  var printWindow=null;
+  if(!isMobile){
+    try{
+      printWindow=window.open('about:blank','_blank');
+      if(printWindow){
+        printWindow.document.open();
+        printWindow.document.write('<!doctype html><html><body style="font-family:Arial,sans-serif;padding:24px;color:#19304f"><h2>Preparing Smart Score Sheet…</h2><p>Building the QR code and print pages. Please wait.</p></body></html>');
+        printWindow.document.close();
+      }
+    }catch(ignore){
+      printWindow=null;
+    }
+  }
+
   showLoad('Generating identified score sheets…');
-  pairs.reduce(function(chain, pair){return chain.then(function(created){
-    return api('context.set',{class_key:pair.class_key,term:term.value,academic_session:session.value})
-      .then(function(){return api('smart.sheet.create',{class_key:pair.class_key,subject_index:pair.subject_index,term:term.value,academic_session:session.value,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}});})
-      .then(function(result){created.push(result.sheet);return created;});
-  });},Promise.resolve([])).then(function(sheets){hideLoad();printSheets(sheets,printWindow);}).catch(function(e){hideLoad();try{printWindow.close();}catch(ignore){}showToast('Sheet was not generated: '+(e&&e.code||'request failed'),'error');});
+  pairs.reduce(function(chain,pair){
+    return chain.then(function(created){
+      return api('context.set',{class_key:pair.class_key,term:term.value,academic_session:session.value})
+        .then(function(){
+          return api('smart.sheet.create',{class_key:pair.class_key,subject_index:pair.subject_index,term:term.value,academic_session:session.value,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}});
+        })
+        .then(function(result){created.push(result.sheet);return created;});
+    });
+  },Promise.resolve([])).then(function(sheets){
+    hideLoad();
+    printSheets(sheets,printWindow);
+  }).catch(function(e){
+    hideLoad();
+    if(printWindow&&!printWindow.closed){
+      try{printWindow.close();}catch(ignore){}
+    }
+    showToast('Sheet was not generated: '+(e&&e.code||'request failed'),'error');
+  });
 }
+
+function renderSmartPrintPreviewModal(finalBody, orientation, totalPages){
+  var existing=document.getElementById('smart-print-preview-modal');
+  if(existing)existing.remove();
+  var existingStyle=document.getElementById('smart-print-preview-style');
+  if(existingStyle)existingStyle.remove();
+
+  var modal=document.createElement('div');
+  modal.id='smart-print-preview-modal';
+
+  var toolbar=document.createElement('div');
+  toolbar.className='smart-modal-toolbar no-print';
+  toolbar.innerHTML='<div class="smart-modal-title">'
+    +'<strong>Smart Score Sheet · A4 ('+orientation.toUpperCase()+')</strong>'
+    +'<small>'+totalPages+' page'+(totalPages===1?'':'s')+' ready · Tap PRINT / SAVE AS PDF</small>'
+    +'</div>'
+    +'<div class="smart-modal-actions">'
+    +'<button type="button" class="smart-btn-print" id="smart-modal-print-btn">PRINT / SAVE AS PDF</button>'
+    +'<button type="button" class="smart-btn-close" id="smart-modal-close-btn">✕ CLOSE</button>'
+    +'</div>';
+
+  var content=document.createElement('div');
+  content.className='smart-preview-content';
+  content.innerHTML=finalBody;
+
+  var style=document.createElement('style');
+  style.id='smart-print-preview-style';
+  style.textContent='@media screen {'
+    +'#smart-print-preview-modal{position:fixed;inset:0;z-index:2147483647;background:#0f172a;overflow-y:auto;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}'
+    +'#smart-print-preview-modal .smart-modal-toolbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:#1a2a4a;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.3)}'
+    +'#smart-print-preview-modal .smart-modal-title strong{font-size:15px;font-weight:700;color:#fff;display:block}'
+    +'#smart-print-preview-modal .smart-modal-title small{font-size:11px;opacity:0.85;color:#cbd5e1}'
+    +'#smart-print-preview-modal .smart-modal-actions{display:flex;gap:10px;align-items:center}'
+    +'#smart-print-preview-modal .smart-btn-print{border:1px solid #6ee7b7;border-radius:8px;background:#10b981;color:#fff;padding:9px 18px;font:800 13px Arial,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(16,185,129,0.35)}'
+    +'#smart-print-preview-modal .smart-btn-print:active{transform:scale(0.97)}'
+    +'#smart-print-preview-modal .smart-btn-close{border:1px solid rgba(255,255,255,0.25);border-radius:8px;background:rgba(255,255,255,0.12);color:#fff;padding:9px 14px;font:700 13px Arial,sans-serif;cursor:pointer}'
+    +'#smart-print-preview-modal .smart-preview-content{padding:24px 12px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:28px;width:100%;box-sizing:border-box}'
+    +'#smart-print-preview-modal .smart-print-page{box-shadow:0 8px 30px rgba(0,0,0,0.45);border-radius:4px;background:#fff!important}'
+    +'}'
+    +'@page{size:A4 '+orientation+';margin:0}'
+    +'@media print{'
+    +'body > *:not(#smart-print-preview-modal){display:none!important}'
+    +'#smart-print-preview-modal{position:static!important;width:100%!important;background:#fff!important;z-index:auto!important;overflow:visible!important;display:block!important}'
+    +'#smart-print-preview-modal .smart-modal-toolbar,.no-print{display:none!important}'
+    +'#smart-print-preview-modal .smart-preview-content{padding:0!important;margin:0!important;width:100%!important;display:block!important}'
+    +'#smart-print-preview-modal .smart-print-page{box-shadow:none!important;border-radius:0!important;margin:0!important}'
+    +'@page{size:A4 '+orientation+';margin:0}'
+    +'}';
+
+  modal.appendChild(toolbar);
+  modal.appendChild(content);
+  document.head.appendChild(style);
+  document.body.appendChild(modal);
+
+  function triggerPrint(){
+    try{
+      if(window.AndroidPrint&&typeof window.AndroidPrint.printPage==='function'){
+        if(orientation==='landscape'){
+          if(typeof window.AndroidPrint.printLandscape==='function'){
+            window.AndroidPrint.printLandscape();
+          }else{
+            window.AndroidPrint.printPage('landscape');
+          }
+        }else{
+          if(typeof window.AndroidPrint.printPortrait==='function'){
+            window.AndroidPrint.printPortrait();
+          }else{
+            window.AndroidPrint.printPage('portrait');
+          }
+        }
+      }else{
+        window.print();
+      }
+    }catch(err){
+      window.print();
+    }
+  }
+
+  document.getElementById('smart-modal-print-btn').onclick=triggerPrint;
+  document.getElementById('smart-modal-close-btn').onclick=function(){
+    modal.remove();
+    style.remove();
+  };
+
+  var imgs=Array.prototype.slice.call(modal.querySelectorAll('img')||[]);
+  Promise.all(imgs.map(function(img){
+    return img.complete?Promise.resolve():new Promise(function(ok){img.onload=img.onerror=ok;});
+  })).then(function(){
+    setTimeout(triggerPrint,350);
+  });
+}
+
 function printSheets(a,win){
-  if(!a||!a.length){showToast('No generated sheet was returned.','error');return;}
+  if(!a||!a.length){
+    showToast('No generated sheet was returned.','error');
+    if(win&&!win.closed){try{win.close();}catch(ignore){}}
+    return;
+  }
   var groups=[];
-  if(uniqueClassKeys(a).length<=1){groups=[a];}
-  else{
+  if(uniqueClassKeys(a).length<=1){
+    groups=[a];
+  }else{
     var bySubject={};
-    a.forEach(function(sheet){var key=canonicalSubject(sheet.subject_name)||String(sheet.subject_index);(bySubject[key]||(bySubject[key]=[])).push(sheet);});
+    a.forEach(function(sheet){
+      var key=canonicalSubject(sheet.subject_name)||String(sheet.subject_index);
+      (bySubject[key]||(bySubject[key]=[])).push(sheet);
+    });
     groups=Object.keys(bySubject).map(function(key){return bySubject[key];});
   }
-  var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.AndroidPrint;
-  if(!isMobile && !win)win=window.open('about:blank','_blank');
-  if(!isMobile && !win){showToast('Allow pop-ups to print the Smart Score Sheet.','error');return;}
-  var qrs=[];var htmlBlocks=[];
+
+  var isMobile=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||Boolean(window.AndroidPrint);
+  var htmlBlocks=[];
+  var totalPages=0;
+  var hasLandscape=false;
+
   groups.reduce(function(chain,g){
     return chain.then(function(){
       var roster=buildPrintRoster(g),pages=Math.max(1,Math.max.apply(null,roster.map(function(r){return Number(r.page_index||0);}))+1),jobs=[];
+      totalPages+=pages;
       for(var p=0;p<pages;p++)jobs.push(qrData(g.length>1?groupCode(g,p):'WTS-SR1:'+g[0].id+':'+p));
       return Promise.all(jobs).then(function(res){
         var body='',columns=printColumns(g),multi=isPrimary(g[0].class_key),first=g[0];
+        if(multi)hasLandscape=true;
         for(var p=0;p<pages;p++){
           var rows=roster.filter(function(r){return Number(r.page_index||0)===p;});
           body+='<section class="smart-print-page '+(multi?'landscape':'portrait')+'"><header class="smart-print-header"><div class="smart-print-title"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(g))+' &middot; '+esc(first.term)+' &middot; '+esc(first.academic_session)+' &middot; Page '+(p+1)+' of '+pages+'</p></div><div><img class="smart-print-qr" src="'+res[p]+'" alt="Sheet code"><div class="smart-print-code">'+esc(first.sheet_code)+(g.length>1?' &middot; merged':'')+' &middot; '+(p+1)+'</div></div></header>'+printTable(columns,rows,multi,uniqueClassKeys(g).length>1)+'</section>';
@@ -496,29 +594,46 @@ function printSheets(a,win){
       });
     });
   },Promise.resolve()).then(function(){
-    var finalBody = htmlBlocks.join('');
-    if(isMobile) {
-       var printDiv = document.createElement('div');
-       printDiv.id = 'smart-mobile-print-container';
-       printDiv.innerHTML = finalBody;
-       var style = document.createElement('style');
-       style.innerHTML = '@media print { body > *:not(#smart-mobile-print-container) { display: none !important; } } #smart-mobile-print-container { width:100%; position: absolute; left: 0; top: 0; background: white; z-index: 2147483647; }';
-       document.head.appendChild(style);
-       document.body.appendChild(printDiv);
-       setTimeout(function() {
-           window.print();
-           setTimeout(function() {
-               printDiv.remove();
-               style.remove();
-           }, 2000);
-       }, 500);
-       if(win && !win.closed) win.close();
-    } else {
-       win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet</title><link rel="stylesheet" href="'+location.origin+'/smart-recording.css"></head><body style="background:#fff;margin:0;padding:0;">'+finalBody+'<script>onload=function(){setTimeout(function(){print()},400)}<\/script></body></html>');
-       win.document.close();
+    var finalBody=htmlBlocks.join('');
+    var orientation=hasLandscape?'landscape':'portrait';
+    var pageRule='@page{size:A4 '+orientation+';margin:0}@media print{@page{size:A4 '+orientation+';margin:0}}';
+
+    if(!isMobile&&win&&!win.closed){
+      try{
+        win.document.open();
+        var toolbar='<div class="smart-print-toolbar no-print">'
+          +'<strong>Smart Score Sheet · A4 ('+orientation.toUpperCase()+')</strong>'
+          +'<span>All '+totalPages+' page'+(totalPages===1?'':'s')+' ready</span>'
+          +'<button type="button" onclick="window.print()">PRINT / SAVE AS PDF</button>'
+          +'<button type="button" onclick="window.close()">CLOSE</button>'
+          +'</div>';
+        var script='<script>'
+          +'function printWhenReady(){'
+          +'  var imgs=Array.prototype.slice.call(document.images||[]);'
+          +'  Promise.all(imgs.map(function(img){return img.complete?Promise.resolve():new Promise(function(ok){img.onload=img.onerror=ok;});})).then(function(){'
+          +'    setTimeout(function(){window.focus();window.print();},250);'
+          +'  });'
+          +'}'
+          +'if(document.readyState==="complete"){printWhenReady();}'
+          +'else{window.addEventListener("load",printWhenReady);setTimeout(printWhenReady,500);}'
+          +'<\/script>';
+        win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet · A4</title>'
+          +'<link rel="stylesheet" href="'+location.origin+'/smart-recording.css">'
+          +'<style>'+pageRule+' .smart-print-toolbar{position:sticky;top:0;z-index:1000;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1a2a4a;color:#fff;font:600 14px Arial,sans-serif}.smart-print-toolbar strong{margin-right:auto}.smart-print-toolbar span{opacity:.8;font-size:12px}.smart-print-toolbar button{border:1px solid #a8e6cc;border-radius:8px;background:#7dd4b0;color:#1a2a4a;padding:9px 12px;font:800 12px Arial,sans-serif;cursor:pointer}@media print{.smart-print-toolbar,.no-print{display:none!important}}</style>'
+          +'</head><body style="background:#fff;margin:0;padding:0;">'
+          +toolbar+finalBody+script
+          +'</body></html>');
+        win.document.close();
+        return;
+      }catch(err){
+        try{win.close();}catch(ignore){}
+        win=null;
+      }
     }
+
+    renderSmartPrintPreviewModal(finalBody,orientation,totalPages);
   }).catch(function(e){
-    if(win && !win.closed) win.close();
+    if(win&&!win.closed){try{win.close();}catch(ignore){}}
     showToast('The print pages could not be generated.','error');
   });
 }
