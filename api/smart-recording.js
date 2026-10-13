@@ -205,24 +205,17 @@ async function readSheet(session, sheetId) {
 }
 
 function isLandscapeClass(classKey) {
-  return /^(creche|kg1|kg2|nursery1|nursery2|primary[1-5])$/.test(String(classKey || ''));
+  return true;
 }
 
 function rowsPerPageForClass(classKey, geometry) {
   const configured = Number(geometry?.rows_per_page);
-  if (configured >= 1 && configured <= 100) return Math.round(configured);
-  const key = String(classKey || '');
-  if (isLandscapeClass(key)) return 50;
-  if (/^(jss|ss)\d/.test(key)) return 58;
-  return 58;
+  if (configured >= 1 && configured <= 100 && configured !== 50 && configured !== 58) return Math.round(configured);
+  return 35;
 }
 
 function geometryIsLandscape(geometry, classKey) {
-  if (geometry && typeof geometry.layout === 'string') return geometry.layout === 'landscape';
-  const width = Number(geometry?.canonical_width);
-  const height = Number(geometry?.canonical_height);
-  if (width > 0 && height > 0) return width > height;
-  return isLandscapeClass(classKey);
+  return true;
 }
 
 function templateGeometry(subjectSheets, baseGeometry, landscape) {
@@ -230,15 +223,12 @@ function templateGeometry(subjectSheets, baseGeometry, landscape) {
   const stored = baseGeometry && typeof baseGeometry === 'object' ? baseGeometry : {};
   const storedWidth = Number(stored.canonical_width);
   const storedHeight = Number(stored.canonical_height);
-  const effectiveLandscape = stored.layout
-    ? stored.layout === 'landscape'
-    : (storedWidth > 0 && storedHeight > 0 ? storedWidth > storedHeight : landscape);
-  const width = storedWidth > 0 ? storedWidth : (effectiveLandscape ? 1754 : 1240);
-  const height = storedHeight > 0 ? storedHeight : (effectiveLandscape ? 1240 : 1754);
+  const width = storedWidth > 0 ? storedWidth : 1754;
+  const height = storedHeight > 0 ? storedHeight : 1240;
   const table = stored.table && typeof stored.table === 'object' ? stored.table : {};
-  const tableX = Number.isFinite(Number(table.x)) ? Number(table.x) : (effectiveLandscape ? 34 : 54);
-  const tableY = Number.isFinite(Number(table.y)) ? Number(table.y) : (effectiveLandscape ? 130 : 292);
-  const tableWidth = Number.isFinite(Number(table.width)) ? Number(table.width) : (effectiveLandscape ? 1686 : 1132);
+  const tableX = Number.isFinite(Number(table.x)) ? Number(table.x) : 34;
+  const tableY = Number.isFinite(Number(table.y)) ? Number(table.y) : 130;
+  const tableWidth = Number.isFinite(Number(table.width)) ? Number(table.width) : 1686;
   const numberWidth = 45;
   const storedStudentColumn = stored.student_column && typeof stored.student_column === 'object' ? stored.student_column : {};
   const storedFirstColumn = stored.columns && stored.columns.ca1 && typeof stored.columns.ca1 === 'object'
@@ -246,14 +236,14 @@ function templateGeometry(subjectSheets, baseGeometry, landscape) {
   const derivedStudentWidth = Number(storedFirstColumn.x) - tableX - numberWidth;
   const studentWidth = Number.isFinite(Number(storedStudentColumn.width)) && Number(storedStudentColumn.width) > 0
     ? Number(storedStudentColumn.width)
-    : (derivedStudentWidth > 0 ? derivedStudentWidth : (effectiveLandscape ? 335 : 611));
+    : (derivedStudentWidth > 0 ? derivedStudentWidth : 335);
   const scoreWidth = Math.max(1, tableWidth - numberWidth - studentWidth);
   const configuredRows = Number(stored.rows_per_page);
-  const rowsPerPage = configuredRows >= 1 && configuredRows <= 100
+  const rowsPerPage = (configuredRows >= 1 && configuredRows <= 100 && configuredRows !== 50 && configuredRows !== 58)
     ? Math.round(configuredRows)
-    : (effectiveLandscape ? 50 : 58);
+    : 35;
   const rowHeight = Number.isFinite(Number(table.row_height)) && Number(table.row_height) > 0
-    ? Number(table.row_height) : (effectiveLandscape ? 20 : 24);
+    ? Number(table.row_height) : 22;
   const columns = {};
   subjectSheets.forEach((subject, subjectPosition) => {
     const subjectKey = String(subject.group_index === undefined ? subjectPosition : subject.group_index);
@@ -269,7 +259,7 @@ function templateGeometry(subjectSheets, baseGeometry, landscape) {
     ...stored,
     canonical_width: width,
     canonical_height: height,
-    layout: effectiveLandscape ? 'landscape' : 'portrait',
+    layout: 'landscape',
     subject_count: count,
     rows_per_page: rowsPerPage,
     table: { ...table, x: tableX, y: tableY, width: tableWidth, row_height: rowHeight },

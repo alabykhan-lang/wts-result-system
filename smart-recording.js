@@ -13,15 +13,13 @@ function isPrimary(k){return /^(creche|kg1|kg2|nursery1|nursery2|primary[1-5])$/
 function supportsMultiSubject(k){return /^(creche|kg1|kg2|nursery1|nursery2|primary[1-5]|jss[1-3]|ss[1-3](?:-[a-z]+)?)$/.test(String(k||''));}
 function isSeniorDepartment(k){return /^ss[23]-/.test(String(k||''));}
 function rowsPerPageForClass(classKey,geometry){
-  if(isPrimary(classKey))return 50;
-  if(/^(jss|ss)\d/.test(String(classKey||'')))return 58;
   var configured=geometry&&Number(geometry.rows_per_page);
-  if(configured>=1&&configured<=100)return Math.round(configured);
-  return 58;
+  if(configured>=1&&configured<=100&&configured!==50&&configured!==58)return Math.round(configured);
+  return 35;
 }
 function storedRowsPerPage(classKey,geometry){
   var configured=geometry&&Number(geometry.rows_per_page);
-  return configured>=1&&configured<=100?Math.round(configured):rowsPerPageForClass(classKey,geometry);
+  return (configured>=1&&configured<=100&&configured!==50&&configured!==58)?Math.round(configured):rowsPerPageForClass(classKey,geometry);
 }
 function opts(a){return a.map(function(x){return'<option value="'+esc(x)+'">'+esc(x)+'</option>';}).join('');}
 function api(a,p){return resultDataRequest(a,p||{});}
@@ -584,18 +582,18 @@ function printSheets(a,win){
       totalPages+=pages;
       for(var p=0;p<pages;p++)jobs.push(qrData(g.length>1?groupCode(g,p):'WTS-SR1:'+g[0].id+':'+p));
       return Promise.all(jobs).then(function(res){
-        var body='',columns=printColumns(g),multi=isPrimary(g[0].class_key),first=g[0];
-        if(multi)hasLandscape=true;
+        var body='',columns=printColumns(g),isMulti=columns.length>1,first=g[0];
+        hasLandscape=true;
         for(var p=0;p<pages;p++){
           var rows=roster.filter(function(r){return Number(r.page_index||0)===p;});
-          body+='<section class="smart-print-page '+(multi?'landscape':'portrait')+'"><header class="smart-print-header"><div class="smart-print-title"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(g))+' &middot; '+esc(first.term)+' &middot; '+esc(first.academic_session)+' &middot; Page '+(p+1)+' of '+pages+'</p></div><div><img class="smart-print-qr" src="'+res[p]+'" alt="Sheet code"><div class="smart-print-code">'+esc(first.sheet_code)+(g.length>1?' &middot; merged':'')+' &middot; '+(p+1)+'</div></div></header>'+printTable(columns,rows,multi,uniqueClassKeys(g).length>1)+'</section>';
+          body+='<section class="smart-print-page landscape"><header class="smart-print-header"><div class="smart-print-title"><h1>'+esc((getSchool()||{}).name||'Way to Success Standard Schools')+'</h1><h2>SMART SCORE SHEET</h2><p>'+esc(printTitle(g))+' &middot; '+esc(first.term)+' &middot; '+esc(first.academic_session)+' &middot; Page '+(p+1)+' of '+pages+'</p></div><div><img class="smart-print-qr" src="'+res[p]+'" alt="Sheet code"><div class="smart-print-code">'+esc(first.sheet_code)+(g.length>1?' &middot; merged':'')+' &middot; '+(p+1)+'</div></div></header>'+printTable(columns,rows,isMulti,uniqueClassKeys(g).length>1)+'</section>';
         }
         htmlBlocks.push(body);
       });
     });
   },Promise.resolve()).then(function(){
     var finalBody=htmlBlocks.join('');
-    var orientation=hasLandscape?'landscape':'portrait';
+    var orientation='landscape';
     var pageRule='@page{size:A4 '+orientation+';margin:0}@media print{@page{size:A4 '+orientation+';margin:0}}';
 
     if(!isMobile&&win&&!win.closed){
@@ -617,7 +615,7 @@ function printSheets(a,win){
           +'if(document.readyState==="complete"){printWhenReady();}'
           +'else{window.addEventListener("load",printWhenReady);setTimeout(printWhenReady,500);}'
           +'<\/script>';
-        win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet · A4</title>'
+        win.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Score Sheet · A4 Landscape</title>'
           +'<link rel="stylesheet" href="'+location.origin+'/smart-recording.css">'
           +'<style>'+pageRule+' .smart-print-toolbar{position:sticky;top:0;z-index:1000;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1a2a4a;color:#fff;font:600 14px Arial,sans-serif}.smart-print-toolbar strong{margin-right:auto}.smart-print-toolbar span{opacity:.8;font-size:12px}.smart-print-toolbar button{border:1px solid #a8e6cc;border-radius:8px;background:#7dd4b0;color:#1a2a4a;padding:9px 12px;font:800 12px Arial,sans-serif;cursor:pointer}@media print{.smart-print-toolbar,.no-print{display:none!important}}</style>'
           +'</head><body style="background:#fff;margin:0;padding:0;">'

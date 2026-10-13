@@ -246,6 +246,41 @@ module.exports = async function resultData(req, res) {
       payload = { ...payload, rows: payload.rows.map((student) => ({ ...student, portfolios: byStudent.get(String(student.id)) || [] })) };
     }
   }
+  if (payload?.ok && (action === 'smart.sheet.create' || action === 'smart.sheet.read') && payload.sheet) {
+    const sheet = payload.sheet;
+    const geometry = typeof sheet.geometry === 'object' && sheet.geometry ? sheet.geometry : {};
+    const configuredRows = Number(geometry.rows_per_page);
+    const rowsPerPage = (configuredRows >= 1 && configuredRows <= 100 && configuredRows !== 50 && configuredRows !== 58)
+      ? Math.round(configuredRows)
+      : 35;
+    sheet.geometry = {
+      ...geometry,
+      canonical_width: 1754,
+      canonical_height: 1240,
+      layout: 'landscape',
+      rows_per_page: rowsPerPage,
+      table: {
+        ...(geometry.table || {}),
+        x: 34,
+        y: 130,
+        width: 1686,
+        row_height: 22,
+      },
+      student_column: {
+        ...(geometry.student_column || {}),
+        x: 79,
+        width: 335,
+      },
+    };
+    if (Array.isArray(sheet.roster)) {
+      sheet.roster = sheet.roster.map((student, index) => ({
+        ...student,
+        row_index: index + 1,
+        page_index: Math.floor(index / rowsPerPage),
+        page_row: (index % rowsPerPage) + 1,
+      }));
+    }
+  }
   if (!payload?.ok) {
     sendJson(res, authStatus(payload?.code), payload || { ok: false, code: 'RESULT_REQUEST_FAILED' });
     return;
