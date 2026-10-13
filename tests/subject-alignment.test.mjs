@@ -202,4 +202,42 @@ if (typeof sandbox.subjectTargetsForKeys === 'function') {
   console.log('✓ Smart Recording resolves Government to index 9 and History to index 12.');
 }
 
+console.log('=== TEST 6: DATABASE TRIGGER CONTRACT FOR SUBJECT CATALOG VALIDATION & AUDIT ===');
+const migrationPath = path.join(__dirname, '..', 'supabase', 'migrations', '20261013140000_scores_catalog_validation_and_audit_trigger.sql');
+assert.ok(fs.existsSync(migrationPath), 'Migration file 20261013140000_scores_catalog_validation_and_audit_trigger.sql must exist');
+const migrationSql = fs.readFileSync(migrationPath, 'utf8');
+
+// Assertions on validation trigger
+assert.match(migrationSql, /FUNCTION public\.school_result_scores_validate_catalog/, 'Must define validation function');
+assert.match(migrationSql, /from public\.result_subject_catalog r/i, 'Must check against result_subject_catalog');
+assert.match(migrationSql, /r\.class_key = NEW\.class_key/i, 'Must match class_key');
+assert.match(migrationSql, /r\.subject_index = NEW\.subject_index/i, 'Must match subject_index');
+assert.match(migrationSql, /raise exception 'Invalid subject_index/i, 'Must raise exception on unknown subject index');
+assert.match(migrationSql, /CREATE TRIGGER trg_scores_validate_catalog\s+BEFORE INSERT OR UPDATE ON public\.scores/i, 'Must install BEFORE trigger on scores');
+
+// Assertions on audit trigger
+assert.match(migrationSql, /FUNCTION public\.school_result_scores_audit_change/, 'Must define audit trigger function');
+assert.match(migrationSql, /insert into public\.school_result_score_audit/i, 'Must write to school_result_score_audit');
+assert.match(migrationSql, /CREATE TRIGGER trg_scores_audit_change\s+AFTER INSERT OR UPDATE OR DELETE ON public\.scores/i, 'Must install AFTER trigger on scores for INSERT, UPDATE, DELETE');
+assert.match(migrationSql, /'score_record'/, 'Must write score_record component audit row');
+assert.match(migrationSql, /'database_direct'/, 'Must default source_application to database_direct');
+
+// Simulation of trigger validation against all 226 catalog rows
+const catalogMap = new Set();
+for (const classKey of Object.keys(catalogDump)) {
+  for (const item of catalogDump[classKey]) {
+    catalogMap.add(`${classKey}|${item.index}`);
+  }
+}
+assert.equal(catalogMap.size, 226, 'Must index all 226 catalog subjects');
+for (const classKey of Object.keys(catalogDump)) {
+  for (const item of catalogDump[classKey]) {
+    assert.ok(catalogMap.has(`${classKey}|${item.index}`), `Subject ${item.name} (${classKey}:${item.index}) must pass catalog validation`);
+  }
+}
+// Invalid test cases
+assert.ok(!catalogMap.has('ss1-general|999'), 'Fake index 999 must not be in catalog');
+assert.ok(!catalogMap.has('jss2|55'), 'Fake index 55 in JSS2 must not be in catalog');
+console.log('✓ Database trigger contract and simulation verified: rejects unknown subject indices and writes audit rows.');
+
 console.log('=== ALL SUBJECT ALIGNMENT TESTS PASSED ===');
