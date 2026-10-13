@@ -3627,13 +3627,14 @@ function confirmedScoreResponse(studentId,subjectIdx,response,version){
 }
 function scoreSaveMessage(error){
   var code=error&&error.code;
-  if(code==='RESULT_ACADEMIC_CONTEXT_READ_ONLY'||code==='RESULT_ACADEMIC_TERM_READ_ONLY')return 'Save failed — this previous or closed academic context is read-only.';
+  if(code==='RESULT_ACADEMIC_CONTEXT_READ_ONLY'||code==='RESULT_ACADEMIC_TERM_READ_ONLY'||code==='RESULT_OPERATING_MODE_READ_ONLY')return 'Save failed — this previous or closed academic context is read-only.';
   if(code==='RESULT_STAFF_WRITE_DISABLED')return 'Save failed — management has turned off score entry for this account.';
   if(code==='RESULT_TERM_NOT_ACTIVE'||code==='RESULT_CONTEXT_MISMATCH'||code==='RESULT_TERM_INVALID')return 'Save failed — not recorded: select the selected class, session and term again.';
   if(code==='RESULT_ACADEMIC_SESSION_NOT_ACTIVE'||code==='RESULT_CONTEXT_INVALID')return 'Save failed — not recorded: select the selected academic session again.';
   if(code==='RESULT_CLASS_SCOPE_DENIED'||code==='RESULT_SUBJECT_SCOPE_DENIED')return 'Save failed — not recorded: this class or subject is not assigned.';
   if(code==='RESULT_PERMISSION_DENIED')return 'Save failed — not recorded: score-entry permission is required.';
-  return 'Save failed — not recorded';
+  if(error&&error.error_detail)return 'Save failed — '+error.error_detail;
+  return 'Save failed — not recorded'+(code?' ('+code+')':'');
 }
 function queueScoreSave(studentId,subjectIdx){
   var key=scoreDraftKey(studentId,subjectIdx);
@@ -3648,7 +3649,8 @@ function queueScoreSave(studentId,subjectIdx){
       })
       .catch(function(error){
         if(SCORE_SAVE_VERSIONS[key]===version){
-          scoreStatus(studentId,subjectIdx,'Save failed — not recorded','#991b1b');
+          var detail = error && (error.error_detail || error.code);
+          scoreStatus(studentId,subjectIdx,detail ? ('Save failed ('+detail+')') : 'Save failed — not recorded','#991b1b');
           showToast(scoreSaveMessage(error),'error');
         }
         console.error('Score save failed:',error);
