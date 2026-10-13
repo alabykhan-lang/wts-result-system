@@ -2015,25 +2015,23 @@ function centralResultRead(path){
   });
 }
 function loadResultSubjectCatalog(){
-  if(!isCentralAuth())return Promise.resolve(null);
+  if(!isCentralAuth())return Promise.resolve(RESULT_SUBJECT_CATALOG);
   return resultDataRequest('read.subjects',{}).then(function(payload){
-    var catalog={};
-    Object.keys(DEPTS).forEach(function(key){catalog[key]=[];});
-    (Array.isArray(payload.rows)?payload.rows:[]).forEach(function(row){
-      if(!row||!row.class_key||row.active===false||!row.subject_name)return;
-      if(!catalog[row.class_key])catalog[row.class_key]=[];
-      catalog[row.class_key].push({index:Number(row.subject_index),name:String(row.subject_name)});
-    });
-    Object.keys(catalog).forEach(function(key){
-      catalog[key].sort(function(a,b){return a.index-b.index;});
-      catalog[key]=catalog[key].map(function(row){return row.name;});
-    });
-    RESULT_SUBJECT_CATALOG=catalog;
-    RESULT_SUBJECT_CATALOG_READY=true;
-    return catalog;
+    var rows = Array.isArray(payload && payload.rows) ? payload.rows : [];
+    if(rows.length > 0){
+      rows.forEach(function(row){
+        if(!row || !row.class_key || row.subject_index === undefined || row.subject_index === null || !row.subject_name) return;
+        var ck = String(row.class_key);
+        var idx = Number(row.subject_index);
+        if(!RESULT_SUBJECT_CATALOG[ck]) RESULT_SUBJECT_CATALOG[ck] = {};
+        RESULT_SUBJECT_CATALOG[ck][idx] = makeSubjectCatalogItem(idx, row.subject_name, row.active !== false);
+      });
+      RESULT_SUBJECT_CATALOG_READY = true;
+    }
+    return RESULT_SUBJECT_CATALOG;
   }).catch(function(error){
-    console.warn('Protected subject catalog unavailable; using local fallback:',error&&error.code||error);
-    return null;
+    console.warn('Protected subject catalog unavailable; using default catalog:', error && error.code || error);
+    return RESULT_SUBJECT_CATALOG;
   });
 }
 function dbGet(path){
@@ -2291,7 +2289,7 @@ function renderCurrentPageAfterSync(){
     if(selector&&sid){
       selector.value=sid;
       var pubSet={};
-      subjects().forEach(function(_,idx){if(isPublished(CLS,idx))pubSet[idx]=true;});
+      subjects().forEach(function(subj,idx){var sIdx=Number(subj.index!==undefined?subj.index:idx);if(isPublished(CLS,sIdx))pubSet[sIdx]=true;});
       var wrap=document.getElementById('rc-wrap');
       if(wrap)wrap.innerHTML=buildCard(
         sid,TERM,getActiveSession(),DB_SCORES[sid]||{},
@@ -2391,41 +2389,379 @@ function setPublishedRemote(classKey,term,idx,val,cb){
 }
 
 // ============================================================
-// SCHOOL DATA
+// SCHOOL DATA & SUBJECT CATALOG
 // ============================================================
+function SubjectItem(index, name, active) {
+  this.index = Number(index);
+  this.name = String(name);
+  this.active = active !== false;
+}
+SubjectItem.prototype.toString = function() { return this.name; };
+SubjectItem.prototype.valueOf = function() { return this.name; };
+Object.defineProperty(SubjectItem.prototype, 'length', {
+  get: function() { return this.name.length; },
+  enumerable: false,
+  configurable: true
+});
+['toLowerCase', 'toUpperCase', 'trim', 'slice', 'localeCompare', 'replace', 'indexOf', 'match', 'startsWith', 'endsWith', 'includes', 'charAt', 'charCodeAt', 'concat', 'split'].forEach(function(fn) {
+  SubjectItem.prototype[fn] = function() {
+    return String.prototype[fn].apply(this.name, arguments);
+  };
+});
+
+function makeSubjectCatalogItem(index, name, active) {
+  return new SubjectItem(index, name, active);
+}
+
+var DEFAULT_SUBJECT_CATALOG = {
+  "creche": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Social Habits",active:true},
+    {index:3,name:"Health Habits",active:true},
+    {index:4,name:"Poem",active:true},
+    {index:5,name:"Physical and Health Education",active:true}
+  ],
+  "jss1": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Cultural & Creative Arts",active:true},
+    {index:3,name:"Yoruba",active:true},
+    {index:4,name:"Physical & Health Education",active:true},
+    {index:5,name:"Business Studies",active:true},
+    {index:6,name:"Citizenship and Social Values",active:true},
+    {index:7,name:"Intermediate Science",active:true},
+    {index:8,name:"Islamic Studies",active:true},
+    {index:9,name:"Livestock Farming",active:true},
+    {index:10,name:"Digital Literacy",active:true},
+    {index:11,name:"History",active:true},
+    {index:12,name:"Home Economics",active:false},
+    {index:13,name:"Physical & Health Education",active:false},
+    {index:14,name:"Business Studies",active:false}
+  ],
+  "jss2": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Cultural & Creative Arts",active:true},
+    {index:3,name:"Yoruba",active:true},
+    {index:4,name:"Physical & Health Education",active:true},
+    {index:5,name:"Business Studies",active:true},
+    {index:6,name:"Intermediate Science",active:true},
+    {index:7,name:"Citizenship",active:true},
+    {index:8,name:"Livestock Farming",active:true},
+    {index:9,name:"Digital Literacy",active:true},
+    {index:11,name:"Islamic Studies",active:true},
+    {index:12,name:"History",active:true},
+    {index:13,name:"Physical & Health Education",active:false},
+    {index:14,name:"Business Studies",active:false}
+  ],
+  "jss3": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Cultural & Creative Arts",active:true},
+    {index:3,name:"Yoruba",active:true},
+    {index:4,name:"Physical & Health Education",active:true},
+    {index:5,name:"Business Studies",active:true},
+    {index:6,name:"Social and Citizenship",active:true},
+    {index:7,name:"Livestock Farming",active:true},
+    {index:8,name:"Digital Literacy",active:true},
+    {index:9,name:"History",active:true},
+    {index:10,name:"Intermediate Science",active:true},
+    {index:11,name:"Islamic Studies",active:true},
+    {index:12,name:"Home Economics",active:false},
+    {index:13,name:"Physical & Health Education",active:false},
+    {index:14,name:"Business Studies",active:false}
+  ],
+  "kg1": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Social Habits",active:true},
+    {index:3,name:"Health Habits",active:true},
+    {index:4,name:"Poem",active:true},
+    {index:5,name:"Handwriting",active:true},
+    {index:6,name:"Basic Science",active:false},
+    {index:7,name:"Social Studies",active:false},
+    {index:8,name:"Cultural & Creative Arts",active:false},
+    {index:9,name:"Computer Studies",active:false},
+    {index:10,name:"Religious & National Values",active:false}
+  ],
+  "kg2": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Handwriting",active:true},
+    {index:3,name:"Social Habits",active:true},
+    {index:4,name:"Health Habits",active:true},
+    {index:5,name:"P.H.E",active:true},
+    {index:6,name:"Basic Science",active:false},
+    {index:7,name:"Social Studies",active:false},
+    {index:8,name:"Cultural & Creative Arts",active:false},
+    {index:9,name:"Computer Studies",active:false},
+    {index:10,name:"Religious & National Values",active:false}
+  ],
+  "nursery1": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Handwriting",active:true},
+    {index:3,name:"Social Habits",active:true},
+    {index:4,name:"Elementary Science",active:true},
+    {index:5,name:"Health Habits",active:true},
+    {index:6,name:"Yoruba",active:true},
+    {index:7,name:"Social Studies",active:false},
+    {index:8,name:"Cultural & Creative Arts",active:false},
+    {index:9,name:"Computer Studies",active:false},
+    {index:10,name:"Religious & National Values",active:false}
+  ],
+  "nursery2": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Handwriting",active:true},
+    {index:3,name:"Verbal Reasoning",active:true},
+    {index:4,name:"Quantitative Reasoning",active:true},
+    {index:5,name:"Elementary Science",active:true},
+    {index:6,name:"Civic Education",active:true},
+    {index:7,name:"Social Studies",active:true},
+    {index:8,name:"Cultural & Creative Arts",active:false},
+    {index:9,name:"Computer Studies",active:false},
+    {index:10,name:"Religious & National Values",active:false}
+  ],
+  "primary1": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Handwriting",active:true},
+    {index:3,name:"Quantitative Reasoning",active:true},
+    {index:4,name:"Verbal Reasoning",active:true},
+    {index:5,name:"Basic Science",active:true},
+    {index:6,name:"Social Studies",active:true},
+    {index:7,name:"Yoruba",active:true},
+    {index:8,name:"Civic Education",active:true},
+    {index:9,name:"I.R.S",active:true},
+    {index:10,name:"Religious & National Values",active:false}
+  ],
+  "primary2": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Handwriting",active:true},
+    {index:3,name:"Basic Science",active:true},
+    {index:4,name:"Social Studies",active:true},
+    {index:5,name:"Cultural & Creative Arts",active:true},
+    {index:6,name:"Yoruba",active:true},
+    {index:7,name:"History",active:true},
+    {index:8,name:"Physical and Health Education",active:true},
+    {index:9,name:"Islamic Studies",active:true},
+    {index:10,name:"Religious & National Values",active:false}
+  ],
+  "primary3": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Handwriting",active:true},
+    {index:3,name:"Basic Science",active:true},
+    {index:4,name:"Cultural & Creative Arts",active:true},
+    {index:5,name:"Islamic Studies",active:true},
+    {index:6,name:"Social and Citizenship",active:true},
+    {index:7,name:"Physical and Health Education",active:true},
+    {index:8,name:"Yoruba",active:true},
+    {index:9,name:"Nigerian History",active:true},
+    {index:10,name:"Religious & National Values",active:false}
+  ],
+  "primary4": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Basic Science",active:true},
+    {index:3,name:"Cultural & Creative Arts",active:true},
+    {index:4,name:"Physical and Health Education",active:true},
+    {index:5,name:"Islamic Studies",active:true},
+    {index:6,name:"Yoruba",active:true},
+    {index:7,name:"Digital Literacy",active:true},
+    {index:8,name:"History",active:true},
+    {index:9,name:"Prevocational Studies",active:true},
+    {index:10,name:"Social and Citizenship",active:true}
+  ],
+  "primary5": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Basic Science",active:true},
+    {index:3,name:"Cultural & Creative Arts",active:true},
+    {index:4,name:"Provocational Studies",active:true},
+    {index:5,name:"Nigerian History",active:true},
+    {index:6,name:"Social and Citizenship",active:true},
+    {index:7,name:"Digital Literacy",active:true},
+    {index:8,name:"Islamic Studies",active:true},
+    {index:9,name:"Yoruba",active:true},
+    {index:10,name:"Physical Health and Education",active:true}
+  ],
+  "ss1-general": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Digital Technology",active:true},
+    {index:3,name:"Economics",active:true},
+    {index:4,name:"Citizenship & Heritage Studies",active:true},
+    {index:5,name:"Biology",active:true},
+    {index:6,name:"Physics",active:true},
+    {index:7,name:"Chemistry",active:true},
+    {index:8,name:"Literature",active:false},
+    {index:9,name:"Government",active:true},
+    {index:10,name:"I.R.S",active:true},
+    {index:11,name:"Financial Accounting",active:true},
+    {index:12,name:"Commerce",active:true},
+    {index:13,name:"Geography",active:true},
+    {index:14,name:"Agricultural Science",active:true},
+    {index:15,name:"Livestock Farming",active:true},
+    {index:16,name:"Yoruba",active:true}
+  ],
+  "ss2-arts": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Digital Technology",active:true},
+    {index:3,name:"Economics",active:true},
+    {index:4,name:"Citizenship & Heritage Studies",active:true},
+    {index:5,name:"Literature",active:true},
+    {index:6,name:"Government",active:true},
+    {index:7,name:"I.R.S",active:true},
+    {index:8,name:"Yoruba",active:true},
+    {index:9,name:"Livestock Farming",active:true}
+  ],
+  "ss2-business": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Digital Technology",active:true},
+    {index:3,name:"Economics",active:true},
+    {index:4,name:"Citizenship & Heritage Studies",active:true},
+    {index:5,name:"Financial Accounting",active:true},
+    {index:6,name:"Commerce",active:true},
+    {index:7,name:"Government",active:true},
+    {index:8,name:"Livestock",active:true}
+  ],
+  "ss2-science": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Digital Technology",active:true},
+    {index:3,name:"Economics",active:true},
+    {index:4,name:"Citizenship & Heritage Studies",active:true},
+    {index:5,name:"Biology",active:true},
+    {index:6,name:"Physics",active:true},
+    {index:7,name:"Chemistry",active:true},
+    {index:8,name:"Agricultural Science",active:true},
+    {index:9,name:"Livestock Farming",active:true},
+    {index:10,name:"Geography",active:true}
+  ],
+  "ss3-arts": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Economics",active:true},
+    {index:3,name:"Citizenship & Heritage Studies",active:true},
+    {index:4,name:"Literature",active:true},
+    {index:5,name:"Government",active:true},
+    {index:6,name:"I.R.S",active:true},
+    {index:7,name:"Yoruba",active:true},
+    {index:8,name:"Digital Technology",active:true},
+    {index:9,name:"Livestock Farming",active:true}
+  ],
+  "ss3-business": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Digital Technology",active:true},
+    {index:3,name:"Economics",active:true},
+    {index:4,name:"Citizenship & Heritage Studies",active:true},
+    {index:5,name:"Financial Accounting",active:true},
+    {index:6,name:"Commerce",active:true},
+    {index:7,name:"Government",active:true},
+    {index:8,name:"Livestock",active:true}
+  ],
+  "ss3-science": [
+    {index:0,name:"English Language",active:true},
+    {index:1,name:"Mathematics",active:true},
+    {index:2,name:"Digital Technology",active:true},
+    {index:3,name:"Economics",active:true},
+    {index:4,name:"Citizenship & Heritage Studies",active:true},
+    {index:5,name:"Biology",active:true},
+    {index:6,name:"Physics",active:true},
+    {index:7,name:"Chemistry",active:true},
+    {index:8,name:"Agricultural Science",active:true},
+    {index:9,name:"Livestock Farming",active:true},
+    {index:10,name:"Geography",active:true}
+  ]
+};
+
+function initDefaultSubjectCatalog() {
+  var map = {};
+  Object.keys(DEFAULT_SUBJECT_CATALOG).forEach(function(ck) {
+    map[ck] = {};
+    DEFAULT_SUBJECT_CATALOG[ck].forEach(function(row) {
+      map[ck][row.index] = makeSubjectCatalogItem(row.index, row.name, row.active);
+    });
+  });
+  return map;
+}
+
+var RESULT_SUBJECT_CATALOG = initDefaultSubjectCatalog();
+var RESULT_SUBJECT_CATALOG_READY = false;
+
+function classSubjectMap(classKey) {
+  if (RESULT_SUBJECT_CATALOG && RESULT_SUBJECT_CATALOG[classKey]) {
+    return RESULT_SUBJECT_CATALOG[classKey];
+  }
+  if (DEPTS[classKey] && Array.isArray(DEPTS[classKey].subjects)) {
+    var map = {};
+    DEPTS[classKey].subjects.forEach(function(name, i) {
+      map[i] = makeSubjectCatalogItem(i, name, true);
+    });
+    return map;
+  }
+  return {};
+}
+
+function subjectNameByIndex(classKey, subjectIndex) {
+  var map = classSubjectMap(classKey);
+  var idx = Number(subjectIndex);
+  if (map && map[idx] && map[idx].name) {
+    return map[idx].name;
+  }
+  return 'Subject ' + (idx + 1);
+}
+
+function classSubjectList(classKey, options) {
+  var includeInactive = Boolean(options && (options.includeInactive || options.all));
+  var map = classSubjectMap(classKey);
+  var list = Object.keys(map).map(function(k) {
+    return map[k];
+  }).sort(function(a, b) {
+    return a.index - b.index;
+  });
+  if (!includeInactive) {
+    list = list.filter(function(item) {
+      return item.active !== false;
+    });
+  }
+  return list;
+}
+
 var CORE=['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies'];
-// These subjects are common to every senior-secondary department.  Keep the
-// existing spelling used by the portal, while subject matching also accepts
-// the school's Civic Education and Livestock aliases.
 var SENIOR_GENERAL_SUBJECTS=['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Livestock'];
-var RESULT_SUBJECT_CATALOG={};
-var RESULT_SUBJECT_CATALOG_READY=false;
-var SIMPLE=['English Language','Mathematics','Phonics','Handwriting','Quantitative Reasoning','Verbal Reasoning','Basic Science','Social Studies','Cultural & Creative Arts','Computer Studies','Religious & National Values'];
-var JSS_CORE=['English Language','Mathematics','Basic Science','Basic Technology','Social Studies','Civic Education','Cultural & Creative Arts','Agricultural Science','Computer Studies','French','Yoruba','Christian Religious Studies','Home Economics','Physical & Health Education','Business Studies'];
+
 var DEPTS={
-  'creche':      {label:'Creche',        subjects:['English Language','Numeracy','Phonics','Handwriting','Creative Play','Social Skills']},
-  'kg1':         {label:'KG 1',          subjects:SIMPLE.slice()},
-  'kg2':         {label:'KG 2',          subjects:SIMPLE.slice()},
-  'nursery1':    {label:'Nursery 1',     subjects:SIMPLE.slice()},
-  'nursery2':    {label:'Nursery 2',     subjects:SIMPLE.slice()},
-  'primary1':    {label:'Primary 1',     subjects:SIMPLE.slice()},
-  'primary2':    {label:'Primary 2',     subjects:SIMPLE.slice()},
-  'primary3':    {label:'Primary 3',     subjects:SIMPLE.slice()},
-  'primary4':    {label:'Primary 4',     subjects:SIMPLE.slice()},
-  'primary5':    {label:'Primary 5',     subjects:SIMPLE.slice()},
-  'jss1':        {label:'JSS 1',         subjects:JSS_CORE.slice()},
-  'jss2':        {label:'JSS 2',         subjects:JSS_CORE.slice()},
-  'jss3':        {label:'JSS 3',         subjects:JSS_CORE.slice()},
-  'ss1-general': {label:'SS1 - General', subjects:CORE.concat(['Biology','Physics','Chemistry','Literature','Government','I.R.S','Financial Accounting','Commerce','Geography','Agricultural Science','Livestock'])},
-  'ss1-science': {label:'SS1 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss1-arts':    {label:'SS1 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba','Livestock'])},
-  'ss1-commercial':{label:'SS1 - Commercial',subjects:CORE.concat(['Financial Accounting','Commerce','Government','Livestock'])},
-  'ss2-science': {label:'SS2 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss2-arts':    {label:'SS2 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba','Livestock Farming'])},
-  'ss2-business':{label:'SS2 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government','Livestock'])},
-  'ss3-science': {label:'SS3 - Science', subjects:CORE.concat(['Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography'])},
-  'ss3-arts':    {label:'SS3 - Arts',    subjects:CORE.concat(['Literature','Government','I.R.S','Yoruba','Livestock Farming'])},
-  'ss3-business':{label:'SS3 - Business',subjects:CORE.concat(['Financial Accounting','Commerce','Government','Livestock'])}
+  'creche':        {label:'Creche',          subjects:['English Language','Mathematics','Social Habits','Health Habits','Poem','Physical and Health Education']},
+  'kg1':           {label:'KG 1',            subjects:['English Language','Mathematics','Social Habits','Health Habits','Poem','Handwriting']},
+  'kg2':           {label:'KG 2',            subjects:['English Language','Mathematics','Handwriting','Social Habits','Health Habits','P.H.E']},
+  'nursery1':      {label:'Nursery 1',       subjects:['English Language','Mathematics','Handwriting','Social Habits','Elementary Science','Health Habits','Yoruba']},
+  'nursery2':      {label:'Nursery 2',       subjects:['English Language','Mathematics','Handwriting','Verbal Reasoning','Quantitative Reasoning','Elementary Science','Civic Education','Social Studies']},
+  'primary1':      {label:'Primary 1',       subjects:['English Language','Mathematics','Handwriting','Quantitative Reasoning','Verbal Reasoning','Basic Science','Social Studies','Yoruba','Civic Education','I.R.S']},
+  'primary2':      {label:'Primary 2',       subjects:['English Language','Mathematics','Handwriting','Basic Science','Social Studies','Cultural & Creative Arts','Yoruba','History','Physical and Health Education','Islamic Studies']},
+  'primary3':      {label:'Primary 3',       subjects:['English Language','Mathematics','Handwriting','Basic Science','Cultural & Creative Arts','Islamic Studies','Social and Citizenship','Physical and Health Education','Yoruba','Nigerian History']},
+  'primary4':      {label:'Primary 4',       subjects:['English Language','Mathematics','Basic Science','Cultural & Creative Arts','Physical and Health Education','Islamic Studies','Yoruba','Digital Literacy','History','Prevocational Studies','Social and Citizenship']},
+  'primary5':      {label:'Primary 5',       subjects:['English Language','Mathematics','Basic Science','Cultural & Creative Arts','Provocational Studies','Nigerian History','Social and Citizenship','Digital Literacy','Islamic Studies','Yoruba','Physical Health and Education']},
+  'jss1':          {label:'JSS 1',           subjects:['English Language','Mathematics','Cultural & Creative Arts','Yoruba','Physical & Health Education','Business Studies','Citizenship and Social Values','Intermediate Science','Islamic Studies','Livestock Farming','Digital Literacy','History']},
+  'jss2':          {label:'JSS 2',           subjects:['English Language','Mathematics','Cultural & Creative Arts','Yoruba','Physical & Health Education','Business Studies','Intermediate Science','Citizenship','Livestock Farming','Digital Literacy','Islamic Studies','History']},
+  'jss3':          {label:'JSS 3',           subjects:['English Language','Mathematics','Cultural & Creative Arts','Yoruba','Physical & Health Education','Business Studies','Social and Citizenship','Livestock Farming','Digital Literacy','History','Intermediate Science','Islamic Studies']},
+  'ss1-general':   {label:'SS1 - General',   subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Biology','Physics','Chemistry','Government','I.R.S','Financial Accounting','Commerce','Geography','Agricultural Science','Livestock Farming','Yoruba']},
+  'ss1-science':   {label:'SS1 - Science',   subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography']},
+  'ss1-arts':      {label:'SS1 - Arts',      subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Government','I.R.S','Yoruba','Livestock Farming']},
+  'ss1-commercial':{label:'SS1 - Commercial',subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Financial Accounting','Commerce','Government','Livestock Farming']},
+  'ss2-science':   {label:'SS2 - Science',   subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography']},
+  'ss2-arts':      {label:'SS2 - Arts',      subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Literature','Government','I.R.S','Yoruba','Livestock Farming']},
+  'ss2-business':  {label:'SS2 - Business',  subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Financial Accounting','Commerce','Government','Livestock']},
+  'ss3-science':   {label:'SS3 - Science',   subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Biology','Physics','Chemistry','Agricultural Science','Livestock Farming','Geography']},
+  'ss3-arts':      {label:'SS3 - Arts',      subjects:['English Language','Mathematics','Economics','Citizenship & Heritage Studies','Literature','Government','I.R.S','Yoruba','Digital Technology','Livestock Farming']},
+  'ss3-business':  {label:'SS3 - Business',  subjects:['English Language','Mathematics','Digital Technology','Economics','Citizenship & Heritage Studies','Financial Accounting','Commerce','Government','Livestock']}
 };
 var ALL_CLASSES=['creche','kg1','kg2','nursery1','nursery2','primary1','primary2','primary3','primary4','primary5','jss1','jss2','jss3','ss1-general','ss1-science','ss1-arts','ss1-commercial','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts','ss3-business'];
 var SECONDARY_CLASSES=['jss1','jss2','jss3','ss1-general','ss1-science','ss1-arts','ss1-commercial','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts','ss3-business'];
@@ -2476,14 +2812,15 @@ function promotionTargetOptions(selected){
   }).join('');
 }
 function calcPromotionAverage(studentId,classKey,scores,published){
-  var subjs=configuredSubjects(classKey,getCfg());
+  var subjs=classSubjectList(classKey);
   var publishedMap={};
   (published||[]).forEach(function(r){publishedMap[r.subject_index]=true;});
   var hasPublished=Object.keys(publishedMap).length>0;
   var total=0,count=0;
-  subjs.forEach(function(_,idx){
-    if(hasPublished&&!publishedMap[idx])return;
-    var row=scores.find(function(s){return String(s.student_id)===String(studentId)&&Number(s.subject_index)===idx;});
+  subjs.forEach(function(subj,idx){
+    var sIdx=Number(subj.index!==undefined?subj.index:idx);
+    if(hasPublished&&!publishedMap[sIdx])return;
+    var row=scores.find(function(s){return String(s.student_id)===String(studentId)&&Number(s.subject_index)===sIdx;});
     var mark=computeTotal(row||null);
     if(mark!==''){total+=mark;count++;}
   });
@@ -2611,23 +2948,12 @@ function ensureSeniorGeneralSubjects(classKey,list){
   SENIOR_GENERAL_SUBJECTS.forEach(function(subject){var key=subjectConfigKey(subject);if(!present[key]){out.push(subject);present[key]=true;}});
   return out;
 }
-function configuredSubjects(classKey,cfg){
-  cfg=cfg||getCfg();
-  if(RESULT_SUBJECT_CATALOG_READY&&Object.prototype.hasOwnProperty.call(RESULT_SUBJECT_CATALOG,classKey)){
-    return RESULT_SUBJECT_CATALOG[classKey].slice();
-  }
-  var cfgDepts=cfg.depts||{};
-  var list;
-  if(cfgDepts[classKey]&&Array.isArray(cfgDepts[classKey].subjects))list=cfgDepts[classKey].subjects.slice();
-  // SS3 Business inherits the configured SS2 Business subjects until
-  // Central Registry performs the next-session departmental placement.
-  if(!list&&classKey==='ss3-business'&&cfgDepts['ss2-business']&&Array.isArray(cfgDepts['ss2-business'].subjects)){
-    list=cfgDepts['ss2-business'].subjects.slice();
-  }
-  if(!list)list=DEPTS[classKey]&&Array.isArray(DEPTS[classKey].subjects)?DEPTS[classKey].subjects.slice():[];
-  return ensureSeniorGeneralSubjects(classKey,list);
+function configuredSubjects(classKey,cfg,options){
+  return classSubjectList(classKey,options);
 }
-function subjects(){return configuredSubjects(CLS,getCfg());}
+function subjects(options){
+  return classSubjectList(CLS,options);
+}
 function getGrade(t){
   if(t===''||t===null||t===undefined)return{g:'',r:'',c:'#aaa',bg:'#f9f9f9'};
   t=Math.floor(Number(t)); // Floor so 74.4 = 74 = B2, not between grades
@@ -2802,11 +3128,12 @@ function loadStudentData(sid,cb){
 function studentSummary(sid){
   var sc=DB_SCORES[sid]||{};
   var subjs=subjects();
-  var tots=[],grand=0,cnt=0,pass=0;
-  subjs.forEach(function(_,i){
-    var t=computeTotal(sc[i]);
-    tots.push(t);
-    if(t!==''&&isPublished(CLS,i)){grand+=t;cnt++;if(t>=40)pass++;}
+  var tots={},grand=0,cnt=0,pass=0;
+  subjs.forEach(function(subj,i){
+    var sIdx=Number(subj.index!==undefined?subj.index:i);
+    var t=computeTotal(sc[sIdx]);
+    tots[sIdx]=t;
+    if(t!==''&&isPublished(CLS,sIdx)){grand+=t;cnt++;if(t>=40)pass++;}
   });
   var avg=cnt?Math.round(grand/cnt*10)/10:'';
   return{tots:tots,grand:cnt?grand:'',avg:avg,pass:cnt?pass:'',cnt:cnt};
@@ -3496,23 +3823,26 @@ function renderScoreGrid(){
     return;
   }
   var html='';
-  subjs.forEach(function(subj,i){
-    var isPub=isPublished(CLS,i);
+  subjs.forEach(function(subj,cardPos){
+    var sIdx=Number(subj.index!==undefined?subj.index:cardPos);
+    var sName=subj.name||String(subj);
+    var isPub=isPublished(CLS,sIdx);
     var filled=students.filter(function(s){
-      var sc=(DB_SCORES[s.id]||{})[i]||{};
-      return sc.ca1!==''&&sc.ca1!==undefined||sc.exam!==''&&sc.exam!==undefined;
+      var sc=(DB_SCORES[s.id]||{})[sIdx]||{};
+      return (sc.ca1!==''&&sc.ca1!==undefined&&sc.ca1!==null)||(sc.exam!==''&&sc.exam!==undefined&&sc.exam!==null);
     }).length;
-    html+='<div class="subj-card'+(isPub?' published':'')+'" id="scard-'+i+'">'
+    html+='<div class="subj-card'+(isPub?' published':'')+'" id="scard-'+sIdx+'">'
       +'<span class="subj-badge '+(isPub?'pub':'draft')+'">'+(isPub?'Published':'Draft')+'</span>'
-      +'<div class="subj-name">'+(i+1)+'. '+subj+'</div>'
+      +'<div class="subj-name">'+(sIdx+1)+'. '+escapeHtml(sName)+'</div>'
       +'<div class="subj-count">'+filled+'/'+students.length+' scored</div>'
       +'</div>';
   });
   el.innerHTML=html;
-  subjs.forEach(function(_,i){
-    var card=document.getElementById('scard-'+i);
+  subjs.forEach(function(subj,cardPos){
+    var sIdx=Number(subj.index!==undefined?subj.index:cardPos);
+    var card=document.getElementById('scard-'+sIdx);
     if(card){
-      card.onclick=(function(idx){return function(){openSheet(idx);};})(i);
+      card.onclick=(function(idx){return function(){openSheet(idx);};})(sIdx);
     }
   });
 }
@@ -3526,10 +3856,11 @@ function setAllSubjectsPublished(published){
     :'Unpublish all '+subjs.length+' subjects? They will be removed from broadsheets and result cards.';
   if(!window.confirm(message))return;
   showLoad((published?'Publishing':'Unpublishing')+' all subjects…');
-  var jobs=subjs.map(function(_,idx){
+  var jobs=subjs.map(function(subj,loopIdx){
+    var sIdx=Number(subj.index!==undefined?subj.index:loopIdx);
     return new Promise(function(resolve,reject){
-      if(isPublished(CLS,idx)===published){resolve();return;}
-      setPublishedRemote(CLS,TERM,idx,published,function(error){if(error)reject(error);else resolve();});
+      if(isPublished(CLS,sIdx)===published){resolve();return;}
+      setPublishedRemote(CLS,TERM,sIdx,published,function(error){if(error)reject(error);else resolve();});
     });
   });
   Promise.all(jobs).then(function(){
@@ -3659,13 +3990,13 @@ function queueScoreSave(studentId,subjectIdx){
 }
 function openSheet(idx){
   var students=DB_STUDENTS[CLS]||[];
-  var subjs=subjects();
-  currentSheetIdx=idx;
-  var isPub=isPublished(CLS,idx);
+  currentSheetIdx=Number(idx);
+  var isPub=isPublished(CLS,currentSheetIdx);
   var scoreInputLock=canWriteResults()?'':' readonly';
+  var sName=subjectNameByIndex(CLS,currentSheetIdx);
   document.getElementById('scores-grid-view').style.display='none';
   document.getElementById('scores-sheet-view').style.display='block';
-  document.getElementById('sheet-title').textContent=(idx+1)+'. '+subjs[idx];
+  document.getElementById('sheet-title').textContent=(currentSheetIdx+1)+'. '+sName;
   var badge=document.getElementById('sheet-pub-badge');
   var btn=document.getElementById('publish-btn');
   badge.style.display=isPub?'inline':'none';
@@ -3673,11 +4004,11 @@ function openSheet(idx){
   btn.className=isPub?'btn btn-outline':'btn btn-primary';
   var html='';
   students.forEach(function(s,rowIdx){
-    var sc=scorePersisted(s.id,idx);
+    var sc=scorePersisted(s.id,currentSheetIdx);
     var total=computeTotal(sc);var grade=getGrade(total);
     html+='<div class="sheet-row" style="background:'+(rowIdx%2===0?'#fff':'#fafafa')+'">'
       +'<span style="font-size:.75rem;color:var(--gray)">'+(rowIdx+1)+'</span>'
-      +'<span style="font-size:.82rem;font-weight:600;color:var(--g1)">'+s.name+'<small id="ss-'+s.id+'-'+idx+'" style="display:block;font-size:.66rem;font-weight:600;color:var(--g1)">Saved</small></span>'
+      +'<span style="font-size:.82rem;font-weight:600;color:var(--g1)">'+escapeHtml(s.name)+'<small id="ss-'+s.id+'-'+currentSheetIdx+'" style="display:block;font-size:.66rem;font-weight:600;color:var(--g1)">Saved</small></span>'
       +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca1)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca1"'+scoreInputLock+'/>'
       +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca2)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca2"'+scoreInputLock+'/>'
       +'<input class="sc-inp" type="number" min="0" max="10" value="'+scoreCellValue(sc.ca3)+'" placeholder="-" data-sid="'+s.id+'" data-field="ca3"'+scoreInputLock+'/>'
@@ -3691,16 +4022,16 @@ function openSheet(idx){
   document.querySelectorAll('#sheet-rows .sc-inp').forEach(function(inp){
     inp.addEventListener('focus',function(){
       var sid=inp.getAttribute('data-sid');
-      confirmSavedScoreEdit(sid,idx,inp);
+      confirmSavedScoreEdit(sid,currentSheetIdx,inp);
     });
     inp.addEventListener('input',function(){
       var sid=inp.getAttribute('data-sid');
       var field=inp.getAttribute('data-field');
       var max=field==='exam'?70:10;
-      if(!confirmSavedScoreEdit(sid,idx,inp))return;
+      if(!confirmSavedScoreEdit(sid,currentSheetIdx,inp))return;
       var raw=inp.value.trim()===''?null:Number(inp.value);
       if(raw!==null&&!isFinite(raw)){
-        scoreStatus(sid,idx,'Save failed — not recorded','#991b1b');
+        scoreStatus(sid,currentSheetIdx,'Save failed — not recorded','#991b1b');
         return;
       }
       if(raw!==null&&(raw<0||raw>max)){
@@ -3709,14 +4040,14 @@ function openSheet(idx){
         return;
       }
       inp.classList.remove('over-limit');
-      var key=scoreDraftKey(sid,idx);
-      var draft=scoreDraft(sid,idx);
+      var key=scoreDraftKey(sid,currentSheetIdx);
+      var draft=scoreDraft(sid,currentSheetIdx);
       draft[field]=raw;
       SCORE_DRAFTS[key]=draft;
       SCORE_SAVE_VERSIONS[key]=(SCORE_SAVE_VERSIONS[key]||0)+1;
-      scoreStatus(sid,idx,'Saving…','var(--gold2)');
-      updateScoreDisplay(sid,idx,draft);
-      queueScoreSave(sid,idx);
+      scoreStatus(sid,currentSheetIdx,'Saving…','var(--gold2)');
+      updateScoreDisplay(sid,currentSheetIdx,draft);
+      queueScoreSave(sid,currentSheetIdx);
     });
   });
 }
@@ -3845,10 +4176,12 @@ function renderProfile(s){
   var subjs=subjects();var sc=DB_SCORES[sid]||{};
   var pubHtml='';
   subjs.forEach(function(subj,i){
-    if(!isPublished(CLS,i))return;
-    var r=sc[i]||{};var t=computeTotal(r);var gd=getGrade(t);
+    var sIdx=Number(subj.index!==undefined?subj.index:i);
+    var sName=subj.name||String(subj);
+    if(!isPublished(CLS,sIdx))return;
+    var r=sc[sIdx]||{};var t=computeTotal(r);var gd=getGrade(t);
     pubHtml+='<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border);font-size:.82rem">'
-      +'<span style="font-weight:600;color:var(--g1)">'+(i+1)+'. '+subj+'</span>'
+      +'<span style="font-weight:600;color:var(--g1)">'+(sIdx+1)+'. '+escapeHtml(sName)+'</span>'
       +'<div style="display:flex;gap:12px;font-size:.78rem">'
       +'<span>CA:'+(Number(r.ca1||0)+Number(r.ca2||0)+Number(r.ca3||0))+'</span>'
       +'<span>Exam:'+(r.exam||'--')+'</span>'
@@ -3999,7 +4332,13 @@ function broadsheetClassKeys(){
 function populateBroadsheetSubjects(){
   var select=document.getElementById('bs-subject-select');if(!select)return'';
   var previous=select.value;var names=[];var seen={};
-  broadsheetClassKeys().forEach(function(key){configuredSubjects(key,getCfg()).forEach(function(name){var id=subjectConfigKey(name);if(!seen[id]){seen[id]=true;names.push(name);}});});
+  broadsheetClassKeys().forEach(function(key){
+    classSubjectList(key).forEach(function(item){
+      var name=item.name||String(item);
+      var id=subjectConfigKey(name);
+      if(!seen[id]){seen[id]=true;names.push(name);}
+    });
+  });
   names.sort(function(a,b){return a.localeCompare(b);});
   select.innerHTML=names.map(function(name){return'<option value="'+escapeHtml(subjectConfigKey(name))+'">'+escapeHtml(name)+'</option>';}).join('');
   if(previous&&seen[previous])select.value=previous;
@@ -4019,8 +4358,48 @@ function renderSelectedSubjectBroadsheet(){
 }
 function refreshBroadsheet(){
   renderBroadsheetDepartmentPicker();
-  var subjectKey=populateBroadsheetSubjects();var classes=broadsheetClassKeys().filter(function(key){return configuredSubjects(key,getCfg()).some(function(name){return subjectConfigKey(name)===subjectKey;});});var originalClass=CLS;var rows=[];var subjectName='';showLoad('Building subject broadsheet...');
-  classes.reduce(function(chain,key){return chain.then(function(){var list=configuredSubjects(key,getCfg());var index=list.findIndex(function(name){return subjectConfigKey(name)===subjectKey;});subjectName=subjectName||list[index]||subjectKey;return setResultContext(key,getActiveSession(),TERM).then(function(){return Promise.all([dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))]);}).then(function(result){var scores={};(result[1]||[]).forEach(function(score){scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};});(result[0]||[]).forEach(function(student){rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});});});});},Promise.resolve()).then(function(){return setResultContext(originalClass,getActiveSession(),TERM);}).then(function(){rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});var level=String(originalClass).match(/^(ss[23])-/);var allLevel=seniorBroadsheetDepartments();var labels=classes.map(function(key){return DEPTS[key]?DEPTS[key].label:key;});var scopeLabel=level?(classes.length===allLevel.length?level[1].toUpperCase()+' · All departments':level[1].toUpperCase()+' · '+labels.join(' + ')):(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass);BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:scopeLabel};hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');}).catch(function(error){hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');});
+  var subjectKey=populateBroadsheetSubjects();
+  var classes=broadsheetClassKeys().filter(function(key){
+    return classSubjectList(key).some(function(item){
+      return subjectConfigKey(item.name||item)===subjectKey;
+    });
+  });
+  var originalClass=CLS;var rows=[];var subjectName='';showLoad('Building subject broadsheet...');
+  classes.reduce(function(chain,key){
+    return chain.then(function(){
+      var list=classSubjectList(key);
+      var found=list.find(function(item){return subjectConfigKey(item.name||item)===subjectKey;});
+      if(!found)return;
+      var index=Number(found.index!==undefined?found.index:list.indexOf(found));
+      subjectName=subjectName||found.name||subjectKey;
+      return setResultContext(key,getActiveSession(),TERM).then(function(){
+        return Promise.all([
+          dbGet('students?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&order=created_at.asc'),
+          dbGet('scores?class_key=eq.'+encodeURIComponent(dbClassKey(key))+'&subject_index=eq.'+index+'&term=eq.'+encodeURIComponent(TERM))
+        ]);
+      }).then(function(result){
+        var scores={};
+        (result[1]||[]).forEach(function(score){
+          scores[score.student_id]={ca1:scoreCellValue(score.ca1),ca2:scoreCellValue(score.ca2),ca3:scoreCellValue(score.ca3),exam:scoreCellValue(score.exam)};
+        });
+        (result[0]||[]).forEach(function(student){
+          rows.push({student:student,score:scores[student.id]||{},classKey:key,classLabel:DEPTS[key]?DEPTS[key].label:key});
+        });
+      });
+    });
+  },Promise.resolve()).then(function(){
+    return setResultContext(originalClass,getActiveSession(),TERM);
+  }).then(function(){
+    rows.sort(function(a,b){return a.student.name.localeCompare(b.student.name);});
+    var level=String(originalClass).match(/^(ss[23])-/);
+    var allLevel=seniorBroadsheetDepartments();
+    var labels=classes.map(function(key){return DEPTS[key]?DEPTS[key].label:key;});
+    var scopeLabel=level?(classes.length===allLevel.length?level[1].toUpperCase()+' · All departments':level[1].toUpperCase()+' · '+labels.join(' + ')):(DEPTS[originalClass]?DEPTS[originalClass].label:originalClass);
+    BROADSHEET_DATA={subjectKey:subjectKey,subjectName:subjectName,rows:rows,scopeLabel:scopeLabel};
+    hideLoad();renderSelectedSubjectBroadsheet();showToast('Broadsheet ready');
+  }).catch(function(error){
+    hideLoad();showToast(error&&error.code?error.code:'Broadsheet refresh failed','error');
+  });
 }
 function refreshCard(options){
   options=options||{};
@@ -4182,13 +4561,15 @@ function renderBroadsheet(){
 
   // One section per published subject
   subjs.forEach(function(subj,si){
-    if(!isPublished(CLS,si))return;
+    var sIdx=Number(subj.index!==undefined?subj.index:si);
+    var sName=subj.name||String(subj);
+    if(!isPublished(CLS,sIdx))return;
 
     html+='<div class="broadsheet-subject" style="margin-bottom:28px;page-break-inside:auto">';
 
     // Subject title bar
     html+='<div style="background:'+NAVY+';color:#fff;padding:7px 14px;font-weight:700;font-size:10pt;border-radius:6px 6px 0 0">'
-      +(si+1)+'. '+subj
+      +(sIdx+1)+'. '+escapeHtml(sName)
       +'</div>';
 
     // Table
@@ -4207,8 +4588,8 @@ function renderBroadsheet(){
     html+='<tbody>';
 
     // Compute positions for this subject
-    var scores=students.map(function(s,idx){
-      var sc=(DB_SCORES[s.id]||{})[si]||{};
+    var scores=students.map(function(s){
+      var sc=(DB_SCORES[s.id]||{})[sIdx]||{};
       var t=computeTotal(sc);
       return{s:s,sc:sc,t:t};
     });
@@ -4224,11 +4605,11 @@ function renderBroadsheet(){
       var pos=t!==''?posMap[t]:'';
       html+='<tr style="background:'+bg+'">'
         +'<td style="padding:5px 8px;border:1px solid '+BORDER+';color:#888">'+(ri+1)+'</td>'
-        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+s.name+'</td>'
-        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca1!==undefined&&sc.ca1!==''?sc.ca1:'')+'</td>'
-        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca2!==undefined&&sc.ca2!==''?sc.ca2:'')+'</td>'
-        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca3!==undefined&&sc.ca3!==''?sc.ca3:'')+'</td>'
-        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.exam!==undefined&&sc.exam!==''?sc.exam:'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+escapeHtml(s.name)+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca1!==undefined&&sc.ca1!==''?escapeHtml(sc.ca1):'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca2!==undefined&&sc.ca2!==''?escapeHtml(sc.ca2):'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.ca3!==undefined&&sc.ca3!==''?escapeHtml(sc.ca3):'')+'</td>'
+        +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center">'+(sc.exam!==undefined&&sc.exam!==''?escapeHtml(sc.exam):'')+'</td>'
         +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center;font-weight:700;color:'+(t!==''?gd.c:'#aaa')+'">'+(t!==''?t:'')+'</td>'
         +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center;font-weight:700;color:'+(t!==''?gd.c:'#aaa')+'">'+(gd.g||'')+'</td>'
         +'<td style="padding:5px 8px;border:1px solid '+BORDER+';text-align:center;color:#555">'+(pos||'')+'</td>'
@@ -4253,12 +4634,16 @@ function exportBroadsheetNow(){
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
   if(!students.length){showToast('No students to export','error');return;}
-  var rows=[['#','Student','Gender'].concat(subjs.map(function(s){return[s+' CA1',s+' CA2',s+' CA3',s+' Exam',s+' Total'];})).flat()];
+  var rows=[['#','Student','Gender'].concat(subjs.map(function(s){
+    var sName=s.name||String(s);
+    return[sName+' CA1',sName+' CA2',sName+' CA3',sName+' Exam',sName+' Total'];
+  })).flat()];
   students.forEach(function(st,i){
     var sc=DB_SCORES[st.id]||{};
     var row=[i+1,st.name,st.gender];
-    subjs.forEach(function(_,idx){
-      var r=sc[idx]||{};var t=computeTotal(r);
+    subjs.forEach(function(s,idx){
+      var sIdx=Number(s.index!==undefined?s.index:idx);
+      var r=sc[sIdx]||{};var t=computeTotal(r);
       row.push(r.ca1||'',r.ca2||'',r.ca3||'',r.exam||'',t!==''?t:'');
     });
     rows.push(row);
@@ -4286,8 +4671,9 @@ function progressStagesFor(stage){
 function detectProgressStage(students,subjs){
   var latest='';
   students.forEach(function(st){
-    subjs.forEach(function(_,idx){
-      var sc=(DB_SCORES[st.id]||{})[idx]||{};
+    subjs.forEach(function(s,idx){
+      var sIdx=Number(s.index!==undefined?s.index:idx);
+      var sc=(DB_SCORES[st.id]||{})[sIdx]||{};
       if(sc.ca3!==''&&sc.ca3!==null&&sc.ca3!==undefined)latest='ca3';
       else if(latest!=='ca3'&&sc.ca2!==''&&sc.ca2!==null&&sc.ca2!==undefined)latest='ca2';
       else if(!latest&&sc.ca1!==''&&sc.ca1!==null&&sc.ca1!==undefined)latest='ca1';
@@ -4347,8 +4733,9 @@ function renderProgress(){
   }
   var ranked=students.map(function(st){
     var currentTotal=0,subjectCount=0;
-    subjs.forEach(function(_,idx){
-      var sc=(DB_SCORES[st.id]||{})[idx]||{};
+    subjs.forEach(function(s,idx){
+      var sIdx=Number(s.index!==undefined?s.index:idx);
+      var sc=(DB_SCORES[st.id]||{})[sIdx]||{};
       var total=progressTotal(sc,stage);
       if(total!==''){currentTotal+=total;subjectCount++;}
     });
@@ -4364,7 +4751,10 @@ function renderProgress(){
     var first=start+1,last=start+chunk.length;
     var isLastChunk=last>=subjs.length;
     var head1='<tr><th rowspan="2">#</th><th rowspan="2">Student</th>';
-    chunk.forEach(function(subj){head1+='<th class="progress-subject" colspan="'+stages.length+'">'+escapeHtml(subj)+'</th>';});
+    chunk.forEach(function(subj){
+      var sName=subj.name||String(subj);
+      head1+='<th class="progress-subject" colspan="'+stages.length+'">'+escapeHtml(sName)+'</th>';
+    });
     if(isLastChunk)head1+='<th rowspan="2">General<br>Total</th>';
     head1+='</tr>';
     var head2='<tr>';
@@ -4375,9 +4765,9 @@ function renderProgress(){
     var body=ranked.map(function(row,i){
       var st=row.student;
       var html='<tr><td>'+(i+1)+'</td><td class="progress-name">'+escapeHtml(st.name)+'</td>';
-      chunk.forEach(function(_,offset){
-        var idx=start+offset;
-        var sc=(DB_SCORES[st.id]||{})[idx]||{};
+      chunk.forEach(function(subj,offset){
+        var sIdx=Number(subj.index!==undefined?subj.index:(start+offset));
+        var sc=(DB_SCORES[st.id]||{})[sIdx]||{};
         stages.forEach(function(s){
           html+='<td>'+(sc[s]!==undefined&&sc[s]!==null?escapeHtml(sc[s]):'')+'</td>';
         });
@@ -4604,9 +4994,10 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
     if(st.id===sid){
       // Use isolated scoreMap for this student
       var subjs2=subjects();var grand2=0;var cnt2=0;
-      subjs2.forEach(function(_,i){
-        if(!cardPubSet||!cardPubSet[i])return;
-        var t2=computeTotal(sc[i]);
+      subjs2.forEach(function(s2,i){
+        var sIdx=Number(s2.index!==undefined?s2.index:i);
+        if(!cardPubSet||!cardPubSet[sIdx])return;
+        var t2=computeTotal(sc[sIdx]);
         if(t2!==''){grand2+=t2;cnt2++;}
       });
       return cnt2?Math.round(grand2/cnt2*10)/10:'';
@@ -4617,23 +5008,26 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
   var lowestAvg=allAvgs.length?Math.min.apply(null,allAvgs):'--';
   var highestAvg=allAvgs.length?Math.max.apply(null,allAvgs):'--';
   // Calculate totals using ISOLATED scoreMap and cardPubSet - strict term compliance
-  var tots=[],grand=0,cnt=0,pass=0;
-  subjs.forEach(function(_,i){
-    var t=computeTotal(sc[i]);
-    tots.push(t);
-    var iPub=cardPubSet?!!cardPubSet[i]:isPublished(CLS,i);
+  var tots={},grand=0,cnt=0,pass=0;
+  subjs.forEach(function(s,i){
+    var sIdx=Number(s.index!==undefined?s.index:i);
+    var t=computeTotal(sc[sIdx]);
+    tots[sIdx]=t;
+    var iPub=cardPubSet?!!cardPubSet[sIdx]:isPublished(CLS,sIdx);
     if(t!==''&&iPub){grand+=t;cnt++;if(t>=40)pass++;}
   });
   var avg=cnt?Math.round(grand/cnt*10)/10:'';
   grand=cnt?grand:'';
 
-  var subjStats=subjs.map(function(_,i){
-    var all=students.map(function(st){var ss=DB_SCORES[st.id]||{};return computeTotal(ss[i]);}).filter(function(x){return x!=='';});
+  var subjStats={};
+  subjs.forEach(function(s,i){
+    var sIdx=Number(s.index!==undefined?s.index:i);
+    var all=students.map(function(st){var ss=DB_SCORES[st.id]||{};return computeTotal(ss[sIdx]);}).filter(function(x){return x!=='';});
     var hi=all.length?Math.max.apply(null,all):'--';
     var ca=all.length?Math.round(all.reduce(function(a,x){return a+x;},0)/all.length*10)/10:'--';
     var sorted=all.slice().sort(function(a,b){return b-a;});
-    var pos=tots[i]!==''?sorted.indexOf(tots[i])+1:'--';
-    return{hi:hi,ca:ca,pos:pos};
+    var pos=(tots[sIdx]!==''&&tots[sIdx]!==undefined)?sorted.indexOf(tots[sIdx])+1:'--';
+    subjStats[sIdx]={hi:hi,ca:ca,pos:pos};
   });
 
   var rdCfg=getResumptionDate();
@@ -4724,13 +5118,16 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
       +'<th style="padding:5px 3px;text-align:center;border:1px solid '+BORDER+'">REMARK</th>'
       +'</tr></thead><tbody>'
       +subjs.map(function(subj,i){
+        var sIdx=Number(subj.index!==undefined?subj.index:i);
+        var sName=subj.name||String(subj);
         var rb=i%2===0?WHITE:MINT;
-        if(!isPublished(CLS,i)){return'';}
-        var r2=sc[i]||{};var t=tots[i];var gd=getGrade(t);var ss=subjStats[i];
+        var iPub=cardPubSet?!!cardPubSet[sIdx]:isPublished(CLS,sIdx);
+        if(!iPub){return'';}
+        var r2=sc[sIdx]||{};var t=tots[sIdx];var gd=getGrade(t);var ss=subjStats[sIdx]||{hi:'--',ca:'--',pos:'--'};
         var hasCa=(r2.ca1!==undefined&&r2.ca1!==''&&r2.ca1!==null)||(r2.ca2!==undefined&&r2.ca2!==''&&r2.ca2!==null)||(r2.ca3!==undefined&&r2.ca3!==''&&r2.ca3!==null);
         var caTotal=hasCa?Math.min(30,Number(r2.ca1||0)+Number(r2.ca2||0)+Number(r2.ca3||0)):'';
         return'<tr style="background:'+rb+';'+P+'">'
-          +'<td style="padding:4px 6px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+subj+'</td>'
+          +'<td style="padding:4px 6px;border:1px solid '+BORDER+';font-weight:600;color:'+NAVY+'">'+escapeHtml(sName)+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(caTotal!==''?caTotal:'')+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+'">'+(r2.exam!==undefined&&r2.exam!==''?r2.exam:'')+'</td>'
           +'<td style="padding:4px 3px;text-align:center;border:1px solid '+BORDER+';font-weight:700;background:'+rb+'">'+(t!==''?t:'')+'</td>'
@@ -4917,15 +5314,32 @@ function renderAnalytics(){
   var withData=summaries.filter(function(s){return s.avg!=='';});
   var classAvg=withData.length?Math.round(withData.reduce(function(a,s){return a+s.avg;},0)/withData.length*10)/10:'--';
   var passRate=withData.length?Math.round(withData.filter(function(s){return s.avg>=40;}).length/withData.length*100)+'%':'--';
-  var distinctions=students.reduce(function(a,s){var sc=DB_SCORES[s.id]||{};return a+subjs.filter(function(_,i){var t=computeTotal(sc[i]);return t!==''&&t>=75;}).length;},0);
-  var withFails=students.filter(function(s){var sc=DB_SCORES[s.id]||{};return subjs.some(function(_,i){var t=computeTotal(sc[i]);return t!==''&&t<40;});}).length;
+  var distinctions=students.reduce(function(a,s){
+    var sc=DB_SCORES[s.id]||{};
+    return a+subjs.filter(function(s2,i){
+      var sIdx=Number(s2.index!==undefined?s2.index:i);
+      var t=computeTotal(sc[sIdx]);
+      return t!==''&&t>=75;
+    }).length;
+  },0);
+  var withFails=students.filter(function(s){
+    var sc=DB_SCORES[s.id]||{};
+    return subjs.some(function(s2,i){
+      var sIdx=Number(s2.index!==undefined?s2.index:i);
+      var t=computeTotal(sc[sIdx]);
+      return t!==''&&t<40;
+    });
+  }).length;
   document.getElementById('an-avg').textContent=classAvg;
   document.getElementById('an-pass').textContent=passRate;
   document.getElementById('an-dist').textContent=distinctions;
   document.getElementById('an-fail').textContent=withFails;
 
-  // Student performance table  ranked by average
-  var pubSubjCount=subjs.filter(function(_,i){return isPublished(CLS,i);}).length;
+  // Student performance table ranked by average
+  var pubSubjCount=subjs.filter(function(s2,i){
+    var sIdx=Number(s2.index!==undefined?s2.index:i);
+    return isPublished(CLS,sIdx);
+  }).length;
   var maxTotal=pubSubjCount*100;
   var ranked=summaries.filter(function(s){return s.avg!=='';})
     .sort(function(a,b){return b.avg-a.avg;});
@@ -4946,7 +5360,7 @@ function renderAnalytics(){
     var rkClass=typeof rkDisplay==='number'?(rkDisplay===1?'rk1':rkDisplay===2?'rk2':rkDisplay===3?'rk3':'rkn'):'rkn';
     return'<tr>'
       +'<td><span class="rk '+rkClass+'">'+rkDisplay+'</span></td>'
-      +'<td><strong style="color:var(--g1)">'+s.name+'</strong></td>'
+      +'<td><strong style="color:var(--g1)">'+escapeHtml(s.name)+'</strong></td>'
       +'<td style="font-weight:700;color:var(--g1)">'+(s.grand!==''?s.grand:'--')+'</td>'
       +'<td style="font-weight:700;color:'+(hasData?gc(s.avg):'#aaa')+'">'+(hasData?s.avg:'--')+'</td>'
       +'<td>'
@@ -4970,12 +5384,23 @@ function renderAnalytics(){
       +'</tr>';
   }).join('')||'<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray)">No scores published yet</td></tr>';
   var gc2={A1:0,B2:0,B3:0,C4:0,C5:0,C6:0,D7:0,E8:0,F9:0};
-  students.forEach(function(s){var sc=DB_SCORES[s.id]||{};subjs.forEach(function(_,i){var t=computeTotal(sc[i]);if(t!==''){var g=getGrade(t).g;gc2[g]=(gc2[g]||0)+1;}});});
+  students.forEach(function(s){
+    var sc=DB_SCORES[s.id]||{};
+    subjs.forEach(function(s2,i){
+      var sIdx=Number(s2.index!==undefined?s2.index:i);
+      var t=computeTotal(sc[sIdx]);
+      if(t!==''){var g=getGrade(t).g;gc2[g]=(gc2[g]||0)+1;}
+    });
+  });
   destroyChart('dist');
   CHARTS.dist=new Chart(document.getElementById('ch-dist'),{type:'doughnut',data:{labels:Object.keys(gc2),datasets:[{data:Object.values(gc2),backgroundColor:['#065f46','#10b981','#34d399','#6ee7b7','#fbbf24','#f59e0b','#f97316','#ef4444','#991b1b'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'right'}}}});
-  var subjAvgs=subjs.map(function(_,i){var vals=students.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});return vals.length?Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10:0;});
+  var subjAvgs=subjs.map(function(s2,i){
+    var sIdx=Number(s2.index!==undefined?s2.index:i);
+    var vals=students.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[sIdx]);}).filter(function(x){return x!=='';});
+    return vals.length?Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10:0;
+  });
   destroyChart('subj');
-  CHARTS.subj=new Chart(document.getElementById('ch-subj'),{type:'bar',data:{labels:subjs.map(function(s){return s.length>10?s.slice(0,10)+'..':s;}),datasets:[{label:'Avg',data:subjAvgs,backgroundColor:subjAvgs.map(function(v){return v>=70?'#10b981':v>=50?'#f59e0b':'#ef4444';}),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}});
+  CHARTS.subj=new Chart(document.getElementById('ch-subj'),{type:'bar',data:{labels:subjs.map(function(s){var n=s.name||String(s);return n.length>10?n.slice(0,10)+'..':n;}),datasets:[{label:'Avg',data:subjAvgs,backgroundColor:subjAvgs.map(function(v){return v>=70?'#10b981':v>=50?'#f59e0b':'#ef4444';}),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}});
   var ranked=withData.slice().sort(function(a,b){return b.avg-a.avg;});
   destroyChart('rank');
   CHARTS.rank=new Chart(document.getElementById('ch-rank'),{type:'bar',data:{labels:ranked.map(function(s){return s.name.split(' ')[0];}),datasets:[{label:'Average',data:ranked.map(function(s){return s.avg;}),backgroundColor:ranked.map(function(s){return s.avg>=70?'#10b981':s.avg>=50?'#f59e0b':'#ef4444';}),borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:100}}}});
@@ -4983,33 +5408,37 @@ function renderAnalytics(){
   var champTbody=document.getElementById('champions-tbody');
   if(champTbody){
     champTbody.innerHTML=subjs.map(function(subj,i){
+      var sIdx=Number(subj.index!==undefined?subj.index:i);
+      var sName=subj.name||String(subj);
       var top=-1;var winners=[];
       students.forEach(function(s){
         var sc=DB_SCORES[s.id]||{};
-        var t=computeTotal(sc[i]);
+        var t=computeTotal(sc[sIdx]);
         if(t==='')return;
         if(t>top){top=t;winners=[s.name];}
         else if(t===top){winners.push(s.name);}
       });
-      if(top<0)return '<tr><td style="padding:8px 14px;color:#aaa">'+(i+1)+'</td><td style="padding:8px 14px">'+subj+'</td><td colspan="2" style="padding:8px 14px;color:#aaa">No scores yet</td></tr>';
+      if(top<0)return '<tr><td style="padding:8px 14px;color:#aaa">'+(sIdx+1)+'</td><td style="padding:8px 14px">'+escapeHtml(sName)+'</td><td colspan="2" style="padding:8px 14px;color:#aaa">No scores yet</td></tr>';
       return '<tr style="background:'+(i%2===0?'#fff':'#f8fffe')+'">'
-        +'<td style="padding:8px 14px;color:var(--gray)">'+(i+1)+'</td>'
-        +'<td style="padding:8px 14px;font-weight:600;color:var(--g1)">'+subj+'</td>'
-        +'<td style="padding:8px 14px">'+winners.map(function(n){return'<span style="background:#edf8f4;color:var(--g1);padding:2px 8px;border-radius:10px;font-size:.78rem;margin-right:4px">&#127942; '+n+'</span>';}).join('')+'</td>'
+        +'<td style="padding:8px 14px;color:var(--gray)">'+(sIdx+1)+'</td>'
+        +'<td style="padding:8px 14px;font-weight:600;color:var(--g1)">'+escapeHtml(sName)+'</td>'
+        +'<td style="padding:8px 14px">'+winners.map(function(n){return'<span style="background:#edf8f4;color:var(--g1);padding:2px 8px;border-radius:10px;font-size:.78rem;margin-right:4px">&#127942; '+escapeHtml(n)+'</span>';}).join('')+'</td>'
         +'<td style="padding:8px 14px;text-align:center;font-weight:700;color:var(--g1)">'+top+'</td>'
         +'</tr>';
     }).join('');
   }
 
   document.getElementById('perf-tbody').innerHTML=subjs.map(function(subj,i){
-    var vals=students.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[i]);}).filter(function(x){return x!=='';});
-    if(!vals.length)return'<tr><td>'+subj+'</td><td colspan="5" style="color:#aaa;text-align:center">No data</td></tr>';
+    var sIdx=Number(subj.index!==undefined?subj.index:i);
+    var sName=subj.name||String(subj);
+    var vals=students.map(function(s){var sc=DB_SCORES[s.id]||{};return computeTotal(sc[sIdx]);}).filter(function(x){return x!=='';});
+    if(!vals.length)return'<tr><td>'+escapeHtml(sName)+'</td><td colspan="5" style="color:#aaa;text-align:center">No data</td></tr>';
     var avg2=Math.round(vals.reduce(function(a,x){return a+x;},0)/vals.length*10)/10;
     var hi=Math.max.apply(null,vals),lo=Math.min.apply(null,vals);
     var pr=Math.round(vals.filter(function(x){return x>=40;}).length/vals.length*100);
-    var isPub=isPublished(CLS,i);
+    var isPub=isPublished(CLS,sIdx);
     return'<tr>'
-      +'<td>'+subj+'</td>'
+      +'<td>'+escapeHtml(sName)+'</td>'
       +'<td><span class="badge '+(isPub?'badge-green':'badge')+'">'+( isPub?'Yes':'No')+'</span></td>'
       +'<td style="font-weight:700;color:'+gc(avg2)+'">'+avg2+'</td>'
       +'<td style="color:#065f46;font-weight:600">'+hi+'</td>'
@@ -5263,25 +5692,22 @@ function renderThemePicker(){
 }
 function renderSubjCfg(){
   var dept=document.getElementById('dept-sel').value;
-  var cfg=getCfg();
-  var list=configuredSubjects(dept,cfg);
+  var map=classSubjectMap(dept);
+  var list=Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.index-b.index;});
   var note=document.getElementById('subj-cfg-note');
-  var hasExplicitConfig=Boolean(cfg.depts&&cfg.depts[dept]);
   if(note){
-    if(dept==='ss3-business'&&!hasExplicitConfig){
-      note.textContent='SS3 Business is currently inheriting the SS2 Business subject configuration. Central Registry will determine departmental placement for the next session.';
-      note.style.display='block';
-    }else{
-      note.textContent='';
-      note.style.display='none';
-    }
+    note.innerHTML='Subjects are synchronized with the central database catalog. Database index is displayed for each subject.';
+    note.style.display='block';
   }
-  document.getElementById('subj-cfg-list').innerHTML=list.map(function(s,i){
-    return'<div class="subj-tag">'+s+'<button data-dept="'+dept+'" data-idx="'+i+'" title="Remove">x</button></div>';
+  document.getElementById('subj-cfg-list').innerHTML=list.map(function(s){
+    var statusClass = s.active ? 'badge-green' : 'badge-gold';
+    var statusLabel = s.active ? 'Active' : 'Inactive';
+    return '<div class="subj-tag" style="display:flex;align-items:center;gap:6px">'
+      + '<span style="font-weight:700;color:var(--navy);font-size:0.75rem;background:#e2e8f0;padding:2px 6px;border-radius:4px">#' + s.index + '</span> '
+      + '<span>' + escapeHtml(s.name) + '</span> '
+      + '<span class="badge ' + statusClass + '" style="font-size:0.65rem;padding:2px 5px">' + statusLabel + '</span>'
+      + '</div>';
   }).join('');
-  document.querySelectorAll('#subj-cfg-list button[data-dept]').forEach(function(btn){
-    btn.onclick=function(){removeSubject(btn.getAttribute('data-dept'),Number(btn.getAttribute('data-idx')));};
-  });
 }
 function renderPromotionCfg(){
   var tbody=document.getElementById('promotion-cfg-tbody');
@@ -5311,20 +5737,10 @@ function readPromotionCfgFromForm(){
   return existing;
 }
 function removeSubject(dept,idx){
-  if(!confirm('Remove this subject?'))return;
-  var cfg=getCfg();if(!cfg.depts)cfg.depts={};
-  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:configuredSubjects(dept,cfg)};
-  cfg.depts[dept].subjects.splice(idx,1);saveCfg(cfg);renderSubjCfg();
-  showToast('Subject removed — synced to all devices');
+  showToast('Subject catalog is managed centrally via database to preserve score indexing integrity.','error');
 }
 function addSubject(){
-  var val=document.getElementById('new-subj-inp').value.trim();if(!val)return;
-  var dept=document.getElementById('dept-sel').value;
-  var cfg=getCfg();if(!cfg.depts)cfg.depts={};
-  if(!cfg.depts[dept])cfg.depts[dept]={label:DEPTS[dept]?DEPTS[dept].label:dept,subjects:configuredSubjects(dept,cfg)};
-  cfg.depts[dept].subjects.push(val);saveCfg(cfg);
-  document.getElementById('new-subj-inp').value='';renderSubjCfg();
-  showToast('Subject added — synced to all devices');
+  showToast('Subject catalog is managed centrally via database to preserve score indexing integrity.','error');
 }
 function saveSettings(){
   var cfg=getCfg();
@@ -5541,9 +5957,8 @@ function getGeminiKey(){
 
 function openOCRScanner(){
   OCR_IDX=currentSheetIdx;
-  var subjs=subjects();
   var el=document.getElementById('ocr-subject-name');
-  if(el)el.textContent=subjs[OCR_IDX]||'this subject';
+  if(el)el.textContent=subjectNameByIndex(CLS,OCR_IDX)||'this subject';
   resetOCR();
   document.getElementById('modal-ocr').style.display='flex';
 }

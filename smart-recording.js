@@ -166,10 +166,50 @@ function canonicalSubject(v){var key=normalizeSubject(v);if(key==='livestock'||k
 function seniorDepartmentKeys(classKey){var level=String(classKey||'').split('-')[0];return classes().filter(function(key){return isSeniorDepartment(key)&&String(key).split('-')[0]===level;});}
 function smartSelectedDepartments(prefix,classKey){var checks=document.querySelectorAll('[data-smart-dept-for="'+prefix+'"] input:checked');if(checks.length)return Array.from(checks).map(function(input){return input.value;});var all=seniorDepartmentKeys(classKey);return all.length?all:[classKey];}
 function departmentPicker(prefix,classKey){var depts=seniorDepartmentKeys(classKey);if(!depts.length)return'';return'<div class="smart-department-checks" data-smart-dept-for="'+prefix+'"><strong>Departments to combine</strong>'+depts.map(function(key){return'<label><input type="checkbox" value="'+esc(key)+'" '+(smartSelectedDepartments(prefix,classKey).indexOf(key)>-1?'checked':'')+'><span>'+esc(clsLabel(key))+'</span></label>';}).join('')+'</div>';}
-function subjectOptions(classKey,departments){var keys=departments&&departments.length?departments:[classKey],seen={},out=[];keys.forEach(function(dept){subjects(dept).forEach(function(name,index){var key=canonicalSubject(name);if(!key||seen[key])return;seen[key]=true;out.push({key:key,label:name,class_key:dept,subject_index:index});});});return out;}
-function subjectTargetsForKeys(classKey,keys,departments){var allowed=departments&&departments.length?departments:(isSeniorDepartment(classKey)?seniorDepartmentKeys(classKey):[classKey]),out=[],seen={};(keys||[]).forEach(function(subjectKey){allowed.forEach(function(dept){var index=subjects(dept).findIndex(function(name){return canonicalSubject(name)===canonicalSubject(subjectKey);});if(index<0)return;var key=dept+'|'+index;if(seen[key])return;seen[key]=true;out.push({class_key:dept,subject_index:index,subject_name:subjects(dept)[index],subject_key:canonicalSubject(subjectKey)});});});return out;}
-function subjectTargets(classKey,index,departments){var list=subjects(classKey),name=list[Number(index)];return name===undefined?[]:subjectTargetsForKeys(classKey,[canonicalSubject(name)],departments);}
-function selectedTargets(classKey,ids,departments){return subjectTargetsForKeys(classKey,(ids||[]).map(function(index){var list=subjects(classKey);return list[Number(index)]===undefined?index:canonicalSubject(list[Number(index)]);}),departments);}
+function subjectOptions(classKey,departments){
+  var keys=departments&&departments.length?departments:[classKey],seen={},out=[];
+  keys.forEach(function(dept){
+    subjects(dept).forEach(function(item,loopIdx){
+      var sIdx=Number(item.index!==undefined?item.index:loopIdx);
+      var sName=item.name||String(item);
+      var key=canonicalSubject(sName);
+      if(!key||seen[key])return;
+      seen[key]=true;
+      out.push({key:key,label:sName,class_key:dept,subject_index:sIdx});
+    });
+  });
+  return out;
+}
+function subjectTargetsForKeys(classKey,keys,departments){
+  var allowed=departments&&departments.length?departments:(isSeniorDepartment(classKey)?seniorDepartmentKeys(classKey):[classKey]),out=[],seen={};
+  (keys||[]).forEach(function(subjectKey){
+    allowed.forEach(function(dept){
+      var list=subjects(dept);
+      var found=list.find(function(item){return canonicalSubject(item.name||item)===canonicalSubject(subjectKey);});
+      if(!found)return;
+      var sIdx=Number(found.index!==undefined?found.index:list.indexOf(found));
+      var sName=found.name||String(found);
+      var key=dept+'|'+sIdx;
+      if(seen[key])return;
+      seen[key]=true;
+      out.push({class_key:dept,subject_index:sIdx,subject_name:sName,subject_key:canonicalSubject(subjectKey)});
+    });
+  });
+  return out;
+}
+function subjectTargets(classKey,index,departments){
+  var sName=(typeof subjectNameByIndex==='function')?subjectNameByIndex(classKey,index):null;
+  if(!sName){var list=subjects(classKey);var found=list.find(function(item){return Number(item.index)===Number(index);});sName=found?(found.name||String(found)):list[Number(index)];}
+  return sName?subjectTargetsForKeys(classKey,[canonicalSubject(sName)],departments):[];
+}
+function selectedTargets(classKey,ids,departments){
+  var names=(ids||[]).map(function(index){
+    var sName=(typeof subjectNameByIndex==='function')?subjectNameByIndex(classKey,index):null;
+    if(!sName){var list=subjects(classKey);var found=list.find(function(item){return Number(item.index)===Number(index);});sName=found?(found.name||String(found)):list[Number(index)];}
+    return canonicalSubject(sName||index);
+  });
+  return subjectTargetsForKeys(classKey,names,departments);
+}
 function sharedTargetGroups(classKey,ids,departments){return (ids||[]).map(function(key){return subjectTargetsForKeys(classKey,[key],departments);}).filter(function(group){return group.length>1;});}
 function sharedHint(id,classKey,ids,departments){var note=document.getElementById(id);if(!note)return;var groups=sharedTargetGroups(classKey,ids,departments);if(!groups.length){note.style.display='none';note.textContent='';return;}var names=groups[0].map(function(x){return clsLabel(x.class_key);});note.textContent='This subject is configured in '+names.join(', ')+'. One merged broadsheet will include all of them.';note.style.display='block';}
 function chooser(id,key,multi,departments){var list=subjectOptions(key,departments);if(multi)return'<div class="smart-subject-checks" id="'+id+'">'+list.map(function(item){return'<label><input type="checkbox" value="'+esc(item.key)+'"><span>'+esc(item.label)+'</span></label>';}).join('')+'</div>';return'<select id="'+id+'"><option value="">Select subject</option>'+list.map(function(item){return'<option value="'+esc(item.key)+'">'+esc(item.label)+'</option>';}).join('')+'</select>';}
@@ -232,7 +272,14 @@ function save(){if(unresolved()||unresolvedConflicts()){showToast('Review the hi
 function applyLocal(rows,sheet){if(!window.DB_SCORES)return;rows.forEach(function(row){var r=S.existing[row.student_id+'|'+sheet.id]||{},idx=Number(sheet.subject_index),f={ca1:r.ca1==null?'':r.ca1,ca2:r.ca2==null?'':r.ca2,ca3:r.ca3==null?'':r.ca3,exam:r.exam==null?'':r.exam};PARTS.forEach(function(p){if(Object.prototype.hasOwnProperty.call(row.scores,p)&&row.decisions[p]!=='keep_existing')f[p]=row.scores[p];});if(!DB_SCORES[row.student_id])DB_SCORES[row.student_id]={};DB_SCORES[row.student_id][idx]=f;});}
 function renderHistory(){document.getElementById('smart-work').innerHTML='<section class=\"smart-card\"><div class=\"smart-history-head\"><h3>Recording History</h3><button class=\"smart-secondary\" id=\"smart-refresh\">Refresh</button></div><div id=\"smart-history-list\"><div class=\"smart-empty\">Loading history…</div></div></section>';document.getElementById('smart-refresh').onclick=loadHistory;loadHistory();}
 function loadHistory(){var el=document.getElementById('smart-history-list');if(!el)return;api('smart.history.read',{limit:50}).then(function(d){var a=d.rows||[];if(!a.length){el.innerHTML='<div class=\"smart-empty\">No Smart Recording saves yet.</div>';return;}el.innerHTML=a.map(function(r){return'<div class=\"smart-history-row\"><strong>'+esc(clsLabel(r.class_key))+' · '+esc(r.subject_name)+'</strong><span>'+esc(r.term)+' · '+esc(r.academic_session)+'</span><span>'+new Date(r.scanned_at).toLocaleString()+'</span><span class=\"smart-pill\">'+r.scores_saved+' saved</span></div>';}).join('');}).catch(function(){el.innerHTML='<div class=\"smart-empty\">History is unavailable.</div>';});}
-function genericSubjectSpecs(classKey,ids){return ids.map(function(index){var name=subjects(classKey)[Number(index)];return{subject_index:Number(index),subject_name:name,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}};}).filter(function(s){return s.subject_name!==undefined;});}
+function genericSubjectSpecs(classKey,ids){
+  return (ids||[]).map(function(targetIdx){
+    var sIdx=Number(targetIdx);
+    var name=(typeof subjectNameByIndex==='function')?subjectNameByIndex(classKey,sIdx):null;
+    if(!name){var list=subjects(classKey);var found=list.find(function(item){return Number(item.index)===sIdx;});name=found?(found.name||String(found)):list[sIdx];}
+    return{subject_index:sIdx,subject_name:name,assessment_config:{ca1:10,ca2:10,ca3:10,exam:70}};
+  }).filter(function(s){return s.subject_name!==undefined&&s.subject_name!=='';});
+}
 function genericTargets(classKey,ids){var out=[],seen={};ids.forEach(function(index){subjectTargets(classKey,index).forEach(function(target){var key=target.class_key+'|'+target.subject_index;if(!seen[key]){seen[key]=true;out.push(target);}});});return out;}
 function loadGenericContext(targets,session,term){
   var seen={},unique=targets.filter(function(target){var key=target.class_key+'|'+target.subject_index;if(seen[key])return false;seen[key]=true;return true;});
@@ -475,4 +522,7 @@ function printSheets(a,win){
     showToast('The print pages could not be generated.','error');
   });
 }
+window.subjectTargetsForKeys = subjectTargetsForKeys;
+window.subjectTargets = subjectTargets;
+window.selectedTargets = selectedTargets;
 })();
