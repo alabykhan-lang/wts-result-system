@@ -48,6 +48,7 @@ module.exports = async function resultAuth(req, res) {
       sendJson(res, 401, payload || { ok: false, code: 'RESULT_SESSION_NOT_ACTIVE' });
       return;
     }
+    setSessionCookie(res, session.sessionId, session.sessionSecret);
     sendJson(res, 200, {
       ...payload,
       auth_mode: 'central',

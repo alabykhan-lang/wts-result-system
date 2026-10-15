@@ -112,6 +112,30 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        CookieManager.getInstance().flush();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        CookieManager.getInstance().flush();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        CookieManager.getInstance().flush();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        CookieManager.getInstance().flush();
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         webView.saveState(outState);
