@@ -1,0 +1,6 @@
+com.waytosuccess.results:mipmap/ic_launcher = 0x7f020000
+com.waytosuccess.results:string/app_name = 0x7f030000
+com.waytosuccess.results:style/AppTheme = 0x7f040000
+com.waytosuccess.results:mipmap/ic_launcher_round = 0x7f020001
+com.waytosuccess.results:drawable/ic_launcher_foreground = 0x7f010001
+com.waytosuccess.results:drawable/ic_launcher_background = 0x7f010000

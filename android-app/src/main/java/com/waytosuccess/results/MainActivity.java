@@ -23,6 +23,27 @@ import android.webkit.WebViewClient;
 public class MainActivity extends Activity {
     private static final String PORTAL_URL = "https://wts-result-system.vercel.app/";
     private static final int FILE_PICKER_REQUEST = 1001;
+    // Only these hosts may load inside the app. Anything else leaves the WebView,
+    // so an outside page can never reach the print bridge or the session cookies.
+    private static final String[] ALLOWED_HOSTS = {
+        "wts-result-system.vercel.app",
+        "wts-school-platform.vercel.app",
+        "wts-central-registry.vercel.app",
+        "portal.waytosuccessschools.com"
+    };
+
+    private static boolean isTrusted(String url) {
+        if (url == null) return false;
+        try {
+            String host = Uri.parse(url).getHost();
+            if (host == null) return false;
+            host = host.toLowerCase();
+            for (String allowed : ALLOWED_HOSTS) {
+                if (host.equals(allowed) || host.endsWith("." + allowed)) return true;
+            }
+        } catch (Exception ignored) { }
+        return false;
+    }
 
     private WebView webView;
     private ValueCallback<Uri[]> fileUploadCallback;
@@ -42,7 +63,7 @@ public class MainActivity extends Activity {
         settings.setUseWideViewPort(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
-        settings.setAllowFileAccess(true);
+        settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setTextZoom(100);
@@ -55,10 +76,13 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
-                    return false;
+                String scheme = uri.getScheme();
+                if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                    if (isTrusted(uri.toString())) return false;   // stay in the app
+                    openExternally(uri);                            // everything else leaves
+                    return true;
                 }
-                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                openExternally(uri);
                 return true;
             }
 
@@ -98,7 +122,13 @@ public class MainActivity extends Activity {
                 request.addRequestHeader("User-Agent", userAgent);
                 request.addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url));
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "wts-result-download");
+                String suffix = ".bin";
+                if (mimeType != null && mimeType.contains("pdf")) suffix = ".pdf";
+                else if (mimeType != null && mimeType.contains("csv")) suffix = ".csv";
+                else if (mimeType != null && mimeType.contains("png")) suffix = ".png";
+                else if (mimeType != null && mimeType.contains("jpeg") || mimeType != null && mimeType.contains("jpg")) suffix = ".jpg";
+                String fileName = "wts-result-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US).format(new java.util.Date()) + suffix;
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
                 DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
                 manager.enqueue(request);
             }
@@ -179,14 +209,28 @@ public class MainActivity extends Activity {
         printManager.print(jobName, adapter, builder.build());
     }
 
+    private void openExternally(Uri uri) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (Exception ignored) {
+            // no handler installed; the current page stays usable
+        }
+    }
+
+    private boolean bridgeAllowed() {
+        return webView != null && isTrusted(webView.getUrl());
+    }
+
     private class PrintBridge {
         @JavascriptInterface
         public void printPage() {
+            if (!bridgeAllowed()) return;
             printPage("portrait");
         }
 
         @JavascriptInterface
         public void printPage(final String orientation) {
+            if (!bridgeAllowed()) return;
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -198,11 +242,13 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void printPortrait() {
+            if (!bridgeAllowed()) return;
             printPage("portrait");
         }
 
         @JavascriptInterface
         public void printLandscape() {
+            if (!bridgeAllowed()) return;
             printPage("landscape");
         }
     }

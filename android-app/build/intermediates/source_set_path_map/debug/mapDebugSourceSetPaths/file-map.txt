@@ -1,0 +1,7 @@
+com.waytosuccess.results.android-app-pngs-0 /opt/data/audit/wts-result-system/android-app/build/generated/res/pngs/debug
+com.waytosuccess.results.android-app-resValues-1 /opt/data/audit/wts-result-system/android-app/build/generated/res/resValues/debug
+com.waytosuccess.results.android-app-packageDebugResources-2 /opt/data/audit/wts-result-system/android-app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.waytosuccess.results.android-app-packageDebugResources-3 /opt/data/audit/wts-result-system/android-app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.waytosuccess.results.android-app-debug-4 /opt/data/audit/wts-result-system/android-app/build/intermediates/merged_res/debug/mergeDebugResources
+com.waytosuccess.results.android-app-debug-5 /opt/data/audit/wts-result-system/android-app/src/debug/res
+com.waytosuccess.results.android-app-main-6 /opt/data/audit/wts-result-system/android-app/src/main/res
