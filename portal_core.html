@@ -3970,28 +3970,69 @@ function scoreSaveMessage(error){
   if(error&&error.error_detail)return 'Save failed — '+error.error_detail;
   return 'Save failed — not recorded'+(code?' ('+code+')':'');
 }
+function scoreSaveRetryable(error){
+  var code=String((error&&(error.code||error.message))||'');
+  if(!code)return true;                     // network drop, no response
+  if(/PERMISSION|SCOPE|READ_ONLY|NOT_ACTIVE|MISMATCH|INVALID|WRITE_DISABLED|NOT_FOUND/i.test(code))return false;
+  return true;
+}
 function queueScoreSave(studentId,subjectIdx){
   var key=scoreDraftKey(studentId,subjectIdx);
   clearTimeout(SCORE_SAVE_TIMERS[key]);
   SCORE_SAVE_TIMERS[key]=setTimeout(function(){
+    delete SCORE_SAVE_TIMERS[key];
     var version=SCORE_SAVE_VERSIONS[key]||0;
-    var score=scoreDraft(studentId,subjectIdx);
-    scoreStatus(studentId,subjectIdx,'Saving…','var(--gold2)');
-    dbUpsertScore(studentId,subjectIdx,score.ca1,score.ca2,score.ca3,score.exam)
-      .then(function(response){
-        return confirmedScoreResponse(studentId,subjectIdx,response,version);
-      })
-      .catch(function(error){
-        if(SCORE_SAVE_VERSIONS[key]===version){
+    function attempt(triesLeft){
+      var score=scoreDraft(studentId,subjectIdx);
+      scoreStatus(studentId,subjectIdx,triesLeft<3?'Retrying…':'Saving…','var(--gold2)');
+      dbUpsertScore(studentId,subjectIdx,score.ca1,score.ca2,score.ca3,score.exam)
+        .then(function(response){
+          return confirmedScoreResponse(studentId,subjectIdx,response,version);
+        })
+        .catch(function(error){
+          if(SCORE_SAVE_VERSIONS[key]!==version)return;   // a newer edit superseded this one
+          if(triesLeft>1&&scoreSaveRetryable(error)){
+            setTimeout(function(){attempt(triesLeft-1);},800);
+            return;
+          }
           var detail = error && (error.error_detail || error.code);
           scoreStatus(studentId,subjectIdx,detail ? ('Save failed ('+detail+')') : 'Save failed — not recorded','#991b1b');
           showToast(scoreSaveMessage(error),'error');
-        }
-        console.error('Score save failed:',error);
-      });
-  },1500);
+          console.error('Score save failed:',error);
+        });
+    }
+    attempt(3);
+  },700);
 }
+// Sends every mark still sitting in a local draft, right now. Called before the
+// sheet closes, before another subject opens, and when the app loses focus, so a
+// teacher tapping away quickly can never leave a typed mark unsent.
+function flushScoreSaves(){
+  Object.keys(SCORE_SAVE_TIMERS).forEach(function(key){
+    if(SCORE_SAVE_TIMERS[key])clearTimeout(SCORE_SAVE_TIMERS[key]);
+    delete SCORE_SAVE_TIMERS[key];
+  });
+  var jobs=[];
+  Object.keys(SCORE_DRAFTS).forEach(function(key){
+    var parts=key.split('|');
+    var studentId=parts[0], subjectIdx=Number(parts[1]);
+    var draft=SCORE_DRAFTS[key]||{};
+    var entered=[draft.ca1,draft.ca2,draft.ca3,draft.exam].some(function(v){
+      return v!==null&&v!==undefined&&v!=='';
+    });
+    if(!entered)return;
+    SCORE_SAVE_VERSIONS[key]=(SCORE_SAVE_VERSIONS[key]||0)+1;
+    var version=SCORE_SAVE_VERSIONS[key];
+    jobs.push(dbUpsertScore(studentId,subjectIdx,draft.ca1,draft.ca2,draft.ca3,draft.exam)
+      .then(function(response){return confirmedScoreResponse(studentId,subjectIdx,response,version);})
+      .catch(function(error){console.error('Flush save failed:',error);return null;}));
+  });
+  return Promise.all(jobs);
+}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')flushScoreSaves();});
+window.addEventListener('pagehide',function(){flushScoreSaves();});
 function openSheet(idx){
+  flushScoreSaves();
   var students=DB_STUDENTS[CLS]||[];
   currentSheetIdx=Number(idx);
   var isPub=isPublished(CLS,currentSheetIdx);
@@ -4056,7 +4097,7 @@ function openSheet(idx){
 }
 
 function closeSheet(){
-
+  flushScoreSaves();
   currentSheetIdx=-1;
   SCORE_EDIT_UNLOCKS={};
   document.getElementById('scores-sheet-view').style.display='none';
