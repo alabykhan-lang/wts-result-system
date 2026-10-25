@@ -1944,6 +1944,21 @@ function completeResultSso(){
   });
 }
 
+function portalIntroNavigate(url){
+  // Hold SSO redirects until the 3D intro finished playing so the
+  // animation gets its full 5.5s before the visitor is sent to sign-in.
+  var el=document.getElementById('portalIntro');
+  if(!el){window.location.replace(url);return;}
+  var done=false;
+  function go(){if(done)return;done=true;window.location.replace(url);}
+  el.addEventListener('click',function(){done=true;});
+  setTimeout(go,5400);
+  new MutationObserver(function(){
+    if(!document.getElementById('portalIntro'))go();
+  }).observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(go,5600);
+}
+
 function startResultSso(isRecovery){
   if(!isRecovery)ssoStorageRemove('wts_pkce_recovery_attempt');
   ssoStatus('Opening the official WTS sign-in…');
@@ -1959,7 +1974,7 @@ function startResultSso(isRecovery){
       ssoStorageSet('wts_pkce_state',transaction.state);
       ssoStorageSet('wts_pkce_nonce',transaction.nonce);
     }
-    window.location.replace(payload.authorize_url);
+    portalIntroNavigate(payload.authorize_url);
   }).catch(function(){
     ssoClearTransientState();
     ssoStatus('Secure sign-in could not start. Please try again.');
