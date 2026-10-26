@@ -1159,6 +1159,7 @@ html.pintro-lock{overflow:hidden}
       <button type="button" class="settings-category" data-settings-category="ai">AI usage</button>
       <button type="button" class="settings-category" data-settings-category="subjects">Subjects</button>
       <button type="button" class="settings-category" data-settings-category="staff">Management access</button>
+      <button type="button" class="settings-category" data-settings-category="registry">Registry scope</button>
     </nav>
     <div class="settings-sync-bar">
       <div class="settings-sync-copy"><strong id="settings-category-title">School identity</strong><span id="settings-category-status">Save changes and sync them to all signed-in devices.</span></div>
@@ -1192,6 +1193,26 @@ html.pintro-lock{overflow:hidden}
           </div>
           <div class="result-staff-write-note">You can view and cross-check existing records, but score entry, Smart Recording saves, and edits are disabled for this account until management turns write access on.</div>
           <div id="staff-write-access-list" class="staff-write-list"><div style="font-size:.78rem;color:var(--gray)">Loading staff list…</div></div>
+        </div>
+      </div>
+      <div class="tbl-wrap" data-settings-category="registry" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Registry defaults &amp; overrides</h3></div>
+        <div style="padding:16px">
+          <small id="registry-policy-status" style="display:block;color:var(--gray);font-size:.72rem;margin-bottom:10px">Loading registry policy…</small>
+          <div id="registry-effective-panel"></div>
+          <div id="registry-override-panel"></div>
+          <div id="registry-override-form-wrap" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+            <strong style="display:block;color:var(--g1);font-size:.84rem;margin-bottom:4px">Add or replace an override</strong>
+            <small style="display:block;color:var(--gray);font-size:.72rem;margin-bottom:8px">Overrides beat the registry inside Results only. The registry stays the system of record, and every override is audited.</small>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+              <div class="fg"><label>Scope</label><select class="inp" id="registry-override-scope" onchange="syncRegistryScopeKey()"><option value="school">School-wide</option><option value="stage">Stage</option><option value="class">Class</option><option value="subject">Subject (class::index)</option><option value="person">Person (uuid)</option></select></div>
+              <div class="fg"><label>Scope key</label><input class="inp" id="registry-override-scope-key" placeholder="e.g. ss1-general" disabled/></div>
+              <div class="fg"><label>Setting key</label><input class="inp" id="registry-override-key" placeholder="e.g. write.entry_enabled"/></div>
+              <div class="fg"><label>Value (JSON)</label><input class="inp" id="registry-override-value" placeholder="false"/></div>
+              <div class="fg"><label>Reason</label><input class="inp" id="registry-override-reason" placeholder="Why this override exists"/></div>
+            </div>
+            <button class="btn btn-primary btn-sm" type="button" onclick="submitRegistryOverride()" style="margin-top:10px">Save override</button>
+          </div>
         </div>
       </div>
       <div class="tbl-wrap" data-settings-category="identity" style="margin-bottom:0">
@@ -1629,7 +1650,7 @@ var RESULT_WRITE_ENABLED=false;
 window._academicContext=null;
 window._academicHistory=[];
 window._activeTermStatus='open';
-var RESULT_MUTATING_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish','students.upsert','students.archive','settings.app_config.update'];
+var RESULT_MUTATING_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish','students.upsert','students.archive','settings.app_config.update','settings.override.set','settings.override.clear'];
 var RESULT_ENTRY_WRITE_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update'];
 
 function isResultMutationAction(action){return RESULT_MUTATING_ACTIONS.indexOf(String(action||'').toLowerCase())>-1;}
@@ -2294,6 +2315,7 @@ function loadRemoteSettings(options){
   var settingsRequest=isCentralAuth()
       ? resultDataRequest('settings.read',{}).then(function(payload){
         var result=payload.settings||{};
+        window._resultSettingsPayload=result;
         var rows=[{key:'app_config',value:JSON.stringify(result.app_config||{})}];
         Object.keys(result.safe||{}).forEach(function(key){rows.push({key:key,value:result.safe[key]});});
         if(result.academic_context)rows.push({key:'academic_context',value:JSON.stringify(result.academic_context)});
@@ -2327,6 +2349,11 @@ function loadRemoteSettings(options){
         try{remoteCfg=JSON.parse(byKey.app_config)||{};}catch(e){remoteCfg={};}
         remoteCfg.session=serverSession;
         remoteCfg.term=serverTerm;
+        // Scoped result-system overrides win over the stored app_config for this teacher's context.
+        var cfgOverrides=(window._resultSettingsPayload||{}).config_overrides||{};
+        Object.keys(cfgOverrides).forEach(function(path){
+          try{setConfigPath(remoteCfg,String(path).split('.'),cfgOverrides[path]);}catch(e){}
+        });
         window._remoteCfg=remoteCfg;
         if(!CONTEXT_EXPLICIT&&!IN_CLASS&&previousSession!==serverSession)clearSessionCaches();
         var labels=[
@@ -5589,7 +5616,8 @@ var SETTINGS_CATEGORY_LABELS={
   cards:'Report cards',
   ai:'AI usage',
   subjects:'Subjects',
-  staff:'Management access'
+  staff:'Management access',
+  registry:'Registry scope'
 };
 function showSettingsCategory(category,scrollIntoView){
   var key=SETTINGS_CATEGORY_LABELS[category]?category:'identity';
@@ -5610,6 +5638,7 @@ function showSettingsCategory(category,scrollIntoView){
   if(context){var official=officialAcademicContext();context.textContent='Official · '+official.session+' · '+official.term;}
   if(key==='staff')loadStaffWriteAccess();
   if(key==='ai')loadProviderStatus();
+  if(key==='registry')loadRegistrySettings();
   if(scrollIntoView){
     var page=document.getElementById('page-settings');
     if(page)page.scrollIntoView({behavior:'smooth',block:'start'});
@@ -5870,6 +5899,102 @@ function removeSubject(dept,idx){
 }
 function addSubject(){
   showToast('Subject catalog is managed centrally via database to preserve score indexing integrity.','error');
+}
+var REGISTRY_SETTINGS_DATA=null;
+function setConfigPath(target,parts,value){
+  if(!parts||!parts.length)return target;
+  var node=target;
+  for(var i=0;i<parts.length-1;i++){
+    var key=parts[i];
+    if(!node[key]||typeof node[key]!=='object'||Array.isArray(node[key]))node[key]={};
+    node=node[key];
+  }
+  node[parts[parts.length-1]]=value;
+  return target;
+}
+function registryScopeKeyInput(){
+  var scope=document.getElementById('registry-override-scope');
+  var key=document.getElementById('registry-override-scope-key');
+  if(!scope||!key)return;
+  var school=scope.value==='school';
+  key.disabled=school;
+  if(school)key.value='';
+  key.placeholder=scope.value==='subject'?'ss1-general::12':(scope.value==='class'?'ss1-general':(scope.value==='stage'?'secondary':'person uuid'));
+}
+function registryValueLabel(value){
+  if(value===true)return 'true';
+  if(value===false)return 'false';
+  if(value&&typeof value==='object')return JSON.stringify(value);
+  return String(value);
+}
+function registrySourceLabel(entry){
+  if(!entry)return 'registry';
+  if(entry.layer!=='result_override')return 'registry';
+  return 'override · '+String(entry.scope||'')+(entry.scope_key?' · '+entry.scope_key:'');
+}
+function renderRegistrySettings(){
+  var data=REGISTRY_SETTINGS_DATA||{};
+  var status=document.getElementById('registry-policy-status');
+  var context=data.scope_context||{};
+  if(status){
+    var bits=[];
+    if(context.class_key)bits.push('class '+context.class_key);
+    if(context.stage)bits.push('stage '+context.stage);
+    bits.push('operating mode '+((data.registry_defaults||{})['module.operating_mode']||'unknown'));
+    status.textContent='Resolved for '+(bits.join(' · ')||'this session')+'. The registry supplies the defaults; overrides below win inside Results.';
+  }
+  var effective=data.effective||{};
+  var provenance=data.provenance||{};
+  var panel=document.getElementById('registry-effective-panel');
+  if(panel){
+    var keys=Object.keys(effective).sort();
+    panel.innerHTML=keys.length?'<table class="tbl" style="width:100%"><thead><tr><th>Setting</th><th>Effective value</th><th>Source</th></tr></thead><tbody>'+keys.map(function(key){
+      var row=provenance[key]||{};
+      var overridden=row.layer==='result_override';
+      return '<tr><td style="font-family:monospace;font-size:.75rem">'+escapeHtml(key)+'</td><td>'+escapeHtml(registryValueLabel(effective[key]))+'</td><td><span class="badge-access" style="background:'+(overridden?'var(--gold2)':'var(--bg)')+';color:var(--g1)">'+escapeHtml(registrySourceLabel(row))+'</span></td></tr>';
+    }).join('')+'</tbody></table>':'<div style="font-size:.78rem;color:var(--gray)">No registry defaults were returned for this account.</div>';
+  }
+  var list=document.getElementById('registry-override-panel');
+  var overrides=data.overrides||[];
+  if(list){
+    list.innerHTML='<div style="margin-top:14px"><strong style="display:block;color:var(--g1);font-size:.84rem;margin-bottom:4px">Active overrides</strong>'+(overrides.length?'':'<small style="display:block;color:var(--gray);font-size:.72rem">Nothing is overridden yet — Results is running on registry defaults.</small>')+'</div>'+(overrides.length?'<table class="tbl" style="width:100%;margin-top:6px"><thead><tr><th>Scope</th><th>Setting</th><th>Value</th><th>Reason</th><th></th></tr></thead><tbody>'+overrides.map(function(item){
+      return '<tr><td>'+escapeHtml(String(item.scope_type||'')+(item.scope_key?' · '+item.scope_key:''))+'</td><td style="font-family:monospace;font-size:.75rem">'+escapeHtml(item.setting_key||'')+'</td><td>'+escapeHtml(registryValueLabel(item.setting_value))+'</td><td style="font-size:.72rem;color:var(--gray)">'+escapeHtml(item.reason||'')+'</td><td><button type="button" class="btn btn-outline btn-sm" onclick="clearRegistryOverride(\''+escapeHtml(item.id||'')+'\')">Remove</button></td></tr>';
+    }).join('')+'</tbody></table>':'');
+  }
+}
+function loadRegistrySettings(){
+  var status=document.getElementById('registry-policy-status');
+  if(status)status.textContent='Loading registry policy…';
+  resultActionRequest('settings.read',{}).then(function(payload){
+    REGISTRY_SETTINGS_DATA=(payload&&payload.settings)||{};
+    renderRegistrySettings();
+  }).catch(function(error){
+    if(status)status.textContent='Registry policy could not be loaded ('+((error&&error.code)||'REQUEST_FAILED')+').';
+  });
+}
+function submitRegistryOverride(){
+  var scope=document.getElementById('registry-override-scope').value;
+  var scopeKey=document.getElementById('registry-override-scope-key').value.trim();
+  var settingKey=document.getElementById('registry-override-key').value.trim();
+  var rawValue=document.getElementById('registry-override-value').value.trim();
+  var reason=document.getElementById('registry-override-reason').value.trim();
+  if(scope!=='school'&&!scopeKey){showToast('Choose a scope key first.','error');return;}
+  if(!settingKey){showToast('Enter the setting key to override.','error');return;}
+  if(reason.length<8){showToast('Give a reason of at least 8 characters.','error');return;}
+  var value;
+  try{value=JSON.parse(rawValue);}catch(e){showToast('The value must be valid JSON, e.g. false or "1st Term".','error');return;}
+  resultActionRequest('settings.override.set',{scope_type:scope,scope_key:scope==='school'?null:scopeKey,setting_key:settingKey,setting_value:value,reason:reason}).then(function(result){
+    showToast((result&&result.code==='OVERRIDE_UPDATED'?'Override updated.':'Override saved.'),'success');
+    loadRegistrySettings();
+  }).catch(function(error){showToast('Override was not saved ('+((error&&error.code)||'REQUEST_FAILED')+').','error');});
+}
+function clearRegistryOverride(id){
+  var reason=prompt('Why is this override being removed? (at least 8 characters)');
+  if(!reason||reason.trim().length<8){showToast('A reason of at least 8 characters is required.','error');return;}
+  resultActionRequest('settings.override.clear',{override_id:id,reason:reason.trim()}).then(function(){
+    showToast('Override removed. Registry defaults apply again.','success');
+    loadRegistrySettings();
+  }).catch(function(error){showToast('Override was not removed ('+((error&&error.code)||'REQUEST_FAILED')+').','error');});
 }
 function saveSettings(){
   var cfg=getCfg();
