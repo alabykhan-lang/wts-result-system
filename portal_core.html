@@ -5976,7 +5976,7 @@ function loadRegistrySettings(){
   if(status)status.textContent='Loading registry policy…';
   var request=classKey
     ? resultActionRequest('settings.effective.read',{class_key:classKey,subject_index:isNaN(subjectIndex)?null:subjectIndex})
-        .then(function(result){return {settings:Object.assign({},result,{scope_context:{class_key:result.class_key,stage:result.stage,person_id:result.person_id}})}})
+        .then(function(result){return {settings:Object.assign({},result,{registry_defaults:result.baseline||{},scope_context:{class_key:result.class_key,stage:result.stage,person_id:result.person_id}})}})
     : resultActionRequest('settings.read',{});
   request.then(function(payload){
     REGISTRY_SETTINGS_DATA=(payload&&payload.settings)||{};
