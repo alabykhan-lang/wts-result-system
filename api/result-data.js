@@ -205,6 +205,13 @@ module.exports = async function resultData(req, res) {
         p_session_id: session.sessionId,
         p_session_secret: session.sessionSecret,
       })
+    : action === 'settings.effective.read'
+      ? await supabaseRpc('school_result_settings_effective_read', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+        p_class_key: requestPayload.class_key || null,
+        p_subject_index: requestPayload.subject_index ?? null,
+      })
     : action === 'settings.override.set'
       ? await supabaseRpc('school_result_settings_override_set', {
         p_session_id: session.sessionId,

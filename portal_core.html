@@ -1199,6 +1199,11 @@ html.pintro-lock{overflow:hidden}
         <div class="tbl-head"><h3>Registry defaults &amp; overrides</h3></div>
         <div style="padding:16px">
           <small id="registry-policy-status" style="display:block;color:var(--gray);font-size:.72rem;margin-bottom:10px">Loading registry policy…</small>
+          <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
+            <div class="fg" style="min-width:190px"><label>Preview class context</label><select class="inp" id="registry-context-class" onchange="loadRegistrySettings()"><option value="">Session default</option></select></div>
+            <div class="fg" style="max-width:150px"><label>Subject index</label><input class="inp" id="registry-context-subject" placeholder="optional"/></div>
+            <button class="btn btn-outline btn-sm" type="button" onclick="loadRegistrySettings()">Re-resolve</button>
+          </div>
           <div id="registry-effective-panel"></div>
           <div id="registry-override-panel"></div>
           <div id="registry-override-form-wrap" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
@@ -5964,9 +5969,22 @@ function renderRegistrySettings(){
 }
 function loadRegistrySettings(){
   var status=document.getElementById('registry-policy-status');
+  var classSelect=document.getElementById('registry-context-class');
+  var subjectInput=document.getElementById('registry-context-subject');
+  var classKey=classSelect?classSelect.value:'';
+  var subjectIndex=subjectInput&&subjectInput.value.trim()!==''?Number(subjectInput.value.trim()):null;
   if(status)status.textContent='Loading registry policy…';
-  resultActionRequest('settings.read',{}).then(function(payload){
+  var request=classKey
+    ? resultActionRequest('settings.effective.read',{class_key:classKey,subject_index:isNaN(subjectIndex)?null:subjectIndex})
+        .then(function(result){return {settings:Object.assign({},result,{scope_context:{class_key:result.class_key,stage:result.stage,person_id:result.person_id}})}})
+    : resultActionRequest('settings.read',{});
+  request.then(function(payload){
     REGISTRY_SETTINGS_DATA=(payload&&payload.settings)||{};
+    var known=(REGISTRY_SETTINGS_DATA.registry_defaults||{})['scope.classes']||[];
+    if(classSelect&&classSelect.options.length<=1&&Array.isArray(known)){
+      known.forEach(function(key){classSelect.appendChild(new Option(key,key));});
+      if(classKey)classSelect.value=classKey;
+    }
     renderRegistrySettings();
   }).catch(function(error){
     if(status)status.textContent='Registry policy could not be loaded ('+((error&&error.code)||'REQUEST_FAILED')+').';
