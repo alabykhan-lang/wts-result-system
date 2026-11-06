@@ -4230,6 +4230,11 @@ function dbUpsertScore(studentId,subjectIdx,ca1,ca2,ca3,exam){
     return isFinite(number)?number:null;
   }
   var d={ca1:n(ca1),ca2:n(ca2),ca3:n(ca3),exam:n(exam)};
+  // An emptied box must clear the stored mark; untouched boxes keep theirs.
+  var clear=[];
+  ['ca1','ca2','ca3','exam'].forEach(function(field){
+    if(d[field]===null&&scoreCellValue(scorePersisted(studentId,subjectIdx)[field])!=='')clear.push(field);
+  });
   var ck=dbClassKey(CLS);
   if(isCentralAuth()){
     return resultDataRequest('scores.enter',{
@@ -4238,7 +4243,7 @@ function dbUpsertScore(studentId,subjectIdx,ca1,ca2,ca3,exam){
       subject_index:subjectIdx,
       term:TERM,
       academic_session:getActiveSession(),
-      ca1:d.ca1,ca2:d.ca2,ca3:d.ca3,exam:d.exam
+      ca1:d.ca1,ca2:d.ca2,ca3:d.ca3,exam:d.exam,clear:clear
     });
   }
   return Promise.reject({code:'RESULT_CENTRAL_SESSION_REQUIRED'});

@@ -39,6 +39,9 @@ module.exports = async function resultData(req, res) {
     return;
   }
   const requestPayload = body.payload && typeof body.payload === 'object' ? body.payload : {};
+  const scoreClearComponents = Array.isArray(requestPayload.clear)
+    ? requestPayload.clear.filter((component) => ['ca1', 'ca2', 'ca3', 'exam'].includes(component))
+    : [];
   let payload = action === 'smart.sheet.create'
     ? await supabaseRpc('school_result_smart_sheet_create', {
         p_session_id: session.sessionId,
@@ -94,6 +97,7 @@ module.exports = async function resultData(req, res) {
         p_ca2: requestPayload.ca2 === '' || requestPayload.ca2 === undefined ? null : requestPayload.ca2,
         p_ca3: requestPayload.ca3 === '' || requestPayload.ca3 === undefined ? null : requestPayload.ca3,
         p_exam: requestPayload.exam === '' || requestPayload.exam === undefined ? null : requestPayload.exam,
+        p_clear_components: scoreClearComponents,
       })
     : action === 'traits.enter'
       ? await supabaseRpc('school_result_traits_update', {

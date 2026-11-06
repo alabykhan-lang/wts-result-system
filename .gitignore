@@ -2,3 +2,6 @@ android-app/build/
 .gradle/
 local.properties
 *.apk
+.vercel
+.env*
+supabase/.temp/
