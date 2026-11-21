@@ -33,6 +33,29 @@ create policy result_agent_keys_server_only on public.result_agent_keys
 
 -- ---------------------------------------------------------------- key issuing
 
+-- Any of the three management permissions may mint or cancel a key.
+create or replace function public.school_result_agent_key_authorize(
+  p_session_id uuid,
+  p_session_secret text
+) returns jsonb
+language plpgsql
+security definer
+set search_path to 'pg_catalog', 'extensions', 'public'
+as $function$
+declare
+  v_auth jsonb;
+  v_permission text;
+begin
+  foreach v_permission in array array['results.manage', 'result_settings.manage', 'result_users.manage'] loop
+    v_auth := public.school_result_authorize(p_session_id, p_session_secret, v_permission);
+    if coalesce((v_auth ->> 'ok')::boolean, false) is true then
+      return v_auth;
+    end if;
+  end loop;
+  return coalesce(v_auth, jsonb_build_object('ok', false, 'code', 'RESULT_PERMISSION_DENIED'));
+end;
+$function$;
+
 create or replace function public.school_result_agent_key_create(
   p_session_id uuid,
   p_session_secret text,
@@ -55,7 +78,7 @@ declare
   v_id uuid;
   v_label text := nullif(btrim(coalesce(p_label, '')), '');
 begin
-  v_auth := public.school_result_authorize(p_session_id, p_session_secret, 'results.manage');
+  v_auth := public.school_result_agent_key_authorize(p_session_id, p_session_secret);
   if coalesce((v_auth ->> 'ok')::boolean, false) is not true then
     return v_auth;
   end if;
@@ -133,7 +156,7 @@ as $function$
 declare
   v_auth jsonb;
 begin
-  v_auth := public.school_result_authorize(p_session_id, p_session_secret, 'results.manage');
+  v_auth := public.school_result_agent_key_authorize(p_session_id, p_session_secret);
   if coalesce((v_auth ->> 'ok')::boolean, false) is not true then
     return v_auth;
   end if;
@@ -175,7 +198,7 @@ declare
   v_person_id uuid;
   v_id uuid;
 begin
-  v_auth := public.school_result_authorize(p_session_id, p_session_secret, 'results.manage');
+  v_auth := public.school_result_agent_key_authorize(p_session_id, p_session_secret);
   if coalesce((v_auth ->> 'ok')::boolean, false) is not true then
     return v_auth;
   end if;
@@ -268,14 +291,17 @@ begin
         'student_id', s.id,
         'name', s.name,
         'admno', s.admno,
-        'ca1', sc.ca1, 'ca2', sc.ca2, 'ca3', sc.ca3, 'exam', sc.exam
+        'scores', coalesce((
+          select jsonb_object_agg(sc.subject_index::text,
+            jsonb_build_object('ca1', sc.ca1, 'ca2', sc.ca2, 'ca3', sc.ca3, 'exam', sc.exam))
+          from public.scores sc
+          where sc.student_id = s.id
+            and sc.class_key = v_class
+            and sc.term = p_term
+            and sc.academic_session = p_academic_session
+        ), '{}'::jsonb)
       ) order by s.name)
       from public.students s
-      left join public.scores sc
-        on sc.student_id = s.id
-       and sc.class_key = v_class
-       and sc.term = p_term
-       and sc.academic_session = p_academic_session
       where s.class_key = v_class
         and coalesce(s.archived, false) = false
         and coalesce(s.lifecycle_status, 'active') = 'active'
@@ -506,3 +532,4 @@ grant execute on function public.school_result_agent_key_list(uuid, text) to ano
 grant execute on function public.school_result_agent_key_revoke(uuid, text, uuid, text) to anon, authenticated, service_role;
 grant execute on function public.school_result_agent_roster(text, text, text, text) to anon, authenticated, service_role;
 grant execute on function public.school_result_agent_score_update(text, uuid, text, integer, text, text, numeric, numeric, numeric, numeric, text[]) to anon, authenticated, service_role;
+grant execute on function public.school_result_agent_key_authorize(uuid, text) to anon, authenticated, service_role;
