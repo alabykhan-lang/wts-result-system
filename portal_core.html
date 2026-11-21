@@ -1195,6 +1195,35 @@ html.pintro-lock{overflow:hidden}
           <div id="staff-write-access-list" class="staff-write-list"><div style="font-size:.78rem;color:var(--gray)">Loading staff list…</div></div>
         </div>
       </div>
+      <style>
+        .agent-key-form{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+        .agent-key-form .fg{min-width:200px;margin:0}
+        .agent-key-scope{flex:1 1 320px}
+        .agent-key-classes{display:flex;flex-wrap:wrap;gap:6px;max-height:132px;overflow:auto;padding:6px;border:1px solid var(--border);border-radius:10px;background:#fff}
+        .agent-key-chip{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;padding:4px 8px;border-radius:999px;background:#f2f5fa;border:1px solid var(--border);cursor:pointer}
+        .agent-key-can-clear{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:600;color:var(--g1)}
+        .agent-key-created{margin-top:12px;padding:12px;border-radius:12px;background:#fff7e6;border:1px solid #f0c987}
+        .agent-key-created code{display:block;margin-top:8px;padding:10px;background:#0f1b33;color:#fff;border-radius:8px;font-size:.85rem;word-break:break-all;user-select:all}
+        .agent-key-list{margin-top:14px}
+        .agent-key-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border)}
+        .agent-key-row:first-child{border-top:0}
+        .agent-key-meta{font-size:.74rem;color:var(--gray)}
+        .agent-key-dead{opacity:.55}
+      </style>
+      <div class="tbl-wrap" data-settings-category="staff" style="margin-bottom:0;grid-column:1/-1">
+        <div class="tbl-head"><h3>Agent access keys</h3></div>
+        <div style="padding:16px">
+          <p style="font-size:.78rem;color:var(--gray);margin:0 0 12px">Give an outside assistant (Muse, or any automation) a key so it can record marks through the school server. A key opens only the classes you tick, cannot sign in anywhere else, and every mark it writes is logged against your name.</p>
+          <div class="agent-key-form">
+            <div class="fg"><label>Key name</label><input class="inp" id="agent-key-label" placeholder="Muse - SS2 Business" autocomplete="off"/></div>
+            <div class="fg agent-key-scope"><label>Classes it may write</label><div id="agent-key-classes" class="agent-key-classes"></div></div>
+            <label class="agent-key-can-clear"><input type="checkbox" id="agent-key-can-clear" checked/> It may also erase a mark</label>
+            <button class="btn btn-primary btn-sm" type="button" onclick="createAgentKey()">Create key</button>
+          </div>
+          <div id="agent-key-created" class="agent-key-created" style="display:none"></div>
+          <div id="agent-key-list" class="agent-key-list"><div style="font-size:.78rem;color:var(--gray)">Loading keys…</div></div>
+        </div>
+      </div>
       <div class="tbl-wrap" data-settings-category="registry" style="margin-bottom:0;grid-column:1/-1">
         <div class="tbl-head"><h3>Registry defaults &amp; overrides</h3></div>
         <div style="padding:16px">
@@ -1655,7 +1684,7 @@ var RESULT_WRITE_ENABLED=false;
 window._academicContext=null;
 window._academicHistory=[];
 window._activeTermStatus='open';
-var RESULT_MUTATING_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish','students.upsert','students.archive','settings.app_config.update','settings.override.set','settings.override.clear'];
+var RESULT_MUTATING_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update','results.publish','results.unpublish','students.upsert','students.archive','settings.app_config.update','settings.override.set','settings.override.clear','agent_keys.create','agent_keys.revoke'];
 var RESULT_ENTRY_WRITE_ACTIONS=['scores.enter','smart.sheet.create','smart.scores.commit','traits.enter','remarks.enter','fees.update'];
 
 function isResultMutationAction(action){return RESULT_MUTATING_ACTIONS.indexOf(String(action||'').toLowerCase())>-1;}
@@ -5747,6 +5776,102 @@ function loadStaffWriteAccess(){
     return null;
   });
 }
+var AGENT_KEYS=null;
+function agentKeyError(error){
+  var code=error&&error.code;
+  if(code==='RESULT_PERMISSION_DENIED'||code==='RESULT_AGENT_KEY_SCOPE_REQUIRED')return 'Results management is required, and at least one class must be ticked.';
+  if(code==='RESULT_AGENT_KEY_SCOPE_UNKNOWN')return 'One of the selected classes is not in the result catalogue.';
+  if(code==='RESULT_AGENT_KEY_LABEL_REQUIRED')return 'Give the key a name so you can tell it apart later.';
+  if(code==='RESULT_AGENT_KEY_NOT_FOUND')return 'That key no longer exists.';
+  return 'Could not reach agent keys'+(code?' ('+code+')':'')+'.';
+}
+function renderAgentKeyClasses(){
+  var box=document.getElementById('agent-key-classes');
+  if(!box||box.getAttribute('data-ready')==='1')return;
+  box.setAttribute('data-ready','1');
+  box.innerHTML=ALL_CLASSES.filter(function(key){return !!DEPTS[key];}).map(function(key){
+    return '<label class="agent-key-chip"><input type="checkbox" value="'+escapeHtml(key)+'"/> '+escapeHtml(DEPTS[key].label)+'</label>';
+  }).join('');
+}
+function loadAgentKeys(){
+  renderAgentKeyClasses();
+  var list=document.getElementById('agent-key-list');
+  if(!list)return Promise.resolve(null);
+  if(!canManageStaffWriteAccess()){
+    list.innerHTML='<div style="font-size:.78rem;color:var(--gray)">Only Results management can create or cancel agent keys.</div>';
+    return Promise.resolve(null);
+  }
+  return resultDataRequest('agent_keys.list',{}).then(function(data){
+    AGENT_KEYS=(data&&data.keys)||[];
+    renderAgentKeys();
+    return AGENT_KEYS;
+  }).catch(function(error){
+    AGENT_KEYS=null;
+    list.innerHTML='<div style="font-size:.78rem;color:#991b1b">'+escapeHtml(agentKeyError(error))+'</div>';
+    return null;
+  });
+}
+function renderAgentKeys(){
+  var list=document.getElementById('agent-key-list');
+  if(!list)return;
+  var keys=AGENT_KEYS||[];
+  if(!keys.length){list.innerHTML='<div style="font-size:.78rem;color:var(--gray)">No agent keys yet. Any key you create will be listed here.</div>';return;}
+  list.innerHTML=keys.map(function(key){
+    var live=key.enabled!==false;
+    var classes=(key.class_scope||[]).map(function(c){return DEPTS[c]?DEPTS[c].label:c;}).join(', ');
+    var used=key.last_used_at?('last used '+new Date(key.last_used_at).toLocaleString()):'never used';
+    return '<div class="agent-key-row'+(live?'':' agent-key-dead')+'">'
+      +'<div><strong style="font-size:.82rem">'+escapeHtml(key.label)+'</strong>'
+      +'<div class="agent-key-meta">'+escapeHtml(key.prefix)+'… · '+escapeHtml(classes)+(key.can_clear?' · may erase marks':' · cannot erase')+'</div>'
+      +'<div class="agent-key-meta">'+escapeHtml(used)+(key.use_count?' · '+key.use_count+' writes':'')+(live?'':' · cancelled')+'</div></div>'
+      +(live?'<button class="btn btn-outline btn-sm" type="button" onclick="revokeAgentKey(\''+escapeHtml(key.id)+'\',\''+escapeHtml(key.label)+'\')">Cancel key</button>':'')
+      +'</div>';
+  }).join('');
+}
+function createAgentKey(){
+  var labelEl=document.getElementById('agent-key-label');
+  var label=labelEl?labelEl.value.trim():'';
+  var scope=[];
+  var box=document.getElementById('agent-key-classes');
+  if(box)Array.prototype.forEach.call(box.querySelectorAll('input[type=checkbox]'),function(input){if(input.checked)scope.push(input.value);});
+  if(!label){showToast('Give the key a name first.','error');return;}
+  if(!scope.length){showToast('Tick at least one class for this key.','error');return;}
+  var clearEl=document.getElementById('agent-key-can-clear');
+  showLoad('Creating agent key…');
+  resultDataRequest('agent_keys.create',{label:label,class_scope:scope,can_clear:!(clearEl&&!clearEl.checked)})
+    .then(function(data){
+      hideLoad();
+      if(!data||!data.key){showToast(agentKeyError(data),'error');return;}
+      var shown=document.getElementById('agent-key-created');
+      if(shown){
+        shown.style.display='block';
+        shown.innerHTML='<strong style="font-size:.82rem">Copy this key now — it is shown once and cannot be recovered.</strong>'
+          +'<code id="agent-key-secret">'+escapeHtml(data.key)+'</code>'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+          +'<button class="btn btn-primary btn-sm" type="button" onclick="copyAgentKey()">Copy key</button>'
+          +'<button class="btn btn-outline btn-sm" type="button" onclick="document.getElementById(\'agent-key-created\').style.display=\'none\'">Hide</button></div>'
+          +'<div class="agent-key-meta" style="margin-top:8px">Give it to the assistant, not to anyone else. Cancel it here at any time and it stops working at once.</div>';
+      }
+      if(labelEl)labelEl.value='';
+      Array.prototype.forEach.call((box?box.querySelectorAll('input[type=checkbox]'):[]),function(input){input.checked=false;});
+      return loadAgentKeys();
+    })
+    .catch(function(error){hideLoad();showToast(agentKeyError(error),'error');});
+}
+function copyAgentKey(){
+  var el=document.getElementById('agent-key-secret');
+  if(!el)return;
+  var value=el.textContent||'';
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(value).then(function(){showToast('Key copied.');},function(){showToast('Select the key and copy it manually.','error');});}
+  else showToast('Select the key and copy it manually.');
+}
+function revokeAgentKey(id,label){
+  if(!id)return;
+  if(!window.confirm('Cancel the key "'+label+'"? Anything using it stops working at once.'))return;
+  resultDataRequest('agent_keys.revoke',{key_id:id,reason:'Cancelled from the settings dashboard'})
+    .then(function(){showToast('Agent key cancelled.');return loadAgentKeys();})
+    .catch(function(error){showToast(agentKeyError(error),'error');});
+}
 function setStaffWriteAccess(personId,enabled,scope){
   if(!canManageStaffWriteAccess()||!personId)return;
   var status=document.getElementById('staff-write-access-status');
@@ -5784,7 +5909,7 @@ function renderSettings(){
   setupSettingsDashboard();
   var ki=document.getElementById('gemini-key-input');if(ki)ki.value='';
   if(SETTINGS_CATEGORY==='ai')loadProviderStatus();
-  if(SETTINGS_CATEGORY==='staff')loadStaffWriteAccess();
+  if(SETTINGS_CATEGORY==='staff'){loadStaffWriteAccess();loadAgentKeys();}
   var sc=getSessionCfg();
   var el=function(id){return document.getElementById(id);};
   if(el('cfg-resumption'))el('cfg-resumption').value=sc.resumption||'';

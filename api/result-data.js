@@ -233,6 +233,27 @@ module.exports = async function resultData(req, res) {
         p_override_id: requestPayload.override_id || null,
         p_reason: requestPayload.reason || '',
       })
+    : action === 'agent_keys.list'
+      ? await supabaseRpc('school_result_agent_key_list', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+      })
+    : action === 'agent_keys.create'
+      ? await supabaseRpc('school_result_agent_key_create', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+        p_label: requestPayload.label || '',
+        p_class_scope: Array.isArray(requestPayload.class_scope) ? requestPayload.class_scope : [],
+        p_subject_scope: Array.isArray(requestPayload.subject_scope) ? requestPayload.subject_scope : null,
+        p_can_clear: requestPayload.can_clear !== false,
+      })
+    : action === 'agent_keys.revoke'
+      ? await supabaseRpc('school_result_agent_key_revoke', {
+        p_session_id: session.sessionId,
+        p_session_secret: session.sessionSecret,
+        p_key_id: requestPayload.key_id || null,
+        p_reason: requestPayload.reason || null,
+      })
     : action === 'settings.read'
     ? await supabaseRpc('school_result_settings_read', {
         p_session_id: session.sessionId,
