@@ -11,7 +11,8 @@ assert.match(sql, /if v_key\.access_level <> 'full' then/);
 assert.match(sql, /RESULT_AGENT_KEY_SCORES_ONLY/);
 assert.match(sql, /where id = v_key\.created_by_person_id/);
 assert.match(sql, /RESULT_AGENT_OWNER_NOT_ACTIVE/);
-assert.match(sql, /interval '8 hours'/);
+assert.match(sql, /p_ttl_hours integer default 720/);
+assert.match(sql, /make_interval\(hours => greatest\(coalesce\(p_ttl_hours, 720\), 1\)\)/);
 assert.match(sql, /v_app not in \('results', 'central_registry'\)/);
 
 // Every mint is logged.

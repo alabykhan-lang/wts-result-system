@@ -164,7 +164,8 @@ $function$;
 -- Mint a session for the key's owner.
 create or replace function public.school_agent_session(
   p_key text,
-  p_app_code text default 'results'
+  p_app_code text default 'results',
+  p_ttl_hours integer default 720
 ) returns jsonb
 language plpgsql
 security definer
@@ -179,7 +180,9 @@ declare
   v_credential public.school_identity_credentials%rowtype;
   v_secret text;
   v_session_id uuid := gen_random_uuid();
-  v_expires timestamptz := now() + interval '8 hours';
+  -- A key never expires. Its working session lasts 30 days, the same as a
+  -- portal sign-in, and the agent simply asks for a new one when it lapses.
+  v_expires timestamptz := now() + make_interval(hours => greatest(coalesce(p_ttl_hours, 720), 1));
 begin
   v_key := public.result_agent_key_resolve(p_key);
   if v_key.id is null then
@@ -241,5 +244,7 @@ begin
 end;
 $function$;
 
+grant execute on function public.school_agent_session(text, text, integer) to anon, authenticated, service_role;
 grant execute on function public.school_agent_session(text, text) to anon, authenticated, service_role;
+drop function if exists public.school_agent_session(text, text);
 grant execute on function public.school_result_agent_key_create(uuid, text, text, text[], text[], boolean, text) to anon, authenticated, service_role;
