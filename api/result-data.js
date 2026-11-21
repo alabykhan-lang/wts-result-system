@@ -246,6 +246,7 @@ module.exports = async function resultData(req, res) {
         p_class_scope: Array.isArray(requestPayload.class_scope) ? requestPayload.class_scope : [],
         p_subject_scope: Array.isArray(requestPayload.subject_scope) ? requestPayload.subject_scope : null,
         p_can_clear: requestPayload.can_clear !== false,
+        p_access_level: requestPayload.access_level === 'full' ? 'full' : 'scores',
       })
     : action === 'agent_keys.revoke'
       ? await supabaseRpc('school_result_agent_key_revoke', {

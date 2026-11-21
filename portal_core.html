@@ -1216,9 +1216,13 @@ html.pintro-lock{overflow:hidden}
           <p style="font-size:.78rem;color:var(--gray);margin:0 0 12px">Give an outside assistant (Muse, or any automation) a key so it can record marks through the school server. A key opens only the classes you tick, cannot sign in anywhere else, and every mark it writes is logged against your name.</p>
           <div class="agent-key-form">
             <div class="fg"><label>Key name</label><input class="inp" id="agent-key-label" placeholder="Muse - SS2 Business" autocomplete="off"/></div>
-            <div class="fg agent-key-scope"><label>Classes it may write</label><div id="agent-key-classes" class="agent-key-classes"></div></div>
-            <label class="agent-key-can-clear"><input type="checkbox" id="agent-key-can-clear" checked/> It may also erase a mark</label>
+            <div class="fg"><label>What it may do</label><select class="inp" id="agent-key-level" onchange="toggleAgentKeyLevel()"><option value="scores">Record marks only</option><option value="full">Everything my account can do</option></select></div>
+            <div class="fg agent-key-scope" id="agent-key-scope-wrap"><label>Classes it may write</label><div id="agent-key-classes" class="agent-key-classes"></div></div>
+            <label class="agent-key-can-clear" id="agent-key-clear-wrap"><input type="checkbox" id="agent-key-can-clear" checked/> It may also erase a mark</label>
             <button class="btn btn-primary btn-sm" type="button" onclick="createAgentKey()">Create key</button>
+          </div>
+          <div id="agent-key-full-warning" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff1f2;border:1px solid #f3b6bd;font-size:.76rem;color:#8a1c27">
+            <strong>Full access is your account.</strong> The assistant can publish results, change settings, grant staff access, and work in the Central Registry, exactly as you can. Give it only to something you trust, and cancel the key when you are done.
           </div>
           <div id="agent-key-created" class="agent-key-created" style="display:none"></div>
           <div id="agent-key-list" class="agent-key-list"><div style="font-size:.78rem;color:var(--gray)">Loading keys…</div></div>
@@ -5822,11 +5826,21 @@ function renderAgentKeys(){
     var used=key.last_used_at?('last used '+new Date(key.last_used_at).toLocaleString()):'never used';
     return '<div class="agent-key-row'+(live?'':' agent-key-dead')+'">'
       +'<div><strong style="font-size:.82rem">'+escapeHtml(key.label)+'</strong>'
-      +'<div class="agent-key-meta">'+escapeHtml(key.prefix)+'… · '+escapeHtml(classes)+(key.can_clear?' · may erase marks':' · cannot erase')+'</div>'
+      +'<div class="agent-key-meta">'+escapeHtml(key.prefix)+'… · '+(key.access_level==='full'?'FULL ACCESS (my account)':escapeHtml(classes)+(key.can_clear?' · may erase marks':' · cannot erase'))+'</div>'
       +'<div class="agent-key-meta">'+escapeHtml(used)+(key.use_count?' · '+key.use_count+' writes':'')+(live?'':' · cancelled')+'</div></div>'
       +(live?'<button class="btn btn-outline btn-sm" type="button" onclick="revokeAgentKey(\''+escapeHtml(key.id)+'\',\''+escapeHtml(key.label)+'\')">Cancel key</button>':'')
       +'</div>';
   }).join('');
+}
+function toggleAgentKeyLevel(){
+  var levelEl=document.getElementById('agent-key-level');
+  var full=levelEl&&levelEl.value==='full';
+  var scopeWrap=document.getElementById('agent-key-scope-wrap');
+  var clearWrap=document.getElementById('agent-key-clear-wrap');
+  var warning=document.getElementById('agent-key-full-warning');
+  if(scopeWrap)scopeWrap.style.display=full?'none':'';
+  if(clearWrap)clearWrap.style.display=full?'none':'';
+  if(warning)warning.style.display=full?'block':'none';
 }
 function createAgentKey(){
   var labelEl=document.getElementById('agent-key-label');
@@ -5834,11 +5848,13 @@ function createAgentKey(){
   var scope=[];
   var box=document.getElementById('agent-key-classes');
   if(box)Array.prototype.forEach.call(box.querySelectorAll('input[type=checkbox]'),function(input){if(input.checked)scope.push(input.value);});
+  var levelEl=document.getElementById('agent-key-level');
+  var level=levelEl&&levelEl.value==='full'?'full':'scores';
   if(!label){showToast('Give the key a name first.','error');return;}
-  if(!scope.length){showToast('Tick at least one class for this key.','error');return;}
+  if(level!=='full'&&!scope.length){showToast('Tick at least one class for this key.','error');return;}
   var clearEl=document.getElementById('agent-key-can-clear');
   showLoad('Creating agent key…');
-  resultDataRequest('agent_keys.create',{label:label,class_scope:scope,can_clear:!(clearEl&&!clearEl.checked)})
+  resultDataRequest('agent_keys.create',{label:label,class_scope:scope,can_clear:!(clearEl&&!clearEl.checked),access_level:level})
     .then(function(data){
       hideLoad();
       if(!data||!data.key){showToast(agentKeyError(data),'error');return;}
@@ -5850,7 +5866,8 @@ function createAgentKey(){
           +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
           +'<button class="btn btn-primary btn-sm" type="button" onclick="copyAgentKey()">Copy key</button>'
           +'<button class="btn btn-outline btn-sm" type="button" onclick="document.getElementById(\'agent-key-created\').style.display=\'none\'">Hide</button></div>'
-          +'<div class="agent-key-meta" style="margin-top:8px">Give it to the assistant, not to anyone else. Cancel it here at any time and it stops working at once.</div>';
+          +'<div class="agent-key-meta" style="margin-top:8px">Give it to the assistant, not to anyone else. Cancel it here at any time and it stops working at once.</div>'
+          +(data.access_level==='full'?'<div class="agent-key-meta" style="margin-top:6px">Full access: it swaps this key for a session at <code>/api/agent-session</code>, then calls the portal and registry APIs as you.</div>':'');
       }
       if(labelEl)labelEl.value='';
       Array.prototype.forEach.call((box?box.querySelectorAll('input[type=checkbox]'):[]),function(input){input.checked=false;});

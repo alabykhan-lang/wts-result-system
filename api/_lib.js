@@ -49,9 +49,19 @@ function parseCookies(req) {
   return cookies;
 }
 
+// A server-side agent holds the session in an Authorization header instead of
+// a cookie: "Bearer <session id>.<session secret>". The portal itself only ever
+// uses the HttpOnly cookie.
+const BEARER_SESSION = /^Bearer\s+([0-9a-fA-F-]{36})\.([A-Za-z0-9._~-]{16,})$/;
+
+function bearerSession(req) {
+  const match = BEARER_SESSION.exec(String(req.headers.authorization || '').trim());
+  return match ? { sessionId: match[1], sessionSecret: match[2] } : null;
+}
+
 function sessionFromRequest(req) {
   const value = parseCookies(req)[COOKIE_NAME];
-  if (!value) return null;
+  if (!value) return bearerSession(req);
   const separator = value.indexOf('.');
   if (separator <= 0 || separator === value.length - 1) return null;
   return {
