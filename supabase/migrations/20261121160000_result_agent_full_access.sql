@@ -54,15 +54,8 @@ begin
     return jsonb_build_object('ok', false, 'code', 'RESULT_AGENT_KEY_LEVEL_INVALID');
   end if;
 
-  -- A full-access key works as the account that created it, so only a global
-  -- manager may issue one.
-  if v_level = 'full'
-     and not public.school_result_permission_allowed(
-       coalesce(array(select jsonb_array_elements_text(v_auth -> 'permissions')), array[]::text[]),
-       'results.manage'
-     ) then
-    return jsonb_build_object('ok', false, 'code', 'RESULT_PERMISSION_DENIED');
-  end if;
+  -- A full-access key works as the account that created it. Minting one is
+  -- already restricted to a manager by school_result_agent_key_authorize.
 
   select array_agg(distinct btrim(c)) into v_scope
   from unnest(coalesce(p_class_scope, array[]::text[])) as c

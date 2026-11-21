@@ -17,8 +17,9 @@ assert.match(sql, /v_app not in \('results', 'central_registry'\)/);
 // Every mint is logged.
 assert.match(sql, /'result\.agent_key\.session'/);
 
-// Only a global manager may issue one.
-assert.match(sql, /v_level = 'full'[\s\S]{0,200}'results\.manage'/);
+// Only a manager may issue one: the helper authorises one of the three
+// management permissions before the key is written.
+assert.match(sql, /school_result_agent_key_authorize\(p_session_id, p_session_secret\)/);
 
 // The server accepts a bearer session, the browser keeps its cookie.
 assert.match(lib, /function bearerSession\(req\)/);
