@@ -3128,6 +3128,7 @@ var SCORE_DRAFTS={};          // key -> values entered but not confirmed by serv
 var SCORE_SAVE_TIMERS={};     // key -> debounce timer
 var SCORE_SAVE_VERSIONS={};   // key -> latest local draft version
 var SCORE_EDIT_UNLOCKS={};    // key -> user confirmed editing an already-saved subject row
+var SCORE_CLEARS={};          // key -> {field:true} marks the user emptied in this page
 
 function scoreCellValue(value){
   return value===null||value===undefined?'':value;
@@ -3141,6 +3142,7 @@ function clearScoreDrafts(){
   SCORE_SAVE_TIMERS={};
   SCORE_SAVE_VERSIONS={};
   SCORE_EDIT_UNLOCKS={};
+  SCORE_CLEARS={};
 }
 
 
@@ -4070,6 +4072,7 @@ function confirmedScoreResponse(studentId,subjectIdx,response,version){
   var key=scoreDraftKey(studentId,subjectIdx);
   if(SCORE_SAVE_VERSIONS[key]===version){
     delete SCORE_DRAFTS[key];
+    delete SCORE_CLEARS[key];
     syncScoreInputs(studentId,score);
     updateScoreDisplay(studentId,subjectIdx,score);
     scoreStatus(studentId,subjectIdx,'Saved','var(--g1)');
@@ -4207,6 +4210,8 @@ function openSheet(idx){
       var draft=scoreDraft(sid,currentSheetIdx);
       draft[field]=raw;
       SCORE_DRAFTS[key]=draft;
+      var clears=SCORE_CLEARS[key]||(SCORE_CLEARS[key]={});
+      if(raw===null)clears[field]=true;else delete clears[field];
       SCORE_SAVE_VERSIONS[key]=(SCORE_SAVE_VERSIONS[key]||0)+1;
       scoreStatus(sid,currentSheetIdx,'Saving…','var(--gold2)');
       updateScoreDisplay(sid,currentSheetIdx,draft);
@@ -4233,9 +4238,14 @@ function dbUpsertScore(studentId,subjectIdx,ca1,ca2,ca3,exam){
   }
   var d={ca1:n(ca1),ca2:n(ca2),ca3:n(ca3),exam:n(exam)};
   // An emptied box must clear the stored mark; untouched boxes keep theirs.
+  // The local copy of a row can be older than the server (another device or an
+  // automation may have written it), so a box the user emptied is always sent
+  // as a clear instead of relying on the cached value.
+  var cleared=SCORE_CLEARS[scoreDraftKey(studentId,subjectIdx)]||{};
   var clear=[];
   ['ca1','ca2','ca3','exam'].forEach(function(field){
-    if(d[field]===null&&scoreCellValue(scorePersisted(studentId,subjectIdx)[field])!=='')clear.push(field);
+    if(d[field]!==null)return;
+    if(cleared[field]||scoreCellValue(scorePersisted(studentId,subjectIdx)[field])!=='')clear.push(field);
   });
   var ck=dbClassKey(CLS);
   if(isCentralAuth()){
