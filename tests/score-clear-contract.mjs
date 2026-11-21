@@ -56,3 +56,8 @@ assert.match(source, /if\(raw===null\)clears\[field\]=true;else delete clears\[f
 assert.match(source, /delete SCORE_CLEARS\[key\];/);
 
 console.log("Score clear contract passed");
+
+// 6. Closing the sheet must still flush a row whose only change was an emptied mark.
+assert.match(source, /var flaggedClear=SCORE_CLEARS\[key\]&&Object\.keys\(SCORE_CLEARS\[key\]\)\.length>0;/);
+assert.match(source, /if\(!entered&&!flaggedClear\)return;/);
+console.log("Score clear flush contract passed");

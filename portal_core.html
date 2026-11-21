@@ -4142,7 +4142,10 @@ function flushScoreSaves(){
     var entered=[draft.ca1,draft.ca2,draft.ca3,draft.exam].some(function(v){
       return v!==null&&v!==undefined&&v!=='';
     });
-    if(!entered)return;
+    // A row whose last mark the teacher just emptied still has to be flushed,
+    // or the clear dies with the sheet.
+    var flaggedClear=SCORE_CLEARS[key]&&Object.keys(SCORE_CLEARS[key]).length>0;
+    if(!entered&&!flaggedClear)return;
     SCORE_SAVE_VERSIONS[key]=(SCORE_SAVE_VERSIONS[key]||0)+1;
     var version=SCORE_SAVE_VERSIONS[key];
     jobs.push(dbUpsertScore(studentId,subjectIdx,draft.ca1,draft.ca2,draft.ca3,draft.exam)
