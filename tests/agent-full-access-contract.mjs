@@ -13,7 +13,7 @@ assert.match(sql, /where id = v_key\.created_by_person_id/);
 assert.match(sql, /RESULT_AGENT_OWNER_NOT_ACTIVE/);
 assert.match(sql, /p_ttl_hours integer default 720/);
 assert.match(sql, /make_interval\(hours => greatest\(coalesce\(p_ttl_hours, 720\), 1\)\)/);
-assert.match(sql, /v_app not in \('results', 'central_registry'\)/);
+assert.match(sql, /v_app not in \('results', 'central_registry', 'staff_self_service'/);
 
 // Every mint is logged.
 assert.match(sql, /'result\.agent_key\.session'/);

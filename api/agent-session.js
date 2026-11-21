@@ -1,6 +1,6 @@
 'use strict';
 
-// Exchange a full-access agent key for a short-lived session on one app.
+// Exchange a full-access agent key for a session on one app.
 //
 // The session belongs to the person who created the key, so the assistant can
 // do exactly what that account can do there. It expires after eight hours and
@@ -14,7 +14,7 @@ const {
 } = require('./_lib');
 
 const KEY_PATTERN = /^Bearer\s+(wtsak_[A-Za-z0-9]{8,128})$/;
-const APPS = ['results', 'central_registry'];
+const APPS = ['results', 'central_registry', 'staff_self_service', 'attendance', 'notifications'];
 
 module.exports = async function agentSession(req, res) {
   setSecurityHeaders(res);

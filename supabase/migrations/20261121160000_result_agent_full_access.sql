@@ -193,7 +193,7 @@ begin
     return jsonb_build_object('ok', false, 'code', 'RESULT_AGENT_KEY_SCORES_ONLY');
   end if;
 
-  if v_app not in ('results', 'central_registry') then
+  if v_app not in ('results', 'central_registry', 'staff_self_service', 'attendance', 'notifications') then
     return jsonb_build_object('ok', false, 'code', 'RESULT_AGENT_APP_INVALID');
   end if;
 
@@ -245,6 +245,4 @@ end;
 $function$;
 
 grant execute on function public.school_agent_session(text, text, integer) to anon, authenticated, service_role;
-grant execute on function public.school_agent_session(text, text) to anon, authenticated, service_role;
-drop function if exists public.school_agent_session(text, text);
 grant execute on function public.school_result_agent_key_create(uuid, text, text, text[], text[], boolean, text) to anon, authenticated, service_role;
