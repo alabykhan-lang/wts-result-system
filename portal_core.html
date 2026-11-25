@@ -1905,7 +1905,7 @@ function consumeCardIntent(){
   }).then(function(){
     if(!intent.print){hideLoad();return;}
     hideLoad();
-    return renderCard().then(function(){
+    return refreshCard({silent:true}).then(function(){
       fitReportCardsToOnePage();
       setTimeout(function(){window.print();resetReportCardPrintFit();},350);
     });
