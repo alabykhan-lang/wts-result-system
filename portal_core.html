@@ -1901,17 +1901,36 @@ function consumeCardIntent(){
     navTo(ppg,document.getElementById('ni-'+ppg)||document.getElementById('ni-dashboard'));
     return filterCardByClass(CLS);
   }).then(function(){
-    var sel=document.getElementById('rc-stu');
-    if(!sel)return;
-    if(intent.student)sel.value=intent.student;
+    return waitForCardStudent(intent.student);
+  }).then(function(){
     if(!intent.print){hideLoad();return;}
     hideLoad();
-    setTimeout(function(){printCard();},400);
+    return renderCard().then(function(){
+      fitReportCardsToOnePage();
+      setTimeout(function(){window.print();resetReportCardPrintFit();},350);
+    });
   }).catch(function(error){
     hideLoad();
     showToast(resultContextMessage(error),'error');
   });
   return true;
+}
+
+function waitForCardStudent(id){
+  return new Promise(function(resolve){
+    var tries=0;
+    (function look(){
+      var sel=document.getElementById('rc-stu');
+      var ready=sel&&(!id||Array.prototype.some.call(sel.options,function(o){return o.value===id;}));
+      if(ready){
+        if(id)sel.value=id;
+        resolve();
+        return;
+      }
+      if(++tries>50){resolve();return;}
+      setTimeout(look,150);
+    })();
+  });
 }
 
 function doLogout(){
