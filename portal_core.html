@@ -29,6 +29,27 @@ window.WTS_RESULT_CONFIG=Object.freeze((function(){
   };
 })());
 
+// A deep link from the assistant (?card=&class=&term=&session=&print=1) is kept
+// through the sign-in round trip, then the card is opened and printed itself.
+(function(){
+  var q;
+  try{q=new URLSearchParams(window.location.search);}catch(e){return;}
+  var card=q.get('card');
+  if(!card)return;
+  try{
+    sessionStorage.setItem('wts_card_intent',JSON.stringify({
+      student:card,
+      classKey:q.get('class')||'',
+      term:q.get('term')||'',
+      session:q.get('session')||'',
+      print:q.get('print')==='1'
+    }));
+  }catch(e){}
+  var keep=new URLSearchParams();
+  ['code','state','nonce','error'].forEach(function(k){if(q.get(k))keep.set(k,q.get(k));});
+  try{history.replaceState({},'',window.location.pathname+(keep.toString()?'?'+keep:''));}catch(e){}
+})();
+
 // Keep the portal locked until the server validates its HttpOnly session.
 document.addEventListener('DOMContentLoaded',function(){
   var a=document.getElementById('auth-screen');
@@ -1817,6 +1838,7 @@ function loginSuccess(user,mode){
 }
 
 function restorePortalPageAfterLogin(){
+  if(consumeCardIntent())return;
   var _pg=null,_cls=null,_trm=null,_ses=null;
   try{
     _pg=sessionStorage.getItem('wts_page');
@@ -1854,6 +1876,42 @@ function restorePortalPageAfterLogin(){
     setMode(false);
     renderHome();
   }
+}
+
+function consumeCardIntent(){
+  var intent=null;
+  try{
+    intent=JSON.parse(sessionStorage.getItem('wts_card_intent')||'null');
+    sessionStorage.removeItem('wts_card_intent');
+  }catch(e){intent=null;}
+  if(!intent||!intent.classKey||!DEPTS[intent.classKey])return false;
+  var ppg='card';
+  var selectedSession=String(intent.session||getCfg().session||DEFAULT_SESSION).trim();
+  CLS=intent.classKey;
+  TERM=String(intent.term||getCfg().term||DEFAULT_TERM).trim();
+  SELECTED_SESSION=selectedSession;
+  CONTEXT_EXPLICIT=true;
+  CONTEXT_READ_ONLY=!isOfficialOpenContext(selectedSession,TERM);
+  showLoad('Opening the report card...');
+  setResultContext(CLS,selectedSession,TERM).then(function(){
+    persistSelectedContext();
+    setMode(true);
+    return loadClass(CLS);
+  }).then(function(){
+    navTo(ppg,document.getElementById('ni-'+ppg)||document.getElementById('ni-dashboard'));
+    return filterCardByClass(CLS);
+  }).then(function(){
+    var sel=document.getElementById('rc-stu');
+    if(!sel)return;
+    if(intent.student)sel.value=intent.student;
+    if(!intent.print){hideLoad();return;}
+    hideLoad();
+    setTimeout(function(){printCard();},400);
+  }).catch(function(error){
+    hideLoad();
+    showToast(resultContextMessage(error),'error');
+  });
+  return true;
 }
 
 function doLogout(){
