@@ -771,7 +771,7 @@ html.pintro-lock{overflow:hidden}
     </div>
     <div class="ni" id="ni-students" onclick="navTo('students',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-      Students
+      Pupils &amp; Students
     </div>
     <div class="ni" id="ni-scores" onclick="navTo('scores',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
@@ -839,7 +839,7 @@ html.pintro-lock{overflow:hidden}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dash
     </div>
     <div class="bn-item" onclick="mobileNav('students',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Students
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Roster
     </div>
     <div class="bn-item" onclick="mobileNav('scores',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Scores
@@ -943,7 +943,7 @@ html.pintro-lock{overflow:hidden}
   <!-- DASHBOARD -->
   <div class="page" id="page-dashboard">
     <div class="stats-row">
-      <div class="stat-card"><span class="stat-icon">&#127891;</span><h3 id="d-stu">0</h3><p>Students</p></div>
+      <div class="stat-card"><span class="stat-icon">&#127891;</span><h3 id="d-stu">0</h3><p id="d-stu-label">Students</p></div>
       <div class="stat-card gold"><span class="stat-icon">&#128221;</span><h3 id="d-ent">0</h3><p>Scores Entered</p></div>
       <div class="stat-card blue"><span class="stat-icon">&#128202;</span><h3 id="d-avg">--</h3><p>Class Average</p></div>
       <div class="stat-card red"><span class="stat-icon">&#10003;</span><h3 id="d-pass">--</h3><p>Pass Rate</p></div>
@@ -964,10 +964,10 @@ html.pintro-lock{overflow:hidden}
   <div class="page" id="page-students">
     <div class="tbl-wrap">
       <div class="tbl-head">
-        <div><h3>Student Roster</h3><small style="color:var(--gray)">Student records are managed only in Central Registry.</small></div>
+        <div><h3 id="stu-title">Student Roster</h3><small style="color:var(--gray)" id="stu-note">Student records are managed only in Central Registry.</small></div>
       </div>
       <table class="data-table">
-        <thead><tr><th>#</th><th>Full Name</th><th>Gender</th><th>Reg. No.</th><th>House</th><th>Photo</th></tr></thead>
+        <thead><tr><th>#</th><th id="stu-name-head">Full Name</th><th>Gender</th><th>Reg. No.</th><th>House</th><th>Photo</th></tr></thead>
         <tbody id="stu-tbody"></tbody>
       </table>
     </div>
@@ -995,7 +995,7 @@ html.pintro-lock{overflow:hidden}
       <p class="result-staff-write-note">Management has turned off score entry for this account. Existing scores remain available for viewing and cross-checking.</p>
       <div class="tbl-wrap" style="margin-bottom:14px">
         <div class="sheet-header">
-          <span>#</span><span>Student</span>
+          <span>#</span><span id="sheet-name-head">Student</span>
           <span style="text-align:center">CA1<br><small style="opacity:.7;font-weight:400">max10</small></span>
           <span style="text-align:center">CA2<br><small style="opacity:.7;font-weight:400">max10</small></span>
           <span style="text-align:center">CA3<br><small style="opacity:.7;font-weight:400">max10</small></span>
@@ -1109,14 +1109,14 @@ html.pintro-lock{overflow:hidden}
     <!-- Student performance ranking -->
     <div class="tbl-wrap" style="margin-bottom:20px">
       <div class="tbl-head">
-        <h3>Student Performance Overview</h3>
+        <h3 id="an-perf-title">Student Performance Overview</h3>
         <div style="font-size:.75rem;color:var(--gray)" id="an-class-term"></div>
       </div>
       <table class="data-table" id="an-student-table">
         <thead>
           <tr>
             <th style="width:40px">Rank</th>
-            <th>Student</th>
+            <th id="an-perf-head">Student</th>
             <th>Total Score</th>
             <th>Average</th>
             <th>Percentage</th>
@@ -1544,7 +1544,7 @@ html.pintro-lock{overflow:hidden}
       </div>
       <div class="fg-row">
         <div class="fg"><label>Age</label><input class="inp" id="in-age" type="number" placeholder="e.g. 17"/></div>
-        <div class="fg"><label>Student Photo</label>
+        <div class="fg"><label id="stu-photo-label">Student Photo</label>
           <div style="display:flex;align-items:center;gap:12px">
             <div class="photo-upload" id="photo-preview">
               <span style="font-size:1.5rem">&#128247;</span>
@@ -1563,7 +1563,7 @@ html.pintro-lock{overflow:hidden}
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModal('modal-stu')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveStu()">Save Student</button>
+      <button class="btn btn-primary" onclick="saveStu()" id="stu-save-btn">Save Student</button>
     </div>
   </div>
 </div>
@@ -2176,9 +2176,10 @@ function filterCardByClass(key){
     syncContextDisplay();
     var tbSub=document.getElementById('tb-sub');
     if(tbSub)tbSub.textContent=(DEPTS[key]?DEPTS[key].label:key)+' - Result Cards · '+TERM+' · '+selectedSession;
-    var students=DB_STUDENTS[key]||[];
+    var students=rosterOf(key);
+    var cardNoun=personWord(key,false);
     if(students.length){
-      sel.innerHTML='<option value="">-- Select Student --</option>'+
+      sel.innerHTML='<option value="">-- Select '+cardNoun+' --</option>'+
         students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
       hideLoad();
       return;
@@ -2195,8 +2196,8 @@ function filterCardByClass(key){
         DB_SCORES[s.student_id][s.subject_index]={ca1:scoreCellValue(s.ca1),ca2:scoreCellValue(s.ca2),ca3:scoreCellValue(s.ca3),exam:scoreCellValue(s.exam)};
       });
       (res[2]||[]).forEach(function(r){PUB_CACHE[pubKey(key,r.term,r.subject_index)]=true;});
-      sel.innerHTML='<option value="">-- Select Student --</option>'+
-        (res[0]||[]).map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+      sel.innerHTML='<option value="">-- Select '+cardNoun+' --</option>'+
+        (res[0]||[]).slice().sort(byName).map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
     });
   }).catch(function(error){
     hideLoad();
@@ -2997,6 +2998,12 @@ var DEPTS={
 };
 var ALL_CLASSES=['creche','kg1','kg2','nursery1','nursery2','primary1','primary2','primary3','primary4','primary5','jss1','jss2','jss3','ss1-general','ss1-science','ss1-arts','ss1-commercial','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts','ss3-business'];
 var SECONDARY_CLASSES=['jss1','jss2','jss3','ss1-general','ss1-science','ss1-arts','ss1-commercial','ss2-science','ss2-arts','ss2-business','ss3-science','ss3-arts','ss3-business'];
+// Creche to Primary 5 are pupils. JSS1 to SS3 are students.
+function personWord(classKey,plural){var secondary=isSecondaryClass(classKey);return plural?(secondary?'Students':'Pupils'):(secondary?'Student':'Pupil');}
+function byName(a,b){return String((a&&a.name)||'').localeCompare(String((b&&b.name)||''),undefined,{sensitivity:'base',numeric:true});}
+function rosterOf(classKey){return (DB_STUDENTS[classKey]||[]).slice().sort(byName);}
+function broadsheetOne(rows){var w=broadsheetWord(rows);return w==='Pupils'?'Pupil':w==='Students'?'Student':'Pupil/Student'};
+function broadsheetWord(rows){var secondary=0,pupils=0;(rows||[]).forEach(function(row){if(isSecondaryClass(row&&(row.classKey||row.class_key)))secondary++;else pupils++;});if(!secondary)return 'Pupils';if(!pupils)return 'Students';return 'Pupils and students';}
 var PENDING_DEPARTMENT_CLASSES=['ss1-general','ss1-science','ss1-arts','ss1-commercial'];
 var PROMOTION_THRESHOLD_CLASSES=['jss1','jss2','ss1-general'];
 var DEFAULT_PROMOTION_TARGETS={
@@ -3123,7 +3130,7 @@ function renderPromotionPlan(plans,sessions){
   var wrap=document.getElementById('promotion-preview');
   var sessionLabel=sessions?(' from '+sessions.source+' to '+sessions.target):'';
   if(head)head.textContent='Carry Forward Preview'+sessionLabel+': '+promote+' move, '+probation+' probation, '+repeat+' repeat, '+held+' held';
-  if(body)body.innerHTML=rows.length?'<table class="data-table" style="font-size:.76rem"><thead><tr><th>Student</th><th>Current</th><th>Target</th><th>Average</th><th>Status</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>':'<div class="empty"><h3>No Students</h3><p>No students found in the source session classes.</p></div>';
+  if(body)body.innerHTML=rows.length?'<table class="data-table" style="font-size:.76rem"><thead><tr><th>'+personWord(CLS,false)+'</th><th>Current</th><th>Target</th><th>Average</th><th>Status</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>':'<div class="empty"><h3>No '+personWord(CLS,true)+'</h3><p>No '+personWord(CLS,true).toLowerCase()+' found in the source session classes.</p></div>';
   if(wrap)wrap.classList.add('show');
 }
 function previewCarryForward(){
@@ -3437,16 +3444,17 @@ function navTo(id,el){
   if(id==='card'||id==='broadsheet'||id==='progress'||id==='analytics')pg.classList.add('print-active');
   if(el)el.classList.add('active');
   var titles={
-    home:'Home', smart:'Smart Recording', history:'Archive & History', dashboard:'Dashboard', students:'Student Roster',
+    home:'Home', smart:'Smart Recording', history:'Archive & History', dashboard:'Dashboard', students:'Roster',
     scores:'Score Entry', broadsheet:'Class Broadsheet', progress:'Class Progress',
     card:'Result Cards', analytics:'Analytics', settings:'Settings'
   };
-  document.getElementById('tb-title').textContent=titles[id]||id;
+  var pageTitle=id==='students'?personWord(CLS,true)+' Roster':(titles[id]||id);
+  document.getElementById('tb-title').textContent=pageTitle;
   var sub=id==='home'?'Way to Success Standard Schools':
           id==='smart'?'Scan · Review · Save':
           id==='history'?'Way to Success Standard Schools · Read-only archive':
           id==='settings'?'System Configuration':
-          DEPTS[CLS]?DEPTS[CLS].label+' - '+titles[id]:'';
+          DEPTS[CLS]?DEPTS[CLS].label+' - '+pageTitle:'';
   if(IN_CLASS&&DEPTS[CLS]&&id!=='home')sub=DEPTS[CLS].label+' - '+titles[id]+' · '+TERM+' · '+getActiveSession();
   document.getElementById('tb-sub').textContent=sub;
   syncContextDisplay();
@@ -3868,9 +3876,11 @@ function renderHistoryStudents(rows,session,classKey,graduates){
 // DASHBOARD
 // ============================================================
 function renderDash(){
-  var students=DB_STUDENTS[CLS]||[];
+  var students=rosterOf(CLS);
+  var word=personWord(CLS,true);
   document.getElementById('d-stu').textContent=students.length;
-  document.getElementById('d-tbl-title').textContent=DEPTS[CLS].label+' - Students';
+  document.getElementById('d-stu-label').textContent=word;
+  document.getElementById('d-tbl-title').textContent=DEPTS[CLS].label+' - '+word;
   var ent=students.filter(function(s){return DB_SCORES[s.id]&&Object.keys(DB_SCORES[s.id]).some(function(k){return!isNaN(k);});}).length;
   document.getElementById('d-ent').textContent=ent;
   var avgs=students.map(function(s){return studentSummary(s.id).avg;}).filter(function(x){return x!=='';});
@@ -3879,7 +3889,7 @@ function renderDash(){
   var ranks=getRanks();
   var tbody=document.getElementById('d-tbody');
   if(!students.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">No students yet. Add students to get started.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray)">No '+word.toLowerCase()+' yet. Add '+word.toLowerCase()+' to get started.</td></tr>';
     return;
   }
   var dept=DEPTS[CLS].label;
@@ -3911,10 +3921,15 @@ function renderDash(){
 // STUDENTS
 // ============================================================
 function renderStudents(){
-  var students=DB_STUDENTS[CLS]||[];
+  var students=rosterOf(CLS);
+  var word=personWord(CLS,true);
+  var one=personWord(CLS,false);
+  document.getElementById('stu-title').textContent=word+' Roster';
+  document.getElementById('stu-note').textContent=one+' records are managed only in Central Registry.';
+  document.getElementById('stu-name-head').textContent='Full Name';
   var tbody=document.getElementById('stu-tbody');
   if(!students.length){
-    tbody.innerHTML='<tr><td colspan="6"><div class="empty"><h3>No Students</h3><p>Add or restore students through Central Registry.</p></div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="6"><div class="empty"><h3>No '+word+'</h3><p>Add or restore '+word.toLowerCase()+' through Central Registry.</p></div></td></tr>';
     return;
   }
   tbody.innerHTML=students.map(function(s,i){
@@ -3931,7 +3946,9 @@ function renderStudents(){
 function openAddStudent(){
   if(CONTEXT_READ_ONLY){showToast('Historical records are read-only.','error');return;}
   photoDataURL='';
-  document.getElementById('modal-title').textContent='Add Student';
+  document.getElementById('modal-title').textContent='Add '+personWord(CLS,false);
+  document.getElementById('stu-save-btn').textContent='Save '+personWord(CLS,false);
+  document.getElementById('stu-photo-label').textContent=personWord(CLS,false)+' Photo';
   document.getElementById('edit-id').value='';
   ['name','admno','house','age'].forEach(function(f){document.getElementById('in-'+f).value='';});
   document.getElementById('in-gender').value='';
@@ -3943,7 +3960,9 @@ function openEditStu(id){
   if(CONTEXT_READ_ONLY){showToast('Historical records are read-only.','error');return;}
   var s=(DB_STUDENTS[CLS]||[]).find(function(x){return x.id===id;});
   if(!s)return;
-  document.getElementById('modal-title').textContent='Edit Student';
+  document.getElementById('modal-title').textContent='Edit '+personWord(CLS,false);
+  document.getElementById('stu-save-btn').textContent='Save '+personWord(CLS,false);
+  document.getElementById('stu-photo-label').textContent=personWord(CLS,false)+' Photo';
   document.getElementById('edit-id').value=id;
   document.getElementById('in-name').value=s.name;
   document.getElementById('in-admno').value=s.admno||'';
@@ -4011,9 +4030,9 @@ function saveStu(){
         if(!DB_STUDENTS[CLS])DB_STUDENTS[CLS]=[];
         DB_STUDENTS[CLS].push(ns);
       }
-      hideLoad();showToast(eid?'Student updated':'Student added');closeModal('modal-stu');renderStudents();renderDash();
+      hideLoad();var saveWord=personWord(CLS,false);showToast(eid?saveWord+' updated':saveWord+' added');closeModal('modal-stu');renderStudents();renderDash();
     }).catch(function(error){
-      hideLoad();console.error('Protected student save error:',error);showToast('Student save denied','error');
+      hideLoad();console.error('Protected student save error:',error);showToast(personWord(CLS,false)+' save denied','error');
     });
     return;
   }
@@ -4028,9 +4047,9 @@ function deleteStu(id){
     resultDataRequest('students.archive',{student_id:id,reason:'Archived through Result Portal'})
       .then(function(){
         DB_STUDENTS[CLS]=(DB_STUDENTS[CLS]||[]).filter(function(s){return s.id!==id;});
-        hideLoad();showToast('Student archived');renderStudents();renderDash();
+        hideLoad();showToast(personWord(CLS,false)+' archived');renderStudents();renderDash();
       }).catch(function(error){
-        hideLoad();console.error('Protected student archive error:',error);showToast('Student archive denied','error');
+        hideLoad();console.error('Protected student archive error:',error);showToast(personWord(CLS,false)+' archive denied','error');
       });
     return;
   }
@@ -4053,7 +4072,8 @@ function renderScoreGrid(){
   document.getElementById('scores-grid-view').style.display='block';
   document.getElementById('scores-sheet-view').style.display='none';
   if(!students.length){
-    el.innerHTML='<div class="empty"><h3>No Students</h3><p>Add students first</p></div>';
+    var gridWord=personWord(CLS,true);
+    el.innerHTML='<div class="empty"><h3>No '+gridWord+'</h3><p>Add '+gridWord.toLowerCase()+' first</p></div>';
     return;
   }
   var html='';
@@ -4268,11 +4288,12 @@ document.addEventListener('visibilitychange',function(){if(document.visibilitySt
 window.addEventListener('pagehide',function(){flushScoreSaves();});
 function openSheet(idx){
   flushScoreSaves();
-  var students=DB_STUDENTS[CLS]||[];
+  var students=rosterOf(CLS);
   currentSheetIdx=Number(idx);
   var isPub=isPublished(CLS,currentSheetIdx);
   var scoreInputLock=canWriteResults()?'':' readonly';
   var sName=subjectNameByIndex(CLS,currentSheetIdx);
+  document.getElementById('sheet-name-head').textContent=personWord(CLS,false);
   document.getElementById('scores-grid-view').style.display='none';
   document.getElementById('scores-sheet-view').style.display='block';
   document.getElementById('sheet-title').textContent=(currentSheetIdx+1)+'. '+sName;
@@ -4459,7 +4480,7 @@ function renderProfile(s){
   document.getElementById('pf-age').textContent=s.age||'--';
   document.getElementById('pf-class').textContent=DEPTS[CLS]?DEPTS[CLS].label:CLS;
   var portfolioBox=document.getElementById('pf-portfolios');var portfolios=(s.portfolios||[]).filter(function(item){return !item.assignment_status||item.assignment_status==='active';});
-  if(portfolioBox){portfolioBox.style.display=portfolios.length?'flex':'none';portfolioBox.innerHTML=portfolios.map(function(item){return'<span class="badge badge-green">'+escapeHtml(item.name||item.office_name||item.portfolio_name||'Student portfolio')+'</span>';}).join('');}
+  if(portfolioBox){portfolioBox.style.display=portfolios.length?'flex':'none';portfolioBox.innerHTML=portfolios.map(function(item){return'<span class="badge badge-green">'+escapeHtml(item.name||item.office_name||item.portfolio_name||'Portfolio')+'</span>';}).join('');}
   var photo=document.getElementById('pf-photo');
   photo.innerHTML=s.photo?'<img src="'+s.photo+'" style="width:100%;height:100%;object-fit:cover"/>':'&#128100;';
 
@@ -4639,11 +4660,12 @@ function renderSelectedSubjectBroadsheet(){
   var data=BROADSHEET_DATA||{};var rows=data.rows||[];var school=getSchool();var session=getActiveSession();
   var bsCls=document.getElementById('bs-class-label');var bsTrm=document.getElementById('bs-term-label');
   if(bsCls)bsCls.textContent=data.scopeLabel || (DEPTS[CLS]?DEPTS[CLS].label:CLS);if(bsTrm)bsTrm.textContent=TERM;
-  if(!rows.length){document.getElementById('bs-wrap').innerHTML='<div class="empty"><h3>No Students</h3><p>No students offering this subject were found.</p></div>';return;}
+  var bsWord=broadsheetWord(rows);
+  if(!rows.length){document.getElementById('bs-wrap').innerHTML='<div class="empty"><h3>No '+bsWord+'</h3><p>No '+bsWord.toLowerCase()+' offering this subject were found.</p></div>';return;}
   var vals=rows.map(function(row){return computeTotal(row.score);}).filter(function(total){return total!=='';}).sort(function(a,b){return b-a;});var positions={};vals.forEach(function(value,index){if(positions[value]===undefined)positions[value]=index+1;});
   var border='#b8edd8',navy='#1a2a4a',mint='#edf8f4';
   var html='<div style="font-family:Arial,sans-serif;max-width:100%"><div style="text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid '+border+'"><div style="font-size:13pt;font-weight:700;color:'+navy+'">'+escapeHtml(school.name)+'</div><div style="font-size:9pt;color:#555">'+escapeHtml(school.addr)+'</div><div style="font-size:10pt;font-weight:600;color:'+navy+';margin-top:5px">'+escapeHtml(data.subjectName)+' — '+escapeHtml(data.scopeLabel)+' — '+escapeHtml(TERM)+' — '+escapeHtml(session)+'</div></div>';
-  html+='<div class="broadsheet-subject"><div style="background:'+navy+';color:#fff;padding:7px 14px;font-weight:700;font-size:10pt">'+escapeHtml(data.subjectName)+' · '+rows.length+' students</div><table style="width:100%;border-collapse:collapse;font-size:8.5pt"><thead><tr style="background:'+mint+'"><th style="padding:6px;border:1px solid '+border+'">#</th><th style="padding:6px;border:1px solid '+border+';text-align:left">Student Name</th><th style="padding:6px;border:1px solid '+border+';text-align:left">Department</th><th style="padding:6px;border:1px solid '+border+'">CA1 /10</th><th style="padding:6px;border:1px solid '+border+'">CA2 /10</th><th style="padding:6px;border:1px solid '+border+'">CA3 /10</th><th style="padding:6px;border:1px solid '+border+'">Exam /70</th><th style="padding:6px;border:1px solid '+border+'">Total</th><th style="padding:6px;border:1px solid '+border+'">Grade</th><th style="padding:6px;border:1px solid '+border+'">Pos</th></tr></thead><tbody>';
+  html+='<div class="broadsheet-subject"><div style="background:'+navy+';color:#fff;padding:7px 14px;font-weight:700;font-size:10pt">'+escapeHtml(data.subjectName)+' · '+rows.length+' '+bsWord.toLowerCase()+'</div><table style="width:100%;border-collapse:collapse;font-size:8.5pt"><thead><tr style="background:'+mint+'"><th style="padding:6px;border:1px solid '+border+'">#</th><th style="padding:6px;border:1px solid '+border+';text-align:left">'+broadsheetOne(rows)+' Name</th><th style="padding:6px;border:1px solid '+border+';text-align:left">Department</th><th style="padding:6px;border:1px solid '+border+'">CA1 /10</th><th style="padding:6px;border:1px solid '+border+'">CA2 /10</th><th style="padding:6px;border:1px solid '+border+'">CA3 /10</th><th style="padding:6px;border:1px solid '+border+'">Exam /70</th><th style="padding:6px;border:1px solid '+border+'">Total</th><th style="padding:6px;border:1px solid '+border+'">Grade</th><th style="padding:6px;border:1px solid '+border+'">Pos</th></tr></thead><tbody>';
   rows.forEach(function(row,index){var score=row.score||{};var total=computeTotal(score);var grade=getGrade(total);html+='<tr style="background:'+(index%2?'#fff':mint)+'"><td style="padding:5px;border:1px solid '+border+';text-align:center">'+(index+1)+'</td><td style="padding:5px;border:1px solid '+border+';font-weight:600">'+escapeHtml(row.student.name)+'</td><td style="padding:5px;border:1px solid '+border+'">'+escapeHtml(row.classLabel)+'</td>'+['ca1','ca2','ca3','exam'].map(function(key){return'<td style="padding:5px;border:1px solid '+border+';text-align:center">'+escapeHtml(score[key]===undefined?'':score[key])+'</td>';}).join('')+'<td style="padding:5px;border:1px solid '+border+';text-align:center;font-weight:700">'+escapeHtml(total)+'</td><td style="padding:5px;border:1px solid '+border+';text-align:center;font-weight:700;color:'+grade.c+'">'+escapeHtml(grade.g)+'</td><td style="padding:5px;border:1px solid '+border+';text-align:center">'+escapeHtml(total===''?'':positions[total])+'</td></tr>';});
   html+='</tbody></table></div></div>';document.getElementById('bs-wrap').innerHTML=html;
 }
@@ -4831,7 +4853,7 @@ function renderBroadsheet(){
   if(bsTrm)bsTrm.textContent=TERM;
 
   if(!students.length){
-    document.getElementById('bs-wrap').innerHTML='<div class="empty"><h3>No Students</h3><p>Add students to this class first</p></div>';
+    document.getElementById('bs-wrap').innerHTML='<div class="empty"><h3>No '+personWord(CLS,true)+'</h3><p>Add '+personWord(CLS,true).toLowerCase()+' to this class first</p></div>';
     return;
   }
 
@@ -4867,7 +4889,7 @@ function renderBroadsheet(){
     html+='<table style="width:100%;border-collapse:collapse;font-size:8.5pt">';
     html+='<thead><tr style="background:'+MINT+'">'
       +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:left;color:'+NAVY+';width:40px">#</th>'
-      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:left;color:'+NAVY+'">Student Name</th>'
+      +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:left;color:'+NAVY+'">'+personWord(CLS,false)+' Name</th>'
       +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:42px">CA1<br><span style="font-size:7pt;font-weight:400">/10</span></th>'
       +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:42px">CA2<br><span style="font-size:7pt;font-weight:400">/10</span></th>'
       +'<th style="padding:6px 8px;border:1px solid '+BORDER+';text-align:center;color:'+NAVY+';width:42px">CA3<br><span style="font-size:7pt;font-weight:400">/10</span></th>'
@@ -4924,7 +4946,7 @@ function exportBroadsheetNow(){
   }
   var students=DB_STUDENTS[CLS]||[];
   var subjs=subjects();
-  if(!students.length){showToast('No students to export','error');return;}
+  if(!students.length){showToast('No '+personWord(CLS,true).toLowerCase()+' to export','error');return;}
   var rows=[['#','Student','Gender'].concat(subjs.map(function(s){
     var sName=s.name||String(s);
     return[sName+' CA1',sName+' CA2',sName+' CA3',sName+' Exam',sName+' Total'];
@@ -5015,7 +5037,7 @@ function renderProgress(){
   var wrap=document.getElementById('progress-wrap');
   if(!wrap)return;
   if(!students.length){
-    wrap.innerHTML='<div class="empty"><h3>No Students</h3><p>Add students to this class first.</p></div>';
+    wrap.innerHTML='<div class="empty"><h3>No '+personWord(CLS,true)+'</h3><p>Add '+personWord(CLS,true).toLowerCase()+' to this class first.</p></div>';
     return;
   }
   if(!subjs.length){
@@ -5128,8 +5150,8 @@ window.addEventListener('afterprint',resetReportCardPrintFit);
 function populateCardSel(){
   var sel=document.getElementById('rc-stu');
   var cur=sel.value;
-  var students=DB_STUDENTS[CLS]||[];
-  sel.innerHTML='<option value="">Select student</option>'+
+  var students=rosterOf(CLS);
+  sel.innerHTML='<option value="">Select '+personWord(CLS,false).toLowerCase()+'</option>'+
     students.map(function(s){return'<option value="'+s.id+'">'+s.name+'</option>';}).join('');
   if(cur){var opt=sel.querySelector('option[value="'+cur+'"]');if(opt)sel.value=cur;}
 }
@@ -5167,7 +5189,7 @@ function renderCard(){
   var sid=sel.value;
   var wrap=document.getElementById('rc-wrap');
   if(!sid){
-    wrap.innerHTML='<div class="empty"><h3>Select a Student</h3><p>Choose a student to generate their result card</p></div>';
+    wrap.innerHTML='<div class="empty"><h3>Select a '+personWord(CLS,false)+'</h3><p>Choose a '+personWord(CLS,false).toLowerCase()+' to generate their result card</p></div>';
     return Promise.resolve(false);
   }
   var cardTerm=TERM;
@@ -5204,8 +5226,8 @@ function renderCard(){
   return request;
 }
 function printAll(){
-  var students=DB_STUDENTS[CLS]||[];
-  if(!students.length){showToast('No students to print','error');return;}
+  var students=rosterOf(CLS);
+  if(!students.length){showToast('No '+personWord(CLS,true).toLowerCase()+' to print','error');return;}
   var printWindow=openPortalPrintWindow('All Report Cards');
   if(!printWindow)return;
   var cardTerm=TERM;
@@ -5381,7 +5403,7 @@ function buildCard(sid,term,session,scoreMap,traitMap,feeData,remData,pubSet){
     h+='<table style="width:100%;border-collapse:collapse;border-bottom:1px solid '+BORDER+';font-size:8pt">'
       +'<tr>'
       +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">No. of students: <strong>'+n+'</strong></td>'
-      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Student avg: <strong>'+(avg!==''?avg:'--')+'</strong></td>'
+      +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">'+personWord(CLS,false)+' avg: <strong>'+(avg!==''?avg:'--')+'</strong></td>'
       +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Class avg: <strong>'+classAvg+'</strong></td>'
       +'<td style="padding:4px 8px;border:1px solid '+BORDER+'">Overall total: <strong>'+(grand!==''?grand:'--')+'</strong></td>'
       +'</tr>'
@@ -5582,8 +5604,13 @@ function changeAnalyticsTerm(newTerm){
 }
 
 function renderAnalytics(){
-  var students=DB_STUDENTS[CLS]||[];
+  var students=rosterOf(CLS);
   var subjs=subjects();
+  var perfWord=personWord(CLS,false);
+  var perfTitle=document.getElementById('an-perf-title');
+  if(perfTitle)perfTitle.textContent=perfWord+' Performance Overview';
+  var perfHead=document.getElementById('an-perf-head');
+  if(perfHead)perfHead.textContent=perfWord;
   destroyChart('dist');destroyChart('subj');
   var clsLabel=DEPTS[CLS]?DEPTS[CLS].label:CLS;
   var lbl=document.getElementById('an-class-term');
@@ -5597,7 +5624,7 @@ function renderAnalytics(){
     document.getElementById('an-pass').textContent='--';
     document.getElementById('an-dist').textContent='0';
     document.getElementById('an-fail').textContent='0';
-    document.getElementById('an-student-tbody').innerHTML='<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray)">No students in this class yet</td></tr>';
+    document.getElementById('an-student-tbody').innerHTML='<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray)">No '+personWord(CLS,true).toLowerCase()+' in this class yet</td></tr>';
     document.getElementById('perf-tbody').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray)">No data yet</td></tr>';
     return;
   }
