@@ -98,6 +98,7 @@ module.exports = async function resultData(req, res) {
         p_ca3: requestPayload.ca3 === '' || requestPayload.ca3 === undefined ? null : requestPayload.ca3,
         p_exam: requestPayload.exam === '' || requestPayload.exam === undefined ? null : requestPayload.exam,
         p_clear_components: scoreClearComponents,
+        p_reason: typeof requestPayload.reason === 'string' ? requestPayload.reason.slice(0, 140) : null,
       })
     : action === 'traits.enter'
       ? await supabaseRpc('school_result_traits_update', {
