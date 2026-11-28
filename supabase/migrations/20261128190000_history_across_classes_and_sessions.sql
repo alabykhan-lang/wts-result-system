@@ -183,9 +183,12 @@ begin
       into v_rows
       from (
         select s.id, s.student_id, st.name, st.admno, s.class_key, s.subject_index,
+               coalesce(cat.subject_name, s.subject_index::text) as subject_name,
                s.ca1, s.ca2, s.ca3, s.exam, s.term, s.academic_session
         from public.scores s
         join public.students st on st.id = s.student_id
+        left join public.result_subject_catalog cat
+          on cat.class_key = s.class_key and cat.subject_index = s.subject_index
         where s.class_key = v_class_key
           and s.academic_session = v_session
           and s.term = v_term
